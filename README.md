@@ -22,6 +22,21 @@ Nexus is an open-source decision-memory platform that keeps multi-agent AI teams
 
 ---
 
+## Getting Started
+
+Deploy Nexus in under 10 minutes:
+
+```bash
+git clone https://github.com/perlantir/nexus.git
+cd nexus
+cp .env.example .env       # Edit with your API key
+docker compose up -d        # That's it
+```
+
+See the full [Getting Started Guide](docs/getting-started.md) for step-by-step instructions with verification at each step.
+
+---
+
 ## Why Nexus?
 
 When you run multiple AI agents on a shared codebase or product, they constantly step on each other:

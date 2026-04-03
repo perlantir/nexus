@@ -1,7 +1,6 @@
+FROM node:22.12-slim AS base
 LABEL maintainer="Perlantir"
 LABEL org.opencontainers.image.authors="Perlantir"
-
-FROM node:22.12-slim AS base
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 WORKDIR /app
 
@@ -14,8 +13,9 @@ COPY packages/cli/package.json packages/cli/
 RUN pnpm install --frozen-lockfile
 
 COPY tsconfig.json ./
+COPY turbo.json ./
 COPY packages/ packages/
-RUN pnpm build
+RUN pnpm --filter @nexus/core --filter @nexus/sdk --filter @nexus/mcp --filter @nexus/server build
 
 FROM node:22.12-slim AS production
 LABEL maintainer="Perlantir"

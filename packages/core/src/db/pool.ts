@@ -21,7 +21,7 @@ export function getPool(config?: DbConfig): pg.Pool {
   if (pool) return pool;
 
   const connectionString = config?.connectionString || process.env.DATABASE_URL;
-  const isProd = process.env.NODE_ENV === 'production';
+  const useSSL = process.env.DATABASE_SSL === 'true';
 
   pool = new Pool({
     connectionString,
@@ -34,7 +34,7 @@ export function getPool(config?: DbConfig): pg.Pool {
     max: config?.max ?? parseInt(process.env.DATABASE_POOL_MAX || '20', 10),
     idleTimeoutMillis: config?.idleTimeoutMillis ?? 30000,
     connectionTimeoutMillis: config?.connectionTimeoutMillis ?? 5000,
-    ...(isProd && { ssl: { rejectUnauthorized: true } }),
+    ...(useSSL && { ssl: { rejectUnauthorized: true } }),
   });
 
   pool.on('error', (err) => {
