@@ -9,7 +9,20 @@ import {
   logAudit,
 } from './validation.js';
 
-const NEXUS_API_KEY = process.env.NEXUS_API_KEY;
+import crypto from 'node:crypto';
+
+function getNexusApiKey(): string | undefined {
+  return process.env.NEXUS_API_KEY;
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, 'utf8');
+  const bufB = Buffer.from(b, 'utf8');
+  const len = Math.max(bufA.length, bufB.length);
+  const paddedA = Buffer.concat([bufA, Buffer.alloc(Math.max(0, len - bufA.length))]);
+  const paddedB = Buffer.concat([bufB, Buffer.alloc(Math.max(0, len - bufB.length))]);
+  return crypto.timingSafeEqual(paddedA, paddedB) && bufA.length === bufB.length;
+}
 
 export function registerDiscoveryRoutes(app: Hono): void {
   // POST /api/projects/:id/import — Bulk import conversation transcripts
@@ -95,10 +108,11 @@ export function registerDiscoveryRoutes(app: Hono): void {
   // POST /api/ingest/webhook — Webhook receiver
   app.post('/api/ingest/webhook', async (c) => {
     // Bearer token auth (independent of session auth)
-    if (NEXUS_API_KEY) {
+    const apiKey = getNexusApiKey();
+    if (apiKey) {
       const authHeader = c.req.header('Authorization') ?? '';
       const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-      if (token !== NEXUS_API_KEY) {
+      if (!safeEqual(token, apiKey)) {
         return c.json({ error: 'Unauthorized' }, 401);
       }
     }

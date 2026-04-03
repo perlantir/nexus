@@ -48,14 +48,19 @@ async function findConversationFiles(basePath: string): Promise<string[]> {
  * For a path like /base/workspaceMyAgent/conversations/file.txt
  * the agent name is "MyAgent".
  */
-function extractAgentName(filePath: string): string {
+export function extractAgentName(filePath: string): string {
   const parts = filePath.split(path.sep);
-  // Find the "workspace*" segment
   const workspaceIdx = parts.findIndex((p) => p.startsWith('workspace'));
   if (workspaceIdx === -1) return 'unknown';
-  const segment = parts[workspaceIdx];
-  const agentName = segment.slice('workspace'.length).trim();
-  return agentName || 'unknown';
+  const segment = parts[workspaceIdx] ?? '';
+
+  let agentName = segment.slice('workspace'.length).replace(/^[-_]/, '').trim();
+
+  if (!agentName) {
+    agentName = process.env.NEXUS_OPENCLAW_DEFAULT_AGENT || 'main';
+  }
+
+  return agentName;
 }
 
 async function readChunk(filePath: string): Promise<ConversationChunk | null> {

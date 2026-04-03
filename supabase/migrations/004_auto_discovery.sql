@@ -1,4 +1,7 @@
--- Auto-discovery: track processed conversation sources
+-- Auto-discovery tables
+-- Depends on: 003_relevance_feedback.sql (defines update_updated_at() function)
+
+-- Track processed conversation sources
 CREATE TABLE processed_sources (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
