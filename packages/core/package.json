@@ -43,6 +43,10 @@
     "./decision-graph/embeddings.js": {
       "import": "./dist/decision-graph/embeddings.js",
       "types": "./dist/decision-graph/embeddings.d.ts"
+    },
+    "./change-propagator/index.js": {
+      "import": "./dist/change-propagator/index.js",
+      "types": "./dist/change-propagator/index.d.ts"
     }
   },
   "scripts": {

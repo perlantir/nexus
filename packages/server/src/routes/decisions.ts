@@ -2,7 +2,8 @@ import type { Hono } from 'hono';
 import { query, transaction } from '@nexus/core/db/pool.js';
 import { parseDecision, parseEdge } from '@nexus/core/db/parsers.js';
 import { NotFoundError, ValidationError } from '@nexus/core/types.js';
-import type { Decision, DecisionEdge } from '@nexus/core/types.js';
+import type { Decision, DecisionEdge, NotificationType } from '@nexus/core/types.js';
+import { propagateChange } from '@nexus/core/change-propagator/index.js';
 import {
   requireUUID,
   requireString,
@@ -97,6 +98,10 @@ export function registerDecisionRoutes(app: Hono): void {
         title: decision.title,
         made_by: decision.made_by,
       });
+
+      propagateChange(decision, 'decision_created').catch((err) =>
+        console.error('[nexus] Change propagation failed:', (err as Error).message),
+      );
 
       return c.json(decision, 201);
     } catch (err) {
@@ -229,6 +234,10 @@ export function registerDecisionRoutes(app: Hono): void {
       fields_updated: Object.keys(body),
     });
 
+    propagateChange(decision, 'decision_updated').catch((err) =>
+      console.error('[nexus] Change propagation failed:', (err as Error).message),
+    );
+
     return c.json(decision);
   });
 
@@ -313,6 +322,10 @@ export function registerDecisionRoutes(app: Hono): void {
       made_by,
     });
 
+    propagateChange(result.newDecision as Decision, 'decision_superseded').catch((err) =>
+      console.error('[nexus] Change propagation failed:', (err as Error).message),
+    );
+
     return c.json(result, 201);
   });
 
@@ -330,6 +343,10 @@ export function registerDecisionRoutes(app: Hono): void {
     const decision = parseDecision(result.rows[0] as Record<string, unknown>);
 
     logAudit('decision_reverted', decision.project_id, { decision_id: decision.id });
+
+    propagateChange(decision, 'decision_reverted').catch((err) =>
+      console.error('[nexus] Change propagation failed:', (err as Error).message),
+    );
 
     return c.json(decision);
   });

@@ -57,7 +57,7 @@ export function registerDistilleryRoutes(app: Hono): void {
         `INSERT INTO session_summaries (
            project_id, agent_name, topic, summary,
            decision_ids, extraction_model, extraction_confidence
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ) VALUES ($1, $2, $3, $4, $5::uuid[], $6, $7)
          RETURNING *`,
         [
           projectId,
@@ -120,7 +120,7 @@ export function registerDistilleryRoutes(app: Hono): void {
            decision_ids, artifact_ids, assumptions,
            open_questions, lessons_learned,
            raw_conversation_hash, extraction_model, extraction_confidence
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+         ) VALUES ($1,$2,$3,$4,$5::uuid[],$6::uuid[],$7,$8,$9,$10,$11,$12)
          RETURNING *`,
         [
           projectId,

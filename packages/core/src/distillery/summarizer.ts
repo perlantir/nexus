@@ -111,7 +111,7 @@ export async function createSessionSummary(
           extraction_confidence, embedding)
        VALUES
          ($1, $2, CURRENT_DATE, $3, $4,
-          $5::text[], '{}', $6::text[], $7::text[],
+          $5::uuid[], '{}', $6::text[], $7::text[],
           $8::text[], $9, $10,
           $11, $12::vector)
        RETURNING *`,
