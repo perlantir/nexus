@@ -177,7 +177,7 @@ services:
     restart: always
     environment:
       NODE_ENV: production
-      API_KEY_SECRET: ${API_KEY_SECRET}
+      NEXUS_API_KEY: ${NEXUS_API_KEY}
     # Remove public port binding — nginx handles it
     ports: []
 
@@ -375,10 +375,10 @@ HOST=0.0.0.0
 NODE_ENV=production
 
 # Security
-API_KEY_SECRET=<random 64-char hex string>
+NEXUS_API_KEY=<random 64-char hex string>
 ```
 
-Generate a strong `API_KEY_SECRET`:
+Generate a strong `NEXUS_API_KEY`:
 
 ```bash
 openssl rand -hex 64
@@ -891,7 +891,7 @@ upstream nexus_api {
 }
 ```
 
-Ensure all instances share the same `DATABASE_URL`, `OPENAI_API_KEY`, and `API_KEY_SECRET`.
+Ensure all instances share the same `DATABASE_URL`, `OPENAI_API_KEY`, and `NEXUS_API_KEY`.
 
 ### PostgreSQL Read Replicas
 
@@ -932,7 +932,7 @@ REDIS_URL=redis://redis:6379
 
 ### API Key Authentication
 
-Enable API key authentication by setting `API_KEY_SECRET` in your environment. Create keys via the API:
+Enable API key authentication by setting `NEXUS_API_KEY` in your environment. Create keys via the API:
 
 ```bash
 curl -X POST http://localhost:3100/api/keys \
@@ -1027,7 +1027,9 @@ git pull origin main
 # Rebuild images
 docker compose build
 
-# Apply any new migrations (always before restarting)
+# Apply any new migrations (always before restarting).
+# Docker initdb only runs on first database creation.
+# Existing installations MUST run migrations manually on upgrade.
 docker compose run --rm server pnpm db:migrate
 
 # Rolling restart (minimizes downtime)

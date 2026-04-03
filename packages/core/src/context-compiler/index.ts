@@ -8,6 +8,7 @@ import {
   parseNotification,
 } from '../db/parsers.js';
 import { NexusError, NotFoundError } from '../types.js';
+import { computeFreshness, blendScores, computeEffectiveConfidence } from '../temporal/index.js';
 import type {
   Agent,
   Decision,
@@ -124,12 +125,22 @@ export function scoreDecision(
   const penalty = statusPenalty(decision, agent);
 
   const rawScore = directAffect + tagMatching + roleRelevance + semanticSimilarity;
-  const combined = rawScore * penalty;
+  const penalizedScore = rawScore * penalty;
 
-  // Freshness score — simple recency metric (0..1, newer = higher)
-  const ageMs = Date.now() - new Date(decision.created_at).getTime();
-  const ageDays = ageMs / (1000 * 60 * 60 * 24);
-  const freshness = Math.max(0, 1 - ageDays / 365); // decays over 1 year
+  // Freshness — exponential decay with validated/unvalidated half-lives
+  const freshness = computeFreshness(decision);
+
+  // Confidence decay — low-confidence decisions rank lower
+  const effectiveConfidence = computeEffectiveConfidence(decision);
+  const confidenceMultiplier = 0.5 + 0.5 * effectiveConfidence;
+
+  // Blend relevance and freshness per agent preference
+  const blended = blendScores(
+    penalizedScore,
+    freshness,
+    agent.relevance_profile.freshness_preference,
+  );
+  const combined = blended * confidenceMultiplier;
 
   const breakdown: ScoringBreakdown = {
     direct_affect: directAffect,

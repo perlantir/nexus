@@ -354,29 +354,5 @@ export function bodyLimit(opts: BodyLimitConfig = {}): MiddlewareHandler {
     }
 
     await next();
-
-    // Post-parse check for distillery conversation_text length
-    const path = new URL(c.req.url).pathname;
-    if (path.includes('/distill')) {
-      try {
-        const body = (await c.req.raw.clone().json()) as Record<string, unknown>;
-        if (
-          typeof body.conversation_text === 'string' &&
-          body.conversation_text.length > distilleryMaxChars
-        ) {
-          return c.json(
-            {
-              error: {
-                code: 'PAYLOAD_TOO_LARGE',
-                message: `conversation_text exceeds ${distilleryMaxChars} character limit`,
-              },
-            },
-            413,
-          );
-        }
-      } catch {
-        // Not JSON or body unavailable — let the route handler deal with it
-      }
-    }
   });
 }

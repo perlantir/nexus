@@ -1,6 +1,6 @@
 import type { ExtractedDecision, Alternative, ConfidenceLevel } from '../types.js';
 
-const ANTHROPIC_MODEL = 'claude-3-haiku-20240307';
+const ANTHROPIC_MODEL = process.env.DISTILLERY_MODEL || 'claude-haiku-4-5-20251001';
 const OPENAI_MODEL = 'gpt-4o-mini';
 
 // LLM call timeout (ms)

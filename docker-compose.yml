@@ -6,7 +6,7 @@ services:
     container_name: nexus-db
     environment:
       POSTGRES_USER: nexus
-      POSTGRES_PASSWORD: nexus_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexus_dev}
       POSTGRES_DB: nexus
     ports:
       - "5432:5432"
@@ -28,11 +28,11 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://nexus:nexus_dev@postgres:5432/nexus
+      DATABASE_URL: ${DATABASE_URL:-postgresql://nexus:${POSTGRES_PASSWORD:-nexus_dev}@postgres:5432/nexus}
       PORT: 3100
       HOST: 0.0.0.0
       NODE_ENV: production
-      API_KEY_SECRET: ${API_KEY_SECRET:-nexus-dev-secret}
+      NEXUS_API_KEY: ${NEXUS_API_KEY:-nexus-dev-secret}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-openai}

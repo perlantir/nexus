@@ -54,7 +54,7 @@ ANTHROPIC_API_KEY=nx_...
 
 # Server
 PORT=3100
-API_KEY_SECRET=change-me-in-production
+NEXUS_API_KEY=change-me-in-production
 
 # Dashboard
 VITE_API_URL=http://localhost:3100
