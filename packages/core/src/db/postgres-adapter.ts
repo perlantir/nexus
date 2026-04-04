@@ -25,6 +25,7 @@ const { Pool } = pg;
  * replacing bare `?` characters that appear outside of single-quoted strings.
  */
 function translatePlaceholders(sql: string): string {
+  if (!sql) return '';
   let idx = 0;
   let inString = false;
   let result = '';
@@ -75,10 +76,23 @@ export class PostgresAdapter implements DatabaseAdapter {
 
   async connect(): Promise<void> {
     // Initialise (or reuse) the pool and verify connectivity.
-    this._pool = this._buildPool();
+    try {
+      this._pool = this._buildPool();
+    } catch (err) {
+      const connStr = this._config?.connectionString ?? process.env.DATABASE_URL ?? '<not set>';
+      throw new Error(
+        `[decigraph/postgres] Failed to create connection pool. ` +
+        `DATABASE_URL=${connStr.replace(/:[^:@]+@/, ':***@')}. ` +
+        `Original error: ${(err as Error).message}`,
+      );
+    }
     const ok = await this.healthCheck();
     if (!ok) {
-      throw new Error('[decigraph/postgres] Database health check failed on connect');
+      const connStr = this._config?.connectionString ?? process.env.DATABASE_URL ?? '<not set>';
+      throw new Error(
+        `[decigraph/postgres] Database health check failed on connect. ` +
+        `DATABASE_URL=${connStr.replace(/:[^:@]+@/, ':***@')}`,
+      );
     }
   }
 
@@ -186,10 +200,16 @@ export class PostgresAdapter implements DatabaseAdapter {
     );
     const appliedSet = new Set(applied.rows.map((r) => r.name));
 
-    const files = fs
-      .readdirSync(migrationsDir)
-      .filter((f) => f.endsWith('.sql'))
-      .sort();
+    let files: string[];
+    try {
+      files = fs
+        .readdirSync(migrationsDir)
+        .filter((f) => f.endsWith('.sql'))
+        .sort();
+    } catch (err) {
+      console.warn(`[decigraph/postgres] Migrations directory not found: ${migrationsDir}. Skipping migrations.`);
+      return;
+    }
 
     for (const file of files) {
       if (appliedSet.has(file)) continue;
@@ -220,6 +240,11 @@ export class PostgresAdapter implements DatabaseAdapter {
     // This mirrors the logic in pool.ts so that existing callers continue to work.
     const connectionString =
       this._config?.connectionString ?? process.env.DATABASE_URL;
+
+    if (!connectionString) {
+      console.warn('[decigraph/postgres] WARNING: No connectionString or DATABASE_URL set. Pool will try default pg settings.');
+    }
+
     const useSSL =
       this._config?.ssl ?? process.env.DATABASE_SSL === 'true';
 
