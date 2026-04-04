@@ -63,6 +63,14 @@ export async function integrateDecisions(
       }
 
       const db = getDb();
+
+      // Auto-approve logic: high confidence → active, medium/low → pending review
+      const autoApproveThreshold = parseFloat(process.env.NEXUS_AUTO_APPROVE_THRESHOLD ?? '0.85');
+      const confidenceScore = ext.confidence === 'high' ? 0.9 : ext.confidence === 'medium' ? 0.6 : 0.3;
+      const autoApproved = confidenceScore >= autoApproveThreshold;
+      const decisionStatus = autoApproved ? 'active' : 'pending';
+      const reviewStatus = autoApproved ? 'approved' : 'pending_review';
+
       const decision = await db.transaction(async (txQuery) => {
         const insertResult = await txQuery(
           `INSERT INTO decisions
@@ -70,13 +78,13 @@ export async function integrateDecisions(
               source_session_id, confidence, status, supersedes_id,
               alternatives_considered, affects, tags, assumptions,
               open_questions, dependencies, confidence_decay_rate, metadata,
-              embedding)
+              embedding, review_status)
            VALUES
              (?, ?, ?, ?, ?, 'auto_distilled',
-              ?, ?, 'pending', ?,
+              ?, ?, ?, ?,
               ?, ?, ?, ?,
               ?, ?, 0, '{}',
-              ?)
+              ?, ?)
            RETURNING *`,
           [
             projectId,
@@ -86,6 +94,7 @@ export async function integrateDecisions(
             'distillery',
             sessionId ?? null,
             ext.confidence,
+            decisionStatus,
             supersedes_id ?? null,
             JSON.stringify(ext.alternatives_considered),
             db.arrayParam(ext.affects),
@@ -94,6 +103,7 @@ export async function integrateDecisions(
             JSON.stringify(ext.open_questions),
             JSON.stringify(ext.dependencies),
             vectorLiteral,
+            reviewStatus,
           ],
         );
 
