@@ -208,6 +208,9 @@ importers:
 
   packages/server:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.33.0
+        version: 0.33.1
       '@decigraph/core':
         specifier: workspace:*
         version: link:../core

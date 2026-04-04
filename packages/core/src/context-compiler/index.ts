@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 import { getDb } from '../db/index.js';
+import { getPersona as _getPersonaImport } from '../config/agentPersonas.js';
+import type { AgentPersona } from '../config/agentPersonas.js';
 import {
   parseAgent,
   parseDecision,
@@ -83,80 +85,115 @@ function statusPenalty(decision: Decision, agent: Agent): number {
  * Signal D (0.25): Semantic similarity — cosine similarity of embeddings
  * Signal E     : Status penalty multiplier
  */
+function _getPersonaSafe(agentName: string): AgentPersona | undefined {
+  try {
+    return _getPersonaImport(agentName);
+  } catch {
+    return undefined;
+  }
+}
+
+// Tuned scoring weights — targets 0.82–0.95 for relevant, <0.3 for irrelevant
+const SCORING_WEIGHTS = {
+  directAffect: 0.35,
+  tagMatch: 0.22,
+  personaMatch: 0.18,
+  semanticSimilarity: 0.25,
+};
+
+// Post-processing thresholds
+export const MIN_SCORE = 0.45;
+export const MAX_RESULTS = 25;
+
 export function scoreDecision(
   decision: Decision,
   agent: Agent,
   taskEmbedding: number[],
 ): ScoredDecision {
   const profile = agent.relevance_profile;
-
-  // Signal A: Direct Affect
-  const affectsLower = decision.affects.map((a) => a.toLowerCase());
   const agentNameLower = agent.name.toLowerCase();
-  const agentRoleLower = agent.role.toLowerCase();
-  const directAffect =
-    affectsLower.includes(agentNameLower) || affectsLower.includes(agentRoleLower) ? 0.4 : 0.0;
 
-  // Signal B: Tag Matching
+  // Signal A: Direct Affect (0 or 1)
+  const affectsLower = (decision.affects ?? []).map((a) => a.toLowerCase());
+  const agentRoleLower = agent.role.toLowerCase();
+  const directAffectScore =
+    affectsLower.includes(agentNameLower) || affectsLower.includes(agentRoleLower) ? 1.0 : 0.0;
+
+  // Signal B: Tag Matching (overlap of decision tags with agent's profile weights)
   const profileWeights = profile.weights;
-  const matchingTags = decision.tags.filter((tag) => profileWeights[tag] !== undefined);
-  let tagMatching = 0;
-  if (matchingTags.length > 0) {
-    const sumWeights = matchingTags.reduce((sum, tag) => sum + (profileWeights[tag] ?? 0), 0);
-    const avgWeight = sumWeights / matchingTags.length;
-    tagMatching = avgWeight * 0.2;
+  const decisionTags = decision.tags ?? [];
+  let tagMatchScore = 0;
+  if (decisionTags.length > 0 && Object.keys(profileWeights).length > 0) {
+    const matchingTags = decisionTags.filter((tag) => profileWeights[tag] !== undefined);
+    if (matchingTags.length > 0) {
+      const sumWeights = matchingTags.reduce((sum, tag) => sum + (profileWeights[tag] ?? 0.5), 0);
+      tagMatchScore = sumWeights / decisionTags.length; // Normalize by total tags
+    }
   }
 
-  // Signal C: Role Relevance — tags with weight >= 0.8 are "high-priority"
-  const highPriorityTags = Object.entries(profileWeights)
-    .filter(([, w]) => w >= 0.8)
-    .map(([tag]) => tag);
-  const highPriorityMatches = decision.tags.filter((tag) => highPriorityTags.includes(tag)).length;
-  const roleRelevance = Math.min(1.0, highPriorityMatches * 0.25) * 0.15;
+  // Signal C: Persona Match (overlap with agent expertise topics)
+  const persona = _getPersonaSafe(agent.name);
+  let personaMatchScore = 0;
+  if (persona && decisionTags.length > 0) {
+    const tagsLower = decisionTags.map((t) => t.toLowerCase());
+    const overlapping = persona.expertiseTopics.filter((t: string) => tagsLower.includes(t)).length;
+    personaMatchScore = persona.expertiseTopics.length > 0
+      ? (overlapping / persona.expertiseTopics.length) * (persona.boostFactor / 0.20) // Normalize
+      : 0;
+  }
 
-  // Signal D: Semantic Similarity
+  // Signal D: Semantic Similarity (cosine between task embedding and decision embedding)
   const decisionEmbedding = decision.embedding ?? [];
-  const semanticSimilarity =
+  const semanticScore =
     decisionEmbedding.length > 0 && taskEmbedding.length > 0
-      ? cosineSimilarity(taskEmbedding, decisionEmbedding) * 0.25
+      ? Math.max(0, cosineSimilarity(taskEmbedding, decisionEmbedding))
       : 0;
 
-  // Signal E: Status Penalty multiplier
-  const penalty = statusPenalty(decision, agent);
+  // Weighted sum
+  let finalScore =
+    SCORING_WEIGHTS.directAffect * directAffectScore +
+    SCORING_WEIGHTS.tagMatch * tagMatchScore +
+    SCORING_WEIGHTS.personaMatch * personaMatchScore +
+    SCORING_WEIGHTS.semanticSimilarity * semanticScore;
 
-  const rawScore = directAffect + tagMatching + roleRelevance + semanticSimilarity;
-  const penalizedScore = rawScore * penalty;
+  const rawScore = finalScore;
 
-  // Freshness — exponential decay with validated/unvalidated half-lives
-  const freshness = computeFreshness(decision);
+  // --- Post-scoring multipliers ---
 
-  // Confidence decay — low-confidence decisions rank lower
-  const effectiveConfidence = computeEffectiveConfidence(decision);
-  const confidenceMultiplier = 0.5 + 0.5 * effectiveConfidence;
+  // Status multiplier
+  if (decision.status === 'superseded') finalScore *= 0.4;
+  if (decision.status === 'pending') finalScore *= 0.6;
 
-  // Blend relevance and freshness per agent preference
-  const blended = blendScores(
-    penalizedScore,
-    freshness,
-    agent.relevance_profile.freshness_preference,
-  );
-  const combined = blended * confidenceMultiplier;
+  // Freshness decay (decisions older than 30 days gradually lose relevance)
+  const ageInDays = (Date.now() - new Date(decision.created_at).getTime()) / 86400000;
+  if (ageInDays > 30) finalScore *= Math.max(0.7, 1 - (ageInDays - 30) * 0.005);
+
+  // Confidence multiplier
+  if (decision.confidence === 'high') finalScore *= 1.15;
+  if (decision.confidence === 'low') finalScore *= 0.75;
+
+  // Direct agent match bonuses (flat adds, not multiplied)
+  if ((decision.affects ?? []).map(a => a.toLowerCase()).includes(agentNameLower)) finalScore += 0.25;
+  if ((decision.made_by ?? '').toLowerCase() === agentNameLower) finalScore += 0.15;
+
+  // Clamp to [0, 1.5] — can exceed 1.0 with bonuses
+  finalScore = Math.max(0, Math.min(1.5, finalScore));
 
   const breakdown: ScoringBreakdown = {
-    direct_affect: directAffect,
-    tag_matching: tagMatching,
-    role_relevance: roleRelevance,
-    semantic_similarity: semanticSimilarity,
-    status_penalty: penalty,
-    freshness,
-    combined,
+    direct_affect: directAffectScore,
+    tag_matching: tagMatchScore,
+    role_relevance: personaMatchScore,
+    semantic_similarity: semanticScore,
+    status_penalty: decision.status === 'superseded' ? 0.4 : decision.status === 'pending' ? 0.6 : 1.0,
+    freshness: ageInDays > 30 ? Math.max(0.7, 1 - (ageInDays - 30) * 0.005) : 1.0,
+    combined: finalScore,
   };
 
   return {
     ...decision,
     relevance_score: rawScore,
-    freshness_score: freshness,
-    combined_score: combined,
+    freshness_score: breakdown.freshness,
+    combined_score: finalScore,
     scoring_breakdown: breakdown,
   };
 }
@@ -463,11 +500,15 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
 
   const depth = agent.relevance_profile.decision_depth;
 
+  // Apply minimum score threshold and max results cap
+  const qualifiedDecisions = scored
+    .filter((d) => d.combined_score >= MIN_SCORE)
+    .sort((a, b) => b.combined_score - a.combined_score)
+    .slice(0, MAX_RESULTS);
+
   // Take top-N scored decisions as seeds (configurable via decision_depth)
   const topN = Math.max(5, depth * 3);
-  const topDecisions = [...scored]
-    .sort((a, b) => b.combined_score - a.combined_score)
-    .slice(0, topN);
+  const topDecisions = qualifiedDecisions.slice(0, topN);
 
   const expanded = await expandGraphContext(topDecisions, depth, allDecisionMap);
 

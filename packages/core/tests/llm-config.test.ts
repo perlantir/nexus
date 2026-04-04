@@ -46,7 +46,7 @@ describe('resolveLLMConfig', () => {
     expect(config.distillery).not.toBeNull();
     expect(config.distillery!.provider).toBe('openrouter');
     expect(config.distillery!.url).toBe('https://openrouter.ai/api/v1');
-    expect(config.distillery!.model).toContain('claude-haiku');
+    expect(config.distillery!.model).toContain('claude-opus');
   });
 
   it('resolves OpenAI direct for both embeddings and distillery', () => {
@@ -71,7 +71,7 @@ describe('resolveLLMConfig', () => {
     expect(config.distillery).not.toBeNull();
     expect(config.distillery!.provider).toBe('anthropic');
     expect(config.distillery!.url).toBe('__anthropic_sdk__');
-    expect(config.distillery!.model).toContain('claude-haiku');
+    expect(config.distillery!.model).toContain('claude-opus');
   });
 
   it('DECIGRAPH_EMBEDDINGS_URL overrides OpenRouter for embeddings', () => {

@@ -74,6 +74,10 @@
     "./context-compiler/index.js": {
       "import": "./dist/context-compiler/index.js",
       "types": "./dist/context-compiler/index.d.ts"
+    },
+    "./config/agentPersonas.js": {
+      "import": "./dist/config/agentPersonas.js",
+      "types": "./dist/config/agentPersonas.d.ts"
     }
   },
   "scripts": {

@@ -22,7 +22,9 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   const ctx = getEmbeddingClient();
 
   if (!ctx) {
-    console.warn('[decigraph:embeddings] No embedding provider configured — returning zero-vector.');
+    console.warn('\n⚠️  [decigraph:embeddings] No embedding provider configured — returning zero-vector!');
+    console.warn('    Set OPENAI_API_KEY or DECIGRAPH_EMBEDDINGS_URL in .env to enable semantic search.');
+    console.warn('    Without embeddings, context compilation cannot differentiate by semantic similarity.\n');
     return new Array(EMBEDDING_DIM).fill(0) as number[];
   }
 

@@ -6,7 +6,7 @@ export interface ApiError {
 }
 
 export function useApi() {
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3100';
+  const baseUrl = import.meta.env.VITE_API_URL || '';
 
   const request = useCallback(
     async <T>(method: string, path: string, body?: unknown): Promise<T> => {

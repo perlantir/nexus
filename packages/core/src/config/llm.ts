@@ -64,7 +64,7 @@ function resolveDistillery(): LLMEndpoint | null {
     return {
       url: 'https://openrouter.ai/api/v1',
       key: process.env.OPENROUTER_API_KEY,
-      model: process.env.DECIGRAPH_LLM_MODEL || 'anthropic/claude-haiku-4-5-20251001',
+      model: process.env.DECIGRAPH_LLM_MODEL || 'anthropic/claude-opus-4-6',
       provider: 'openrouter',
     };
   }
@@ -73,7 +73,7 @@ function resolveDistillery(): LLMEndpoint | null {
     return {
       url: '__anthropic_sdk__',
       key: process.env.ANTHROPIC_API_KEY,
-      model: process.env.DECIGRAPH_LLM_MODEL || 'claude-haiku-4-5-20251001',
+      model: process.env.DECIGRAPH_LLM_MODEL || 'claude-opus-4-6',
       provider: 'anthropic',
     };
   }

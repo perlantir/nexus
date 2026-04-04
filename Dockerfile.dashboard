@@ -12,7 +12,8 @@ LABEL org.opencontainers.image.authors="Perlantir"
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 WORKDIR /app
 
-ARG VITE_API_URL=http://localhost:3100
+ARG VITE_API_URL=/
+ENV VITE_API_URL=${VITE_API_URL}
 ARG CACHE_BUSTER=1
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
