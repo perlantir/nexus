@@ -69,7 +69,7 @@ class DeciGraphAutoGenMemory:
     client:
         An initialised ``DeciGraphClient`` instance.
     project_id:
-        The Nexus project to scope reads and writes to.
+        The DeciGraph project to scope reads and writes to.
     agent_name:
         The AutoGen agent's name.
     task_description:
@@ -81,7 +81,7 @@ class DeciGraphAutoGenMemory:
         Set to ``0`` to disable automatic distillation (call
         ``flush_to_distillery()`` manually).
     create_session_on_end:
-        When ``True`` (default), ``on_session_end()`` creates a Nexus
+        When ``True`` (default), ``on_session_end()`` creates a DeciGraph
         ``SessionSummary``.
     """
 
@@ -126,7 +126,7 @@ class DeciGraphAutoGenMemory:
         Returns
         -------
         str
-            Compiled context text, or an empty string if Nexus is unreachable.
+            Compiled context text, or an empty string if DeciGraph is unreachable.
         """
         task = task_description or self.task_description
         try:
@@ -335,7 +335,7 @@ class DeciGraphAutoGenMemory:
 
         context_message: dict[str, Any] = {
             "role": "system",
-            "content": f"[Nexus Context]\n{context_text}",
+            "content": f"[DeciGraph Context]\n{context_text}",
         }
         return [context_message] + list(messages)
 

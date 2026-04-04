@@ -1,5 +1,5 @@
 """
-nexus-langchain — LangGraph Checkpointer
+decigraph-langchain — LangGraph Checkpointer
 =========================================
 A LangGraph ``BaseCheckpointSaver`` implementation that stores checkpoints as
 DeciGraph session summaries and rehydrates state by compiling context from DeciGraph.
@@ -39,7 +39,7 @@ try:
     from langchain_core.runnables import RunnableConfig
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
-        "langchain-core is required for nexus-langchain. "
+        "langchain-core is required for decigraph-langchain. "
         "Install it with: pip install langchain-core>=0.3.0"
     ) from exc
 

@@ -1,5 +1,5 @@
 """
-nexus-openai-agents
+decigraph-openai-agents
 ===================
 OpenAI Agents SDK integration for the DeciGraph multi-agent memory platform.
 

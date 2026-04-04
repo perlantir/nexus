@@ -1,5 +1,5 @@
 """
-nexus-langchain
+decigraph-langchain
 ===============
 LangChain / LangGraph integration for the DeciGraph multi-agent memory platform.
 
@@ -22,7 +22,7 @@ try:
     import langchain_core  # noqa: F401
 except ImportError:
     raise ImportError(
-        "nexus-langchain requires langchain-core>=0.3.0. "
+        "decigraph-langchain requires langchain-core>=0.3.0. "
         "Install it with: pip install langchain-core"
     )
 

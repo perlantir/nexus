@@ -1,5 +1,5 @@
 """
-nexus-crewai — Task & Crew Callbacks
+decigraph-crewai — Task & Crew Callbacks
 ======================================
 CrewAI callback objects that automatically capture task and crew outputs and
 forward them to the DeciGraph distillery / session summary API.

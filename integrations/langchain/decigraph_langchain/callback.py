@@ -1,5 +1,5 @@
 """
-nexus-langchain — Callback Handler
+decigraph-langchain — Callback Handler
 ===================================
 LangChain ``BaseCallbackHandler`` that automatically captures LLM and chain
 outputs and forwards them to the DeciGraph distillery for decision extraction.
@@ -32,7 +32,7 @@ try:
     from langchain_core.outputs import LLMResult
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
-        "langchain-core is required for nexus-langchain. "
+        "langchain-core is required for decigraph-langchain. "
         "Install it with: pip install langchain-core>=0.3.0"
     ) from exc
 

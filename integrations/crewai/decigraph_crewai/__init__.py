@@ -1,5 +1,5 @@
 """
-nexus-crewai
+decigraph-crewai
 ============
 CrewAI integration for the DeciGraph multi-agent memory platform.
 

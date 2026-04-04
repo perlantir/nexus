@@ -1,5 +1,5 @@
 """
-nexus-openai-agents — Lifecycle Hooks
+decigraph-openai-agents — Lifecycle Hooks
 ======================================
 Hooks for the OpenAI Agents SDK that integrate DeciGraph memory into every agent
 run automatically.
@@ -176,10 +176,10 @@ class DeciGraphAgentHooks(AgentHooks):
             # exposes a mutable ``run_instructions`` attribute; otherwise log.
             run_ctx = getattr(context, "run_context", None) or context
             existing: str = getattr(run_ctx, "run_instructions", None) or ""
-            nexus_block = f"[DeciGraph Context]\n{compiled_text}\n\n"
-            if nexus_block not in existing:
+            decigraph_block = f"[DeciGraph Context]\n{compiled_text}\n\n"
+            if decigraph_block not in existing:
                 try:
-                    object.__setattr__(run_ctx, "run_instructions", nexus_block + existing)
+                    object.__setattr__(run_ctx, "run_instructions", decigraph_block + existing)
                 except AttributeError:
                     pass  # Read-only; SDK version may differ
             logger.debug(

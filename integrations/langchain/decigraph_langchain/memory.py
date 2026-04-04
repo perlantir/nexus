@@ -1,5 +1,5 @@
 """
-nexus-langchain — Memory
+decigraph-langchain — Memory
 ========================
 LangChain ``BaseMemory`` implementation backed by DeciGraph.
 
@@ -36,13 +36,13 @@ try:
     from langchain_core.messages import get_buffer_string
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
-        "langchain-core is required for nexus-langchain. "
+        "langchain-core is required for decigraph-langchain. "
         "Install it with: pip install langchain-core>=0.3.0"
     ) from exc
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_MEMORY_KEY = "nexus_context"
+_DEFAULT_MEMORY_KEY = "decigraph_context"
 _DEFAULT_INPUT_KEY = "input"
 _DEFAULT_OUTPUT_KEY = "output"
 
@@ -71,7 +71,7 @@ class DeciGraphMemory(BaseMemory):
         A description of the current task, used to rank relevant context.
     memory_key:
         The key under which compiled context is injected into LangChain's
-        input variables (default ``"nexus_context"``).
+        input variables (default ``"decigraph_context"``).
     input_key:
         The key for the human input in ``save_context`` inputs.
     output_key:
@@ -83,7 +83,7 @@ class DeciGraphMemory(BaseMemory):
         (default 1, i.e. distil after every exchange).
     return_messages:
         When ``True``, ``load_memory_variables`` also returns the raw
-        decision list under ``nexus_decisions``.
+        decision list under ``decigraph_decisions``.
     """
 
     client: DeciGraphClient
@@ -118,7 +118,7 @@ class DeciGraphMemory(BaseMemory):
         """List of variable names this memory injects."""
         keys = [self.memory_key]
         if self.return_messages:
-            keys.append("nexus_decisions")
+            keys.append("decigraph_decisions")
         return keys
 
     def load_memory_variables(self, inputs: dict[str, Any]) -> dict[str, Any]:
@@ -138,7 +138,7 @@ class DeciGraphMemory(BaseMemory):
         -------
         dict
             ``{memory_key: <compiled_text>}`` and optionally
-            ``{"nexus_decisions": [...]}``.
+            ``{"decigraph_decisions": [...]}``.
         """
         task = self.task_description
         if self.input_key in inputs:
@@ -155,13 +155,13 @@ class DeciGraphMemory(BaseMemory):
             logger.warning("DeciGraphMemory: failed to load context — %s", exc)
             result: dict[str, Any] = {self.memory_key: ""}
             if self.return_messages:
-                result["nexus_decisions"] = []
+                result["decigraph_decisions"] = []
             return result
 
         compiled_text: str = pkg.get("compiled_text", "")
         result = {self.memory_key: compiled_text}
         if self.return_messages:
-            result["nexus_decisions"] = pkg.get("relevant_decisions", [])
+            result["decigraph_decisions"] = pkg.get("relevant_decisions", [])
         return result
 
     def save_context(self, inputs: dict[str, Any], outputs: dict[str, str]) -> None:

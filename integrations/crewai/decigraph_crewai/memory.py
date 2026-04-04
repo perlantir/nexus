@@ -1,5 +1,5 @@
 """
-nexus-crewai — Memory Backend
+decigraph-crewai — Memory Backend
 ==============================
 A CrewAI memory backend that delegates storage and retrieval to DeciGraph.
 
