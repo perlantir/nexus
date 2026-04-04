@@ -150,7 +150,17 @@ export function ProjectStats() {
   const { get } = useApi();
   const { projectId } = useProject();
 
-  const [stats, setStats] = useState<ProjectStatsData | null>(null);
+  const [stats, setStats] = useState<ProjectStatsData>({
+    total_decisions: 0,
+    by_status: { active: 0, superseded: 0, reverted: 0, pending: 0 },
+    decisions_per_agent: [],
+    decision_trend: [],
+    unresolved_contradictions: 0,
+    total_agents: 0,
+    total_artifacts: 0,
+    total_sessions: 0,
+    recent_activity: [],
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,13 +172,19 @@ export function ProjectStats() {
     get<ProjectStatsData>(`/api/projects/${projectId}/stats`)
       .then((data) => {
         if (!cancelled) {
-          setStats(data);
+          setStats({
+            ...data,
+            by_status: data.by_status ?? { active: 0, superseded: 0, reverted: 0, pending: 0 },
+            decisions_per_agent: data.decisions_per_agent ?? [],
+            decision_trend: data.decision_trend ?? [],
+            recent_activity: data.recent_activity ?? [],
+          });
           setLoading(false);
         }
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err.message || 'Failed to load project stats');
+          setError(err instanceof Error ? err.message : String(err?.message ?? 'Failed to load project stats'));
           setLoading(false);
         }
       });
@@ -197,18 +213,6 @@ export function ProjectStats() {
         <div className="card p-6 max-w-md text-center">
           <AlertTriangle size={24} className="mx-auto mb-2 text-status-reverted" />
           <p className="text-sm text-status-reverted">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  /* ---- Empty ------------------------------------------------------ */
-  if (!stats) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center py-12">
-          <BarChart3 size={28} className="mx-auto mb-2 text-[var(--text-tertiary)]" />
-          <p className="text-sm text-[var(--text-secondary)]">No stats available</p>
         </div>
       </div>
     );
