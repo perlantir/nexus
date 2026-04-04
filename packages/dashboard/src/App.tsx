@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback, type ReactNode } from 'react';
 import {
   GitBranch,
   Clock,
@@ -8,14 +8,14 @@ import {
   Zap,
   History,
   Bell,
-  Sun,
-  Moon,
-  ChevronLeft,
-  ChevronRight,
   BarChart3,
   Upload,
   Settings,
   Radio,
+  Menu,
+  X,
+  ClipboardCheck,
+  Activity,
 } from 'lucide-react';
 import { DecisionGraph } from './components/DecisionGraph';
 import { Timeline } from './components/Timeline';
@@ -71,25 +71,18 @@ type View =
   | 'timetravel'
   | 'wizard';
 
-const NAV_ITEMS: { id: View; label: string; icon: ReactNode }[] = [
-  { id: 'graph', label: 'Decision Graph', icon: <GitBranch size={18} /> },
-  { id: 'timeline', label: 'Timeline', icon: <Clock size={18} /> },
-  { id: 'contradictions', label: 'Contradictions', icon: <AlertTriangle size={18} /> },
-  { id: 'context', label: 'Context Compare', icon: <Columns2 size={18} /> },
-  { id: 'search', label: 'Search', icon: <SearchIcon size={18} /> },
-  { id: 'impact', label: 'Impact Analysis', icon: <Zap size={18} /> },
-  { id: 'sessions', label: 'Sessions', icon: <History size={18} /> },
-  { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> },
-  { id: 'stats', label: 'Project Stats', icon: <BarChart3 size={18} /> },
-  { id: 'import', label: 'Import', icon: <Upload size={18} /> },
-  { id: 'connectors', label: 'Connectors', icon: <Settings size={18} /> },
-  { id: 'webhooks', label: 'Webhooks', icon: <Radio size={18} /> },
-  { id: 'timetravel', label: 'Time Travel', icon: <Clock size={18} /> },
-];
+interface NavItem {
+  id: View;
+  label: string;
+  icon: ReactNode;
+  badge?: number | null;
+  group: 'main' | 'integrations' | 'monitoring' | 'settings';
+}
 
 function getViewFromHash(): View {
   const hash = window.location.hash.replace('#', '') as View;
-  if (NAV_ITEMS.find((n) => n.id === hash)) return hash;
+  const all: View[] = ['graph','timeline','contradictions','context','search','impact','sessions','notifications','stats','import','connectors','webhooks','timetravel'];
+  if (all.includes(hash)) return hash;
   return 'graph';
 }
 
@@ -99,35 +92,111 @@ function getViewFromHash(): View {
 
 function ViewContent({ view }: { view: View }) {
   switch (view) {
-    case 'graph':
-      return <DecisionGraph />;
-    case 'timeline':
-      return <Timeline />;
-    case 'contradictions':
-      return <Contradictions />;
-    case 'context':
-      return <ContextComparison />;
-    case 'search':
-      return <Search />;
-    case 'impact':
-      return <ImpactAnalysis />;
-    case 'sessions':
-      return <SessionHistory />;
-    case 'notifications':
-      return <NotificationFeed />;
-    case 'stats':
-      return <ProjectStats />;
-    case 'import':
-      return <Import />;
-    case 'connectors':
-      return <Connectors />;
-    case 'webhooks':
-      return <Webhooks />;
-    case 'timetravel':
-      return <TimeTravelView />;
-    default:
-      return <DecisionGraph />;
+    case 'graph': return <DecisionGraph />;
+    case 'timeline': return <Timeline />;
+    case 'contradictions': return <Contradictions />;
+    case 'context': return <ContextComparison />;
+    case 'search': return <Search />;
+    case 'impact': return <ImpactAnalysis />;
+    case 'sessions': return <SessionHistory />;
+    case 'notifications': return <NotificationFeed />;
+    case 'stats': return <ProjectStats />;
+    case 'import': return <Import />;
+    case 'connectors': return <Connectors />;
+    case 'webhooks': return <Webhooks />;
+    case 'timetravel': return <TimeTravelView />;
+    default: return <DecisionGraph />;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Nav Item Component                                                 */
+/* ------------------------------------------------------------------ */
+
+function NavItemButton({
+  item,
+  active,
+  collapsed,
+  onClick,
+}: {
+  item: NavItem;
+  active: boolean;
+  collapsed?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={collapsed ? item.label : undefined}
+      className={`nav-item w-full text-left ${active ? 'active' : ''}`}
+    >
+      <span className="shrink-0">{item.icon}</span>
+      {!collapsed && <span className="truncate flex-1">{item.label}</span>}
+      {!collapsed && item.badge != null && item.badge > 0 && (
+        <span className="nav-badge">{item.badge > 99 ? '99+' : item.badge}</span>
+      )}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar Content (shared between mobile menu and desktop sidebar)   */
+/* ------------------------------------------------------------------ */
+
+function SidebarContent({
+  navItems,
+  view,
+  collapsed,
+  onNavigate,
+}: {
+  navItems: NavItem[];
+  view: View;
+  collapsed?: boolean;
+  onNavigate: (v: View) => void;
+}) {
+  const groups: Array<{ key: string; items: NavItem[] }> = [
+    { key: 'main', items: navItems.filter((n) => n.group === 'main') },
+    { key: 'integrations', items: navItems.filter((n) => n.group === 'integrations') },
+    { key: 'monitoring', items: navItems.filter((n) => n.group === 'monitoring') },
+    { key: 'settings', items: navItems.filter((n) => n.group === 'settings') },
+  ];
+
+  return (
+    <>
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-5 py-5">
+        <div className="w-8 h-8 rounded-lg bg-[#D97706] flex items-center justify-center shrink-0">
+          <span className="text-white font-bold text-sm">N</span>
+        </div>
+        {!collapsed && <span className="font-bold text-lg text-white tracking-tight">Nexus</span>}
+      </div>
+
+      {/* Nav groups */}
+      <div className="flex-1 overflow-y-auto px-3 pb-4">
+        {groups.map((group, gi) => (
+          <div key={group.key}>
+            {gi > 0 && group.items.length > 0 && <div className="nav-divider" />}
+            <div className="space-y-0.5">
+              {group.items.map((item) => (
+                <NavItemButton
+                  key={item.id}
+                  item={item}
+                  active={view === item.id}
+                  collapsed={collapsed}
+                  onClick={() => onNavigate(item.id)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Version */}
+      {!collapsed && (
+        <div className="px-5 py-3 text-xs text-[#5A5957]">v0.1.0</div>
+      )}
+    </>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -138,16 +207,32 @@ export default function App() {
   const { get } = useApi();
 
   const [view, setView] = useState<View>(getViewFromHash);
-  const [collapsed, setCollapsed] = useState(false);
-  const [dark, setDark] = useState(true);
   const [projectId, setProjectId] = useState('default');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // First-run detection
   const [showWizard, setShowWizard] = useState(false);
   const [projectsChecked, setProjectsChecked] = useState(false);
 
-  // Unresolved contradictions badge count
+  // Badge counts
   const [unresolvedCount, setUnresolvedCount] = useState<number | null>(null);
+
+  // Build nav items
+  const navItems: NavItem[] = [
+    { id: 'graph', label: 'Decision Graph', icon: <GitBranch size={18} />, group: 'main' },
+    { id: 'timeline', label: 'Timeline', icon: <Clock size={18} />, group: 'main' },
+    { id: 'contradictions', label: 'Contradictions', icon: <AlertTriangle size={18} />, badge: unresolvedCount, group: 'main' },
+    { id: 'context', label: 'Context Compare', icon: <Columns2 size={18} />, group: 'main' },
+    { id: 'search', label: 'Search', icon: <SearchIcon size={18} />, group: 'main' },
+    { id: 'impact', label: 'Impact Analysis', icon: <Zap size={18} />, group: 'main' },
+    { id: 'sessions', label: 'Sessions', icon: <History size={18} />, group: 'main' },
+    { id: 'import', label: 'Import', icon: <Upload size={18} />, group: 'integrations' },
+    { id: 'connectors', label: 'Connectors', icon: <Settings size={18} />, group: 'integrations' },
+    { id: 'webhooks', label: 'Webhooks', icon: <Radio size={18} />, group: 'integrations' },
+    { id: 'timetravel', label: 'Time Travel', icon: <Clock size={18} />, group: 'integrations' },
+    { id: 'notifications', label: 'Alerts', icon: <Bell size={18} />, group: 'monitoring' },
+    { id: 'stats', label: 'Health', icon: <BarChart3 size={18} />, group: 'monitoring' },
+  ];
 
   /* ---- Check for first run -------------------------------------- */
   useEffect(() => {
@@ -156,59 +241,57 @@ export default function App() {
         if (Array.isArray(projects) && projects.length === 0) {
           setShowWizard(true);
         } else if (Array.isArray(projects) && projects.length > 0) {
-          // Use the first project if projectId is still the placeholder
           if (projectId === 'default' && projects[0]?.id) {
             setProjectId(projects[0].id);
           }
         }
         setProjectsChecked(true);
       })
-      .catch(() => {
-        // If the API is unreachable, skip wizard and show dashboard
-        setProjectsChecked(true);
-      });
+      .catch(() => setProjectsChecked(true));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once on mount
+  }, []);
 
   /* ---- Fetch unresolved contradiction count --------------------- */
   useEffect(() => {
     if (!projectsChecked || showWizard || projectId === 'default') return;
-
     let cancelled = false;
     get<Array<{ id: string }>>(`/api/projects/${projectId}/contradictions?status=unresolved`)
       .then((data) => {
-        if (!cancelled) {
-          setUnresolvedCount(Array.isArray(data) ? data.length : null);
-        }
+        if (!cancelled) setUnresolvedCount(Array.isArray(data) ? data.length : null);
       })
-      .catch(() => {
-        if (!cancelled) setUnresolvedCount(null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+      .catch(() => { if (!cancelled) setUnresolvedCount(null); });
+    return () => { cancelled = true; };
   }, [get, projectId, projectsChecked, showWizard]);
 
-  /* ---- Sync hash → view ---------------------------------------- */
+  /* ---- Hash sync ------------------------------------------------ */
   useEffect(() => {
-    function onHash() {
-      setView(getViewFromHash());
-    }
+    function onHash() { setView(getViewFromHash()); }
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
   /* ---- Navigate ------------------------------------------------- */
-  function navigate(v: View) {
+  const navigate = useCallback((v: View) => {
     window.location.hash = v;
     setView(v);
-  }
+    setMenuOpen(false);
+  }, []);
 
-  /* ---- Theme toggle -------------------------------------------- */
+  /* ---- Touch gestures: swipe from left edge to open menu -------- */
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
-  }, [dark]);
+    let startX = 0;
+    const onTouchStart = (e: TouchEvent) => { startX = e.touches[0].clientX; };
+    const onTouchEnd = (e: TouchEvent) => {
+      const endX = e.changedTouches[0].clientX;
+      if (startX < 20 && endX - startX > 60) setMenuOpen(true);
+    };
+    document.addEventListener('touchstart', onTouchStart);
+    document.addEventListener('touchend', onTouchEnd);
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchend', onTouchEnd);
+    };
+  }, []);
 
   /* ---- Wizard complete ----------------------------------------- */
   function handleWizardComplete(newProjectId: string) {
@@ -217,19 +300,13 @@ export default function App() {
     navigate('graph');
   }
 
-  /* ---- Loading splash (waiting for first-run check) ------------ */
+  /* ---- Loading -------------------------------------------------- */
   if (!projectsChecked) {
     return (
       <ProjectContext.Provider value={{ projectId, setProjectId }}>
-        <div
-          className={`flex items-center justify-center h-screen ${
-            dark ? 'bg-nexus-bg-dark' : 'bg-nexus-bg-light'
-          }`}
-        >
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <GitBranch size={16} className="text-white" />
-            </div>
+        <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bg-primary)' }}>
+          <div className="w-10 h-10 rounded-xl bg-[#D97706] flex items-center justify-center">
+            <span className="text-white font-bold">N</span>
           </div>
         </div>
       </ProjectContext.Provider>
@@ -248,103 +325,48 @@ export default function App() {
   /* ---- Main dashboard ------------------------------------------ */
   return (
     <ProjectContext.Provider value={{ projectId, setProjectId }}>
+      {/* Mobile top bar */}
+      <header
+        className="sticky top-0 z-30 flex items-center h-14 px-4 border-b md:hidden top-bar"
+        style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-light)' }}
+      >
+        <button onClick={() => setMenuOpen(true)} className="p-2 -ml-2 touch-target">
+          <Menu className="w-5 h-5" style={{ color: 'var(--text-primary)' }} />
+        </button>
+        <span className="ml-3 font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>Nexus</span>
+      </header>
+
+      {/* Mobile overlay */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile slide-over menu */}
+      <nav
+        className={`fixed inset-y-0 left-0 z-50 w-3/4 max-w-[320px] bg-[#1A1A1A] transform transition-transform duration-[250ms] ease-out md:hidden flex flex-col ${
+          menuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <SidebarContent navItems={navItems} view={view} onNavigate={navigate} />
+      </nav>
+
       <div className="flex h-screen overflow-hidden">
-        {/* Sidebar */}
-        <aside
-          className={`flex flex-col shrink-0 transition-[width] duration-200 ${
-            collapsed ? 'w-16' : 'w-56'
-          } ${
-            dark
-              ? 'bg-[#111110] border-r border-nexus-border-dark'
-              : 'bg-[#EEEDEA] border-r border-nexus-border-light'
-          }`}
-        >
-          {/* Logo area */}
-          <div className="flex items-center gap-3 px-4 h-14 shrink-0">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center shrink-0">
-              <GitBranch size={14} className="text-white" />
-            </div>
-            {!collapsed && (
-              <span className="font-semibold text-sm tracking-tight truncate">Nexus</span>
-            )}
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 flex flex-col gap-0.5 px-2 py-2 overflow-y-auto scrollbar-thin">
-            {NAV_ITEMS.map((item) => {
-              const active = view === item.id;
-              const isContradictions = item.id === 'contradictions';
-              const showBadge =
-                isContradictions &&
-                unresolvedCount !== null &&
-                unresolvedCount > 0;
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => navigate(item.id)}
-                  title={collapsed ? item.label : undefined}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                    active
-                      ? 'bg-primary/15 text-primary'
-                      : dark
-                        ? 'text-nexus-text-muted-dark hover:text-nexus-text-dark hover:bg-white/5'
-                        : 'text-nexus-text-muted-light hover:text-nexus-text-light hover:bg-black/5'
-                  }`}
-                >
-                  <span className="shrink-0 relative">
-                    {item.icon}
-                    {/* Badge dot for collapsed sidebar */}
-                    {showBadge && collapsed && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-400" />
-                    )}
-                  </span>
-                  {!collapsed && (
-                    <span className="truncate flex-1">{item.label}</span>
-                  )}
-                  {/* Numeric badge for expanded sidebar */}
-                  {!collapsed && showBadge && (
-                    <span className="shrink-0 ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400">
-                      {unresolvedCount! > 99 ? '99+' : unresolvedCount}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Bottom controls */}
-          <div className="flex flex-col gap-1 px-2 py-3 border-t border-inherit">
-            <button
-              onClick={() => setDark(!dark)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150 ${
-                dark
-                  ? 'text-nexus-text-muted-dark hover:text-nexus-text-dark hover:bg-white/5'
-                  : 'text-nexus-text-muted-light hover:text-nexus-text-light hover:bg-black/5'
-              }`}
-            >
-              {dark ? <Sun size={18} /> : <Moon size={18} />}
-              {!collapsed && <span>{dark ? 'Light mode' : 'Dark mode'}</span>}
-            </button>
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150 ${
-                dark
-                  ? 'text-nexus-text-muted-dark hover:text-nexus-text-dark hover:bg-white/5'
-                  : 'text-nexus-text-muted-light hover:text-nexus-text-light hover:bg-black/5'
-              }`}
-            >
-              {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-              {!collapsed && <span>Collapse</span>}
-            </button>
-          </div>
+        {/* Desktop/Tablet sidebar */}
+        <aside className="hidden md:flex md:flex-col shrink-0 sidebar">
+          <SidebarContent navItems={navItems} view={view} onNavigate={navigate} />
         </aside>
 
-        {/* Main */}
+        {/* Main content */}
         <main
-          className={`flex-1 overflow-y-auto ${dark ? 'bg-nexus-bg-dark' : 'bg-nexus-bg-light'}`}
+          className="flex-1 overflow-y-auto md:ml-[260px]"
+          style={{ background: 'var(--bg-primary)' }}
         >
-          <ViewContent view={view} />
+          <div className="page-enter">
+            <ViewContent view={view} />
+          </div>
         </main>
       </div>
     </ProjectContext.Provider>

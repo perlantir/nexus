@@ -1,56 +1,56 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
-  content: ['./public/index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
       colors: {
         nexus: {
           bg: {
-            light: '#F7F6F2',
+            light: '#FAFAF8',
             dark: '#171614',
           },
           surface: {
-            light: '#F9F8F5',
+            light: '#FFFFFF',
             dark: '#1C1B19',
           },
           'surface-alt': {
-            light: '#FBFBF9',
+            light: '#F5F5F0',
             dark: '#201F1D',
           },
           border: {
-            light: '#D4D1CA',
+            light: '#E5E4DF',
             dark: '#393836',
           },
           text: {
-            light: '#28251D',
+            light: '#1A1A1A',
             dark: '#CDCCCA',
           },
           'text-muted': {
-            light: '#7A7974',
+            light: '#6B6B6B',
             dark: '#797876',
           },
           'text-faint': {
-            light: '#BAB9B4',
+            light: '#9B9B9B',
             dark: '#5A5957',
           },
         },
         primary: {
-          DEFAULT: '#01696F',
-          hover: '#0C4E54',
-          light: '#4F98A3',
+          DEFAULT: '#D97706',
+          hover: '#B45309',
+          light: '#F59E0B',
         },
         status: {
-          active: '#01696F',
-          superseded: '#D19900',
-          reverted: '#A13544',
-          pending: '#FFC553',
+          active: '#16A34A',
+          superseded: '#9B9B9B',
+          reverted: '#DC2626',
+          pending: '#D97706',
         },
         urgency: {
-          critical: '#A13544',
-          high: '#DA7101',
-          medium: '#01696F',
-          low: '#7A7974',
+          critical: '#DC2626',
+          high: '#D97706',
+          medium: '#6B8AE5',
+          low: '#9B9B9B',
         },
         chart: {
           teal: '#20808D',
@@ -64,17 +64,30 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+        sans: ['DM Sans', '-apple-system', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'SF Mono', 'monospace'],
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
+      },
+      borderRadius: {
+        sm: '6px',
+        md: '10px',
+        lg: '14px',
+        xl: '20px',
+      },
+      boxShadow: {
+        sm: '0 1px 2px rgba(0,0,0,0.04)',
+        md: '0 2px 8px rgba(0,0,0,0.06)',
+        lg: '0 4px 16px rgba(0,0,0,0.08)',
       },
       animation: {
         'fade-in': 'fadeIn 200ms ease-out',
         'slide-in': 'slideIn 200ms ease-out',
         'slide-up': 'slideUp 300ms ease-out',
         'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+        shimmer: 'shimmer 1.5s infinite',
+        'page-enter': 'pageEnter 200ms ease-out',
       },
       keyframes: {
         fadeIn: {
@@ -92,6 +105,14 @@ export default {
         pulseSoft: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.7' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        pageEnter: {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
     },
