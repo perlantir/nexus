@@ -12,7 +12,7 @@ export interface Decision {
   status: DecisionStatus;
   tags: string[];
   made_by: string;
-  made_at: string;
+  created_at: string;
   alternatives?: string[];
   assumptions?: string[];
   relationships?: Relationship[];

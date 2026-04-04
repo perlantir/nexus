@@ -1,4 +1,43 @@
-import { useState, useEffect, createContext, useContext, useCallback, type ReactNode } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback, type ReactNode } from 'react';
+
+/* ------------------------------------------------------------------ */
+/*  Error Boundary                                                     */
+/* ------------------------------------------------------------------ */
+
+class ErrorBoundary extends React.Component<
+  { children: ReactNode; viewKey?: string },
+  { hasError: boolean; error: Error | null }
+> {
+  state = { hasError: false, error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidUpdate(prevProps: { viewKey?: string }) {
+    if (prevProps.viewKey !== this.props.viewKey && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-lg font-medium mb-2">Something went wrong</p>
+          <p className="text-sm mb-4">{this.state.error?.message}</p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700"
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import {
   GitBranch,
   Clock,
@@ -364,9 +403,11 @@ export default function App() {
           className="flex-1 overflow-y-auto md:ml-[260px]"
           style={{ background: 'var(--bg-primary)' }}
         >
-          <div className="page-enter">
-            <ViewContent view={view} />
-          </div>
+          <ErrorBoundary viewKey={view}>
+            <div className="page-enter">
+              <ViewContent view={view} />
+            </div>
+          </ErrorBoundary>
         </main>
       </div>
     </ProjectContext.Provider>

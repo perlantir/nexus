@@ -53,7 +53,7 @@ function ValidationControls({
       <div className="flex items-center gap-2 mb-2 text-xs">
         {isValidated ? (
           <span className="flex items-center gap-1 text-green-400">
-            <span>\u2705</span>
+            <span>✅</span>
             Validated via {decision.validation_source?.replace(/_/g, ' ')}
             {decision.validated_at && (
               <span className="text-[var(--text-secondary)] ml-1">
@@ -63,7 +63,7 @@ function ValidationControls({
           </span>
         ) : (
           <span className="flex items-center gap-1 text-[var(--text-secondary)]">
-            <span>\u23F3</span> Not yet validated
+            <span>⏳</span> Not yet validated
           </span>
         )}
       </div>
@@ -201,11 +201,11 @@ export function Timeline() {
     .filter((d) => {
       if (filterAgent && d.made_by !== filterAgent) return false;
       if (filterTag && !d.tags.includes(filterTag)) return false;
-      if (dateFrom && d.made_at < dateFrom) return false;
-      if (dateTo && d.made_at > dateTo) return false;
+      if (dateFrom && d.created_at < dateFrom) return false;
+      if (dateTo && d.created_at > dateTo) return false;
       return true;
     })
-    .sort((a, b) => new Date(b.made_at).getTime() - new Date(a.made_at).getTime());
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   /* ---- Supersession chains --------------------------------------- */
   function getChain(decision: Decision): Decision[] {
@@ -368,7 +368,7 @@ export function Timeline() {
                           {decision.title}
                         </h3>
                         {decision.validated_at && (
-                          <span className="text-green-400 text-xs" title={`Validated: ${decision.validation_source}`}>\u2705</span>
+                          <span className="text-green-400 text-xs" title={`Validated: ${decision.validation_source}`}>✅</span>
                         )}
                         <span className={statusBadgeClass(decision.status)}>{decision.status}</span>
                       </div>
@@ -380,7 +380,7 @@ export function Timeline() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock size={12} />
-                          {formatDate(decision.made_at)}
+                          {formatDate(decision.created_at)}
                         </span>
                       </div>
 
@@ -432,7 +432,7 @@ export function Timeline() {
                                     </span>
                                   </div>
                                   <span className="text-[var(--text-secondary)] mt-1 block">
-                                    {formatDate(prev.made_at)}
+                                    {formatDate(prev.created_at)}
                                   </span>
                                 </div>
                               ))}

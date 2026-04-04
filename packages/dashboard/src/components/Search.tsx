@@ -194,7 +194,7 @@ export function Search() {
                           </label>
                           <p className="flex items-center gap-1.5">
                             <Clock size={12} />
-                            {new Date(d.made_at).toLocaleDateString()}
+                            {new Date(d.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>

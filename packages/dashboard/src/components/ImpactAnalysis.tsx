@@ -242,7 +242,7 @@ export function ImpactAnalysis() {
                   <h3 className="text-sm font-semibold">{impact.decision.title}</h3>
                   <p className="text-xs text-[var(--text-secondary)] mt-1">
                     by {impact.decision.made_by} ·{' '}
-                    {new Date(impact.decision.made_at).toLocaleDateString()}
+                    {new Date(impact.decision.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -358,7 +358,7 @@ export function ImpactAnalysis() {
                           <div className="text-sm">
                             <span className="font-medium">{d.title}</span>
                             <div className="text-xs text-[var(--text-secondary)] mt-0.5">
-                              {new Date(d.made_at).toLocaleDateString()} ·{' '}
+                              {new Date(d.created_at).toLocaleDateString()} ·{' '}
                               <span className={`badge-${d.status} capitalize`}>{d.status}</span>
                             </div>
                           </div>

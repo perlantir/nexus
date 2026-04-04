@@ -205,7 +205,7 @@ export function Contradictions() {
           {decision.description}
         </p>
         <p className="text-2xs text-[var(--text-tertiary)] mt-2">
-          by {decision.made_by} · {new Date(decision.made_at).toLocaleDateString()}
+          by {decision.made_by} · {new Date(decision.created_at).toLocaleDateString()}
         </p>
       </div>
     );

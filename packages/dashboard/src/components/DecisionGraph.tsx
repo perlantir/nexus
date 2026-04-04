@@ -56,7 +56,7 @@ export function DecisionGraph() {
     setLoading(true);
     setError(null);
 
-    get<Decision[]>(`/api/projects/${projectId}/decisions`)
+    get<Decision[]>(`/api/projects/${projectId}/decisions?limit=500`)
       .then((data) => {
         if (!cancelled) {
           setDecisions(Array.isArray(data) ? data : []);
@@ -374,7 +374,7 @@ export function DecisionGraph() {
   return (
     <div className="flex h-full">
       {/* Graph area */}
-      <div className="flex-1 relative" ref={containerRef}>
+      <div className="flex-1 relative min-h-[400px]" ref={containerRef}>
         {/* Toolbar */}
         <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
           <h1 className="text-lg font-semibold mr-2">Decision Graph</h1>
@@ -512,7 +512,7 @@ export function DecisionGraph() {
                 <label className="text-xs text-[var(--text-secondary)] block mb-1">
                   Date
                 </label>
-                <p>{new Date(selectedNode.made_at).toLocaleDateString()}</p>
+                <p>{new Date(selectedNode.created_at).toLocaleDateString()}</p>
               </div>
 
               {/* Description */}
