@@ -69,7 +69,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-_NEXUS_CHECKPOINT_TAG = "langgraph-checkpoint"
+_DECIGRAPH_CHECKPOINT_TAG = "langgraph-checkpoint"
 
 
 class NexusCheckpointer(BaseCheckpointSaver):
@@ -143,7 +143,7 @@ class NexusCheckpointer(BaseCheckpointSaver):
         candidates = [
             s for s in sessions
             if s.get("metadata", {}).get("thread_id") == thread_id
-            and _NEXUS_CHECKPOINT_TAG in s.get("metadata", {}).get("tags", [])
+            and _DECIGRAPH_CHECKPOINT_TAG in s.get("metadata", {}).get("tags", [])
         ]
         if not candidates:
             return None
@@ -185,7 +185,7 @@ class NexusCheckpointer(BaseCheckpointSaver):
             meta = session.get("metadata", {})
             if meta.get("thread_id") != thread_id:
                 continue
-            if _NEXUS_CHECKPOINT_TAG not in meta.get("tags", []):
+            if _DECIGRAPH_CHECKPOINT_TAG not in meta.get("tags", []):
                 continue
             tup = self._session_to_tuple(session, config)
             if tup is not None:
@@ -233,7 +233,7 @@ class NexusCheckpointer(BaseCheckpointSaver):
         session_metadata = {
             "thread_id": thread_id,
             "checkpoint_id": checkpoint_id,
-            "tags": [_NEXUS_CHECKPOINT_TAG],
+            "tags": [_DECIGRAPH_CHECKPOINT_TAG],
             "checkpoint_payload": json.dumps(checkpoint, default=str),
             "langgraph_metadata": metadata,
         }

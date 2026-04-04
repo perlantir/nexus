@@ -1,5 +1,5 @@
 /**
- * DatabaseAdapter — dialect-agnostic interface for all Nexus DB access.
+ * DatabaseAdapter — dialect-agnostic interface for all DeciGraph DB access.
  *
  * Both PostgresAdapter and SQLiteAdapter implement this interface so that
  * higher-level code is completely decoupled from the underlying driver.
@@ -80,7 +80,7 @@ export interface DatabaseAdapter {
 
   /**
    * Apply pending SQL migration files from `migrationsDir` in lexicographic
-   * order, skipping files already recorded in `_nexus_migrations`.
+   * order, skipping files already recorded in `_decigraph_migrations`.
    */
   runMigrations(migrationsDir: string): Promise<void>;
 

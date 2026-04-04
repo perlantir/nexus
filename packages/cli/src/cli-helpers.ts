@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { createInterface } from 'node:readline';
-import { NexusClient, NexusApiError } from '@nexus/sdk';
+import { DeciGraphClient, DeciGraphApiError } from '@decigraph/sdk';
 import type {
   Decision,
   Agent,
@@ -9,19 +9,19 @@ import type {
   ProjectStats,
   GraphResult,
   DecisionEdge,
-} from '@nexus/sdk';
+} from '@decigraph/sdk';
 
-export function getClient(): NexusClient {
-  const baseUrl = process.env.NEXUS_API_URL ?? 'http://localhost:3000';
-  const apiKey = process.env.NEXUS_API_KEY;
-  return new NexusClient({ baseUrl, apiKey });
+export function getClient(): DeciGraphClient {
+  const baseUrl = process.env.DECIGRAPH_API_URL ?? 'http://localhost:3000';
+  const apiKey = process.env.DECIGRAPH_API_KEY;
+  return new DeciGraphClient({ baseUrl, apiKey });
 }
 
 export function getProjectId(): string {
-  const id = process.env.NEXUS_PROJECT_ID;
+  const id = process.env.DECIGRAPH_PROJECT_ID;
   if (!id) {
-    console.error(chalk.red('Error: NEXUS_PROJECT_ID environment variable is not set.'));
-    console.error(chalk.dim('Run `nexus init` to create a project, then set NEXUS_PROJECT_ID.'));
+    console.error(chalk.red('Error: DECIGRAPH_PROJECT_ID environment variable is not set.'));
+    console.error(chalk.dim('Run `decigraph init` to create a project, then set DECIGRAPH_PROJECT_ID.'));
     process.exit(1);
   }
   return id;
@@ -29,7 +29,7 @@ export function getProjectId(): string {
 
 export function handleError(err: unknown, spinner?: ReturnType<typeof ora>): never {
   if (spinner) spinner.fail();
-  if (err instanceof NexusApiError) {
+  if (err instanceof DeciGraphApiError) {
     console.error(chalk.red(`API Error (${err.code}): ${err.message}`));
     if (err.details) {
       console.error(chalk.dim(JSON.stringify(err.details, null, 2)));

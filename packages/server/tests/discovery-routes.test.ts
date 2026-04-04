@@ -7,7 +7,7 @@ import { createApp } from '../src/app.js';
 // ── DB Mock ───────────────────────────────────────────────────────────────────
 
 const mockQuery = vi.fn();
-vi.mock('@nexus/core/db/index.js', () => ({
+vi.mock('@decigraph/core/db/index.js', () => ({
   getDb: () => ({
     query: mockQuery,
     transaction: vi.fn().mockImplementation(async (fn: Function) => fn(mockQuery)),
@@ -19,7 +19,7 @@ vi.mock('@nexus/core/db/index.js', () => ({
   closeDb: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('@nexus/core/db/pool.js', () => ({
+vi.mock('@decigraph/core/db/pool.js', () => ({
   query: mockQuery,
   getPool: vi.fn(),
   closePool: vi.fn(),
@@ -27,7 +27,7 @@ vi.mock('@nexus/core/db/pool.js', () => ({
   transaction: vi.fn().mockImplementation(async (fn: Function) => fn({ query: mockQuery })),
 }));
 
-vi.mock('@nexus/core/db/parsers.js', () => ({
+vi.mock('@decigraph/core/db/parsers.js', () => ({
   parseProject: vi.fn((row: Record<string, unknown>) => row),
   parseAgent: vi.fn((row: Record<string, unknown>) => row),
   parseDecision: vi.fn((row: Record<string, unknown>) => row),
@@ -43,21 +43,21 @@ vi.mock('@nexus/core/db/parsers.js', () => ({
 
 // ── Discovery-specific mocks ──────────────────────────────────────────────────
 
-vi.mock('@nexus/core/distillery/index.js', () => ({
+vi.mock('@decigraph/core/distillery/index.js', () => ({
   distill: vi.fn(),
 }));
 
-vi.mock('@nexus/core/contradiction-detector/index.js', () => ({
+vi.mock('@decigraph/core/contradiction-detector/index.js', () => ({
   scanProjectContradictions: vi.fn(),
 }));
 
 // Import mocked modules after vi.mock calls
 // mockQuery is defined on line 9 and shared with the vi.mock factories above.
 
-const { distill } = await import('@nexus/core/distillery/index.js');
+const { distill } = await import('@decigraph/core/distillery/index.js');
 const mockDistill = vi.mocked(distill);
 
-const { scanProjectContradictions } = await import('@nexus/core/contradiction-detector/index.js');
+const { scanProjectContradictions } = await import('@decigraph/core/contradiction-detector/index.js');
 const mockScan = vi.mocked(scanProjectContradictions);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -193,7 +193,7 @@ describe('POST /api/ingest/webhook', () => {
   };
 
   it('rejects missing Authorization header — returns 401', async () => {
-    vi.stubEnv('NEXUS_API_KEY', 'super-secret-key');
+    vi.stubEnv('DECIGRAPH_API_KEY', 'super-secret-key');
     const newApp = createApp();
 
     const res = await request(newApp, 'POST', '/api/ingest/webhook', VALID_BODY);
@@ -206,7 +206,7 @@ describe('POST /api/ingest/webhook', () => {
   });
 
   it('rejects invalid auth token — returns 401', async () => {
-    vi.stubEnv('NEXUS_API_KEY', 'super-secret-key');
+    vi.stubEnv('DECIGRAPH_API_KEY', 'super-secret-key');
     const newApp = createApp();
 
     const res = await request(newApp, 'POST', '/api/ingest/webhook', VALID_BODY, {
@@ -221,7 +221,7 @@ describe('POST /api/ingest/webhook', () => {
   });
 
   it('accepts valid request with correct Bearer token — returns queued', async () => {
-    vi.stubEnv('NEXUS_API_KEY', 'super-secret-key');
+    vi.stubEnv('DECIGRAPH_API_KEY', 'super-secret-key');
     const newApp = createApp();
 
     const res = await request(newApp, 'POST', '/api/ingest/webhook', VALID_BODY, {
@@ -237,7 +237,7 @@ describe('POST /api/ingest/webhook', () => {
   });
 
   it('validates required fields (text, source_id, project_id) — returns 400 when missing', async () => {
-    // No NEXUS_API_KEY set → auth check skipped, goes straight to validation
+    // No DECIGRAPH_API_KEY set → auth check skipped, goes straight to validation
     const resMissingText = await request(app, 'POST', '/api/ingest/webhook', {
       source_id: 'some-source',
       project_id: PROJECT_ID,
@@ -277,7 +277,7 @@ describe('GET /api/projects/:id/connectors', () => {
         project_id: PROJECT_ID,
         connector_name: 'webhook',
         enabled: false,
-        config: { url: 'https://hooks.example.com/nexus' },
+        config: { url: 'https://hooks.example.com/decigraph' },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },

@@ -7,32 +7,32 @@
 ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
 ```
 
-# Nexus — The shared brain for multi-agent AI teams
+# DeciGraph — The shared brain for multi-agent AI teams
 
 ## Install
 
 **Try it instantly (no Docker needed):**
 
 ```bash
-npx @nexus/cli init my-project
+npx @decigraph/cli init my-project
 ```
 
 **Python:**
 
 ```bash
-pip install nexus-memory
-nexus-memory init my-project
+pip install decigraph-memory
+decigraph-memory init my-project
 ```
 
 **Production (Docker + PostgreSQL):**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/perlantir/nexus/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/perlantir/decigraph/main/install.sh | bash
 ```
 
 Or clone and run manually — see the [Getting Started Guide](docs/getting-started.md).
 
-[![CI](https://github.com/perlantir/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/perlantir/nexus/actions/workflows/ci.yml)
+[![CI](https://github.com/perlantir/decigraph/actions/workflows/ci.yml/badge.svg)](https://github.com/perlantir/decigraph/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Node 22+](https://img.shields.io/badge/node-22%2B-green)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
@@ -41,17 +41,17 @@ Or clone and run manually — see the [Getting Started Guide](docs/getting-start
 
 Maintained by [Perlantir](https://github.com/perlantir).
 
-Nexus is an open-source decision-memory platform that keeps multi-agent AI teams aligned. Agents record what they decide, why they decided it, and what changed — then compile that knowledge into a ranked, token-budgeted context package before every task. No more contradictory agents, no more lost decisions, no more context amnesia.
+DeciGraph is an open-source decision-memory platform that keeps multi-agent AI teams aligned. Agents record what they decide, why they decided it, and what changed — then compile that knowledge into a ranked, token-budgeted context package before every task. No more contradictory agents, no more lost decisions, no more context amnesia.
 
 ---
 
 ## Getting Started
 
-Deploy Nexus in under 10 minutes:
+Deploy DeciGraph in under 10 minutes:
 
 ```bash
-git clone https://github.com/perlantir/nexus.git
-cd nexus
+git clone https://github.com/perlantir/decigraph.git
+cd decigraph
 cp .env.example .env       # Edit with your API key
 docker compose up -d        # That's it
 ```
@@ -60,7 +60,7 @@ See the full [Getting Started Guide](docs/getting-started.md) for step-by-step i
 
 ---
 
-## Why Nexus?
+## Why DeciGraph?
 
 When you run multiple AI agents on a shared codebase or product, they constantly step on each other:
 
@@ -68,7 +68,7 @@ When you run multiple AI agents on a shared codebase or product, they constantly
 - **Reviewer** approves code that violates a security decision made two sessions ago.
 - A new Claude session starts with no memory of the 200 decisions the team made last week.
 
-Nexus solves this with a persistent, searchable decision graph, automatic contradiction detection, a 5-signal relevance scorer, and first-class MCP support so Claude and other LLM clients can read and write the shared brain without any code changes.
+DeciGraph solves this with a persistent, searchable decision graph, automatic contradiction detection, a 5-signal relevance scorer, and first-class MCP support so Claude and other LLM clients can read and write the shared brain without any code changes.
 
 ---
 
@@ -78,7 +78,7 @@ Nexus solves this with a persistent, searchable decision graph, automatic contra
 Every decision is a node. Relationships between decisions (`supersedes`, `requires`, `blocks`, `contradicts`, `enables`, `depends_on`, `refines`, `reverts`) are typed edges. You can traverse the graph, detect cycles, and analyse downstream impact before committing a change.
 
 ### 5-Signal Context Compiler
-When an agent asks "what do I need to know to do this task?", Nexus runs a 5-signal scoring algorithm across every decision in the project:
+When an agent asks "what do I need to know to do this task?", DeciGraph runs a 5-signal scoring algorithm across every decision in the project:
 - **Direct affect** (0.40 weight): Is this agent or role explicitly in the decision's `affects` list?
 - **Tag matching** (0.20): Do the decision's tags match the agent's relevance profile?
 - **Role relevance** (0.15): How many high-priority tags align with the agent's role?
@@ -88,10 +88,10 @@ When an agent asks "what do I need to know to do this task?", Nexus runs a 5-sig
 Results are packed into a token budget, cached for 1 hour, and returned as formatted Markdown or JSON.
 
 ### Distillery
-Feed Nexus a raw conversation transcript and an LLM (Anthropic Claude or OpenAI GPT-4o-mini) extracts structured decisions, assumptions, open questions, and a session summary automatically. No manual tagging required.
+Feed DeciGraph a raw conversation transcript and an LLM (Anthropic Claude or OpenAI GPT-4o-mini) extracts structured decisions, assumptions, open questions, and a session summary automatically. No manual tagging required.
 
 ### Change Propagator
-When a decision is updated or superseded, Nexus identifies every agent whose `affects` or subscription list includes the changed domain, generates role-specific notification messages, and queues them as unread notifications ready for the next context compile.
+When a decision is updated or superseded, DeciGraph identifies every agent whose `affects` or subscription list includes the changed domain, generates role-specific notification messages, and queues them as unread notifications ready for the next context compile.
 
 ### Temporal Engine
 Decisions carry a `confidence_decay_rate`. Freshness scores decay over time. The compiler surfaces `⚠️ Open questions` and `🔷 Assumptions` inline so agents know exactly where to validate.
@@ -112,8 +112,8 @@ Drop-in integrations for LangChain/LangGraph, CrewAI, AutoGen, and OpenAI Agents
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/perlantir/nexus.git
-cd nexus
+git clone https://github.com/perlantir/decigraph.git
+cd decigraph
 cp .env.example .env
 ```
 
@@ -124,7 +124,7 @@ Edit `.env` — add your preferred LLM provider:
 OPENROUTER_API_KEY=sk-or-your-key    # Recommended: one key, all features
 # OPENAI_API_KEY=sk-your-key          # Alternative: OpenAI direct
 # ANTHROPIC_API_KEY=sk-ant-your-key   # Alternative: Anthropic direct
-# Or leave all blank — Nexus works without LLM keys
+# Or leave all blank — DeciGraph works without LLM keys
 ```
 
 ### 2. Start everything with Docker Compose
@@ -135,24 +135,24 @@ docker compose up -d
 
 This starts:
 - **PostgreSQL 17 + pgvector** on port 5432 (with migrations auto-applied)
-- **Nexus API server** on port 3100
+- **DeciGraph API server** on port 3100
 - **Dashboard** on port 3200
 
 ### 3. Create your first project
 
 ```bash
-export NEXUS_API_URL=http://localhost:3100
-curl -s -X POST $NEXUS_API_URL/api/projects \
+export DECIGRAPH_API_URL=http://localhost:3100
+curl -s -X POST $DECIGRAPH_API_URL/api/projects \
   -H "Content-Type: application/json" \
-  -d '{"name": "my-project", "description": "Testing Nexus"}' | jq .id
+  -d '{"name": "my-project", "description": "Testing DeciGraph"}' | jq .id
 # → "proj-uuid-here"
-export NEXUS_PROJECT_ID="proj-uuid-here"
+export DECIGRAPH_PROJECT_ID="proj-uuid-here"
 ```
 
 ### 4. Register an agent
 
 ```bash
-curl -s -X POST $NEXUS_API_URL/api/projects/$NEXUS_PROJECT_ID/agents \
+curl -s -X POST $DECIGRAPH_API_URL/api/projects/$DECIGRAPH_PROJECT_ID/agents \
   -H "Content-Type: application/json" \
   -d '{"name": "alice", "role": "architect", "context_budget_tokens": 50000}' | jq .
 ```
@@ -160,7 +160,7 @@ curl -s -X POST $NEXUS_API_URL/api/projects/$NEXUS_PROJECT_ID/agents \
 ### 5. Record a decision
 
 ```bash
-curl -s -X POST $NEXUS_API_URL/api/projects/$NEXUS_PROJECT_ID/decisions \
+curl -s -X POST $DECIGRAPH_API_URL/api/projects/$DECIGRAPH_PROJECT_ID/decisions \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Use PostgreSQL as primary database",
@@ -176,11 +176,11 @@ curl -s -X POST $NEXUS_API_URL/api/projects/$NEXUS_PROJECT_ID/decisions \
 ### 6. Compile context before a task
 
 ```bash
-curl -s -X POST $NEXUS_API_URL/api/compile \
+curl -s -X POST $DECIGRAPH_API_URL/api/compile \
   -H "Content-Type: application/json" \
   -d '{
     "agent_name": "alice",
-    "project_id": "'$NEXUS_PROJECT_ID'",
+    "project_id": "'$DECIGRAPH_PROJECT_ID'",
     "task_description": "Design the data layer for user authentication"
   }' | jq .formatted_markdown
 ```
@@ -191,7 +191,7 @@ curl -s -X POST $NEXUS_API_URL/api/compile \
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Nexus Platform                          │
+│                         DeciGraph Platform                          │
 │                                                                 │
 │   ┌──────────┐   ┌───────────┐   ┌──────────┐   ┌──────────┐  │
 │   │  Claude  │   │LangChain/ │   │ CrewAI / │   │  CLI /   │  │
@@ -231,18 +231,18 @@ curl -s -X POST $NEXUS_API_URL/api/compile \
 
 ## MCP Quickstart (Claude Desktop)
 
-Add Nexus to your Claude Desktop configuration:
+Add DeciGraph to your Claude Desktop configuration:
 
 ```json
 // ~/Library/Application Support/Claude/claude_desktop_config.json
 {
   "mcpServers": {
-    "nexus": {
+    "decigraph": {
       "command": "node",
-      "args": ["/path/to/nexus/packages/mcp/dist/mcp/src/index.js"],
+      "args": ["/path/to/decigraph/packages/mcp/dist/mcp/src/index.js"],
       "env": {
-        "NEXUS_API_URL": "http://localhost:3100",
-        "NEXUS_PROJECT_ID": "your-project-uuid"
+        "DECIGRAPH_API_URL": "http://localhost:3100",
+        "DECIGRAPH_PROJECT_ID": "your-project-uuid"
       }
     }
   }
@@ -251,18 +251,18 @@ Add Nexus to your Claude Desktop configuration:
 
 Restart Claude Desktop. You now have 12 tools available:
 
-- `nexus_compile_context` — load relevant decisions before any task
-- `nexus_record_decision` — record a decision into the graph
-- `nexus_auto_capture` — extract decisions from a conversation automatically
-- `nexus_search_decisions` — semantic search across all decisions
-- `nexus_supersede_decision` — replace an outdated decision
-- `nexus_get_impact` — analyse downstream impact of a change
-- `nexus_get_contradictions` — surface conflicting decisions
-- `nexus_get_graph` — traverse the decision graph
-- `nexus_record_session` — save a session summary
-- `nexus_get_notifications` — read pending alerts
-- `nexus_feedback` — teach Nexus which decisions were useful
-- `nexus_list_decisions` — browse decisions with filters
+- `decigraph_compile_context` — load relevant decisions before any task
+- `decigraph_record_decision` — record a decision into the graph
+- `decigraph_auto_capture` — extract decisions from a conversation automatically
+- `decigraph_search_decisions` — semantic search across all decisions
+- `decigraph_supersede_decision` — replace an outdated decision
+- `decigraph_get_impact` — analyse downstream impact of a change
+- `decigraph_get_contradictions` — surface conflicting decisions
+- `decigraph_get_graph` — traverse the decision graph
+- `decigraph_record_session` — save a session summary
+- `decigraph_get_notifications` — read pending alerts
+- `decigraph_feedback` — teach DeciGraph which decisions were useful
+- `decigraph_list_decisions` — browse decisions with filters
 
 See [docs/mcp-setup.md](docs/mcp-setup.md) for full configuration options and Cursor integration.
 
@@ -273,20 +273,20 @@ See [docs/mcp-setup.md](docs/mcp-setup.md) for full configuration options and Cu
 ### LangChain
 
 ```python
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusMemory
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphMemory
 
-client = NexusClient(base_url="http://localhost:3100")
-memory = NexusMemory(client=client, project_id="proj-id", agent_name="coder")
+client = DeciGraphClient(base_url="http://localhost:3100")
+memory = DeciGraphMemory(client=client, project_id="proj-id", agent_name="coder")
 chain = LLMChain(llm=llm, prompt=prompt, memory=memory)
 ```
 
 ### LangGraph
 
 ```python
-from nexus_langchain import NexusCheckpointer
+from decigraph_langchain import DeciGraphCheckpointer
 
-checkpointer = NexusCheckpointer(client=client, project_id="proj-id", agent_name="orchestrator")
+checkpointer = DeciGraphCheckpointer(client=client, project_id="proj-id", agent_name="orchestrator")
 app = graph.compile(checkpointer=checkpointer)
 result = app.invoke({"messages": [...]}, config={"configurable": {"thread_id": "t1"}})
 ```
@@ -294,19 +294,19 @@ result = app.invoke({"messages": [...]}, config={"configurable": {"thread_id": "
 ### CrewAI
 
 ```python
-from nexus_crewai import NexusCrewMemory, NexusCrewCallback
+from decigraph_crewai import DeciGraphCrewMemory, DeciGraphCrewCallback
 
-memory = NexusCrewMemory(client=client, project_id="proj-id", agent_name="researcher")
-cb = NexusCrewCallback(client=client, project_id="proj-id")
+memory = DeciGraphCrewMemory(client=client, project_id="proj-id", agent_name="researcher")
+cb = DeciGraphCrewCallback(client=client, project_id="proj-id")
 crew = Crew(agents=[...], tasks=[...], task_callback=cb.on_task_complete)
 ```
 
 ### AutoGen
 
 ```python
-from nexus_autogen import NexusAutoGenMemory
+from decigraph_autogen import DeciGraphAutoGenMemory
 
-mem = NexusAutoGenMemory(client=client, project_id="proj-id", agent_name="assistant")
+mem = DeciGraphAutoGenMemory(client=client, project_id="proj-id", agent_name="assistant")
 system_ctx = mem.get_context()
 assistant = autogen.AssistantAgent(name="assistant",
     system_message=f"{system_ctx}\n\nYou are a helpful assistant.")
@@ -315,9 +315,9 @@ assistant = autogen.AssistantAgent(name="assistant",
 ### OpenAI Agents SDK
 
 ```python
-from nexus_openai_agents import NexusAgentHooks
+from decigraph_openai_agents import DeciGraphAgentHooks
 
-hooks = NexusAgentHooks(client=client, project_id="proj-id", agent_name="assistant")
+hooks = DeciGraphAgentHooks(client=client, project_id="proj-id", agent_name="assistant")
 agent = Agent(name="assistant", instructions="You are helpful.", hooks=hooks)
 result = await Runner.run(agent, "Help me design the API.")
 ```
@@ -327,9 +327,9 @@ result = await Runner.run(agent, "Help me design the API.")
 ## Python SDK
 
 ```python
-from nexus_sdk import NexusClient
+from decigraph_sdk import DeciGraphClient
 
-client = NexusClient(base_url="http://localhost:3100", api_key="nx_...")
+client = DeciGraphClient(base_url="http://localhost:3100", api_key="nx_...")
 
 # Create a project
 project = client.create_project("My Project")
@@ -366,9 +366,9 @@ print(f"Extracted {result['decisions_extracted']} decisions")
 ## TypeScript SDK
 
 ```typescript
-import { NexusClient } from '@nexus/sdk';
+import { DeciGraphClient } from '@decigraph/sdk';
 
-const client = new NexusClient({ baseUrl: 'http://localhost:3100' });
+const client = new DeciGraphClient({ baseUrl: 'http://localhost:3100' });
 
 // Create a project and register an agent
 const project = await client.createProject({ name: 'My Project' });
@@ -404,47 +404,47 @@ console.log(ctx.formatted_markdown);
 
 ```bash
 # Install globally
-npm install -g @nexus/cli
+npm install -g @decigraph/cli
 
 # Set environment
-export NEXUS_API_URL=http://localhost:3100
-export NEXUS_PROJECT_ID=your-project-id
+export DECIGRAPH_API_URL=http://localhost:3100
+export DECIGRAPH_PROJECT_ID=your-project-id
 
 # Create a project
-nexus init "My Project" --description "Production AI team"
+decigraph init "My Project" --description "Production AI team"
 
 # List decisions
-nexus decisions list --status active --tags architecture
+decigraph decisions list --status active --tags architecture
 
 # Add a decision interactively
-nexus decisions add
+decigraph decisions add
 
 # Semantic search
-nexus decisions search "authentication approach"
+decigraph decisions search "authentication approach"
 
 # View decision graph as ASCII tree
-nexus decisions graph <decision-id> --depth 3
+decigraph decisions graph <decision-id> --depth 3
 
 # Analyse downstream impact
-nexus decisions impact <decision-id>
+decigraph decisions impact <decision-id>
 
 # Supersede a decision
-nexus decisions supersede <old-decision-id>
+decigraph decisions supersede <old-decision-id>
 
 # Compile context for an agent
-nexus compile alice "Implement the payments module" --markdown
+decigraph compile alice "Implement the payments module" --markdown
 
 # Distil decisions from a conversation file
-nexus distill ./session.txt --agent alice --session
+decigraph distill ./session.txt --agent alice --session
 
 # View project stats
-nexus status
+decigraph status
 
 # Check for contradictions
-nexus contradictions
+decigraph contradictions
 
 # Show agent notifications
-nexus notifications --agent <agent-id>
+decigraph notifications --agent <agent-id>
 ```
 
 ---
@@ -482,8 +482,8 @@ Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before openin
 ### Development Setup
 
 ```bash
-git clone https://github.com/perlantir/nexus.git
-cd nexus
+git clone https://github.com/perlantir/decigraph.git
+cd decigraph
 pnpm install
 cp .env.example .env
 # Fill in API keys
@@ -494,7 +494,7 @@ pnpm dev                        # start server in watch mode
 ### Package Structure
 
 ```
-nexus/
+decigraph/
 ├── packages/
 │   ├── core/        TypeScript core library (scoring, context compiler, roles)
 │   ├── server/      Hono REST API server
@@ -541,4 +541,4 @@ pnpm test --filter core  # run core package tests only
 
 Apache License 2.0 — see [LICENSE](LICENSE) for full text.
 
-You are free to use, modify, and distribute Nexus in commercial projects. Attribution is appreciated but not required.
+You are free to use, modify, and distribute DeciGraph in commercial projects. Attribution is appreciated but not required.

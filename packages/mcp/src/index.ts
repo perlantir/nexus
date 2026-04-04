@@ -4,24 +4,24 @@
 
 import path from 'node:path';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { NexusClient } from '../../sdk/src/index.js';
-import { createNexusServer } from './server.js';
+import { DeciGraphClient } from '../../sdk/src/index.js';
+import { createDeciGraphServer } from './server.js';
 
-const API_URL = process.env['NEXUS_API_URL'] ?? 'http://localhost:3100';
-const API_KEY = process.env['NEXUS_API_KEY'];
-let PROJECT_ID = process.env['NEXUS_PROJECT_ID'] ?? '';
+const API_URL = process.env['DECIGRAPH_API_URL'] ?? 'http://localhost:3100';
+const API_KEY = process.env['DECIGRAPH_API_KEY'];
+let PROJECT_ID = process.env['DECIGRAPH_PROJECT_ID'] ?? '';
 
 // Use stderr to avoid polluting the stdio MCP stream
 function log(msg: string): void {
-  process.stderr.write(`[nexus-mcp] ${msg}\n`);
+  process.stderr.write(`[decigraph-mcp] ${msg}\n`);
 }
 
 function logError(msg: string, err?: unknown): void {
   const detail = err instanceof Error ? err.message : String(err ?? '');
-  process.stderr.write(`[nexus-mcp] ERROR: ${msg}${detail ? ` — ${detail}` : ''}\n`);
+  process.stderr.write(`[decigraph-mcp] ERROR: ${msg}${detail ? ` — ${detail}` : ''}\n`);
 }
 
-async function ensureProject(client: NexusClient): Promise<string> {
+async function ensureProject(client: DeciGraphClient): Promise<string> {
   if (PROJECT_ID) {
     try {
       await client.getProject(PROJECT_ID);
@@ -35,28 +35,28 @@ async function ensureProject(client: NexusClient): Promise<string> {
 
   // Auto-create a project named after the current working directory
   const projectName = path.basename(process.cwd());
-  log(`No NEXUS_PROJECT_ID set. Creating project "${projectName}"...`);
+  log(`No DECIGRAPH_PROJECT_ID set. Creating project "${projectName}"...`);
 
   const project = await client.createProject({
     name: projectName,
-    description: `Auto-created by nexus-mcp for directory: ${process.cwd()}`,
+    description: `Auto-created by decigraph-mcp for directory: ${process.cwd()}`,
     metadata: {
       auto_created: true,
       cwd: process.cwd(),
-      created_by: 'nexus-mcp',
+      created_by: 'decigraph-mcp',
     },
   });
 
   log(`Project created: ${project.id} (name: "${project.name}")`);
   log(`\n  ╔══════════════════════════════════════════╗`);
   log(`  ║  Save your project ID for future use:    ║`);
-  log(`  ║  NEXUS_PROJECT_ID=${project.id}  ║`);
+  log(`  ║  DECIGRAPH_PROJECT_ID=${project.id}  ║`);
   log(`  ╚══════════════════════════════════════════╝\n`);
 
   return project.id;
 }
 
-async function ensureDefaultAgent(client: NexusClient, projectId: string): Promise<string> {
+async function ensureDefaultAgent(client: DeciGraphClient, projectId: string): Promise<string> {
   try {
     const agents = await client.listAgents(projectId);
     const existing = agents.find((a) => a.name === 'developer' || a.role === 'builder');
@@ -81,10 +81,10 @@ async function ensureDefaultAgent(client: NexusClient, projectId: string): Promi
 }
 
 async function main(): Promise<void> {
-  log(`Starting Nexus MCP server`);
+  log(`Starting DeciGraph MCP server`);
   log(`API URL: ${API_URL}`);
 
-  const client = new NexusClient({
+  const client = new DeciGraphClient({
     baseUrl: API_URL,
     apiKey: API_KEY,
   });
@@ -94,13 +94,13 @@ async function main(): Promise<void> {
     const health = await client.health();
     log(`API healthy: ${health.status} (v${health.version})`);
   } catch (err) {
-    logError(`Cannot reach Nexus API at ${API_URL}. Is the server running?`, err);
+    logError(`Cannot reach DeciGraph API at ${API_URL}. Is the server running?`, err);
   }
 
   PROJECT_ID = await ensureProject(client);
   const agentId = await ensureDefaultAgent(client, PROJECT_ID);
 
-  const server = createNexusServer({
+  const server = createDeciGraphServer({
     apiUrl: API_URL,
     apiKey: API_KEY,
     projectId: PROJECT_ID,
@@ -110,7 +110,7 @@ async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  log(`Nexus MCP server running on stdio (project: ${PROJECT_ID})`);
+  log(`DeciGraph MCP server running on stdio (project: ${PROJECT_ID})`);
 }
 
 main().catch((err: unknown) => {

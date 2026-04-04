@@ -1,11 +1,11 @@
 {
-  "name": "@nexus/dashboard",
+  "name": "@decigraph/dashboard",
   "version": "0.1.0",
-  "description": "React web dashboard for Nexus",
+  "description": "React web dashboard for DeciGraph",
   "author": "Perlantir",
   "repository": {
     "type": "git",
-    "url": "https://github.com/perlantir/nexus"
+    "url": "https://github.com/perlantir/decigraph"
   },
   "type": "module",
   "scripts": {

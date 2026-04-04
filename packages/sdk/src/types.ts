@@ -1,4 +1,4 @@
-// SDK-local type definitions — mirrors core types without depending on @nexus/core,
+// SDK-local type definitions — mirrors core types without depending on @decigraph/core,
 // so the SDK works in any environment (browser, edge, Node).
 
 export interface Project {
@@ -395,18 +395,18 @@ export interface DecisionListFilters {
   offset?: number;
 }
 
-export interface NexusClientOptions {
+export interface DeciGraphClientOptions {
   baseUrl: string;
   apiKey?: string;
 }
 
-export interface NexusError {
+export interface DeciGraphError {
   code: string;
   message: string;
   details?: unknown;
 }
 
-export class NexusApiError extends Error {
+export class DeciGraphApiError extends Error {
   constructor(
     message: string,
     public readonly code: string,
@@ -414,6 +414,6 @@ export class NexusApiError extends Error {
     public readonly details?: unknown,
   ) {
     super(message);
-    this.name = 'NexusApiError';
+    this.name = 'DeciGraphApiError';
   }
 }

@@ -1,11 +1,11 @@
 {
-  "name": "@nexus/core",
+  "name": "@decigraph/core",
   "version": "0.1.0",
   "description": "Core engine: decision graph, context compiler, change propagator, distillery",
   "author": "Perlantir",
   "repository": {
     "type": "git",
-    "url": "https://github.com/perlantir/nexus"
+    "url": "https://github.com/perlantir/decigraph"
   },
   "type": "module",
   "main": "./dist/index.js",

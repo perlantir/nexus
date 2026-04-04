@@ -7,7 +7,7 @@ import {
   parseSession,
   parseNotification,
 } from '../db/parsers.js';
-import { NexusError, NotFoundError } from '../types.js';
+import { DeciGraphError, NotFoundError } from '../types.js';
 import { computeFreshness, blendScores, computeEffectiveConfidence } from '../temporal/index.js';
 import type {
   Agent,
@@ -623,7 +623,7 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
     await writeCache(agent.id, taskHash, pkg, includedDecisionIds, includedArtifactIds);
   } catch (err) {
     // Cache write failures are non-fatal
-    console.warn('[nexus:context-compiler] Cache write failed:', (err as Error).message);
+    console.warn('[decigraph:context-compiler] Cache write failed:', (err as Error).message);
   }
 
   try {
@@ -636,11 +636,11 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
       compilation_time_ms: pkg.compilation_time_ms,
     });
   } catch (err) {
-    console.warn('[nexus:context-compiler] Audit log write failed:', (err as Error).message);
+    console.warn('[decigraph:context-compiler] Audit log write failed:', (err as Error).message);
   }
 
   return pkg;
 }
 
 // Re-export scoreDecision and cosineSimilarity for external use
-export { NexusError };
+export { DeciGraphError };

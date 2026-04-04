@@ -1,6 +1,6 @@
 import {
-  NexusApiError,
-  type NexusClientOptions,
+  DeciGraphApiError,
+  type DeciGraphClientOptions,
   type Project,
   type CreateProjectInput,
   type Agent,
@@ -33,11 +33,11 @@ import {
   type AuditEntry,
 } from './types.js';
 
-export class NexusClient {
+export class DeciGraphClient {
   private readonly baseUrl: string;
   private readonly apiKey?: string;
 
-  constructor(opts: NexusClientOptions) {
+  constructor(opts: DeciGraphClientOptions) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, '');
     this.apiKey = opts.apiKey;
   }
@@ -83,7 +83,7 @@ export class NexusClient {
     try {
       res = await fetch(url, opts);
     } catch (err) {
-      throw new NexusApiError(`Network error: ${(err as Error).message}`, 'NETWORK_ERROR', 0);
+      throw new DeciGraphApiError(`Network error: ${(err as Error).message}`, 'NETWORK_ERROR', 0);
     }
 
     if (!res.ok) {
@@ -95,7 +95,7 @@ export class NexusClient {
       }
       const code = errorBody.error?.code ?? 'API_ERROR';
       const message = errorBody.error?.message ?? res.statusText;
-      throw new NexusApiError(message, code, res.status, errorBody.error?.details);
+      throw new DeciGraphApiError(message, code, res.status, errorBody.error?.details);
     }
 
     // 204 No Content

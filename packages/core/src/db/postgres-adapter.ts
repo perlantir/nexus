@@ -78,7 +78,7 @@ export class PostgresAdapter implements DatabaseAdapter {
     this._pool = this._buildPool();
     const ok = await this.healthCheck();
     if (!ok) {
-      throw new Error('[nexus/postgres] Database health check failed on connect');
+      throw new Error('[decigraph/postgres] Database health check failed on connect');
     }
   }
 
@@ -174,7 +174,7 @@ export class PostgresAdapter implements DatabaseAdapter {
   async runMigrations(migrationsDir: string): Promise<void> {
     // Ensure tracking table exists (PostgreSQL dialect).
     await this.query(`
-      CREATE TABLE IF NOT EXISTS _nexus_migrations (
+      CREATE TABLE IF NOT EXISTS _decigraph_migrations (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
         applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -182,7 +182,7 @@ export class PostgresAdapter implements DatabaseAdapter {
     `);
 
     const applied = await this.query<{ name: string }>(
-      'SELECT name FROM _nexus_migrations ORDER BY id',
+      'SELECT name FROM _decigraph_migrations ORDER BY id',
     );
     const appliedSet = new Set(applied.rows.map((r) => r.name));
 
@@ -199,10 +199,10 @@ export class PostgresAdapter implements DatabaseAdapter {
 
       await this.transaction(async (txQuery) => {
         await txQuery(sql);
-        await txQuery('INSERT INTO _nexus_migrations (name) VALUES (?)', [file]);
+        await txQuery('INSERT INTO _decigraph_migrations (name) VALUES (?)', [file]);
       });
 
-      console.warn(`[nexus/postgres] Migration applied: ${file}`);
+      console.warn(`[decigraph/postgres] Migration applied: ${file}`);
     }
   }
 
@@ -233,7 +233,7 @@ export class PostgresAdapter implements DatabaseAdapter {
     });
 
     pool.on('error', (err) => {
-      console.error('[nexus/postgres] Unexpected pool error:', (err as Error).message);
+      console.error('[decigraph/postgres] Unexpected pool error:', (err as Error).message);
     });
 
     return pool;

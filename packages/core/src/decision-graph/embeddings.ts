@@ -22,7 +22,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   const ctx = getEmbeddingClient();
 
   if (!ctx) {
-    console.warn('[nexus:embeddings] No embedding provider configured — returning zero-vector.');
+    console.warn('[decigraph:embeddings] No embedding provider configured — returning zero-vector.');
     return new Array(EMBEDDING_DIM).fill(0) as number[];
   }
 
@@ -33,7 +33,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     });
     return response.data[0]?.embedding ?? (new Array(EMBEDDING_DIM).fill(0) as number[]);
   } catch (err) {
-    console.error('[nexus:embeddings] Failed to generate embedding:', err);
+    console.error('[decigraph:embeddings] Failed to generate embedding:', err);
     throw err;
   }
 }

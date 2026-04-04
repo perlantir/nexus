@@ -119,7 +119,7 @@ describe('Webhook Dispatcher', () => {
       expect(embed.title).toContain('Contradiction Detected');
       expect(embed.description).toContain('Use JWT for auth');
       expect(embed.color).toBe(15158332); // red for contradictions
-      expect(embed.footer.text).toBe('Nexus Decision Memory');
+      expect(embed.footer.text).toBe('DeciGraph Decision Memory');
       expect(embed.fields.length).toBeGreaterThanOrEqual(2);
     });
 
@@ -208,12 +208,12 @@ describe('Webhook Dispatcher', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const callArgs = mockFetch.mock.calls[0];
       const headers = callArgs[1].headers as Record<string, string>;
-      expect(headers['X-Nexus-Signature']).toBeDefined();
+      expect(headers['X-DeciGraph-Signature']).toBeDefined();
 
       // Verify the signature matches
       const body = callArgs[1].body as string;
       const expected = createHmac('sha256', secret).update(body).digest('hex');
-      expect(headers['X-Nexus-Signature']).toBe(expected);
+      expect(headers['X-DeciGraph-Signature']).toBe(expected);
     });
 
     it('handles fetch timeout gracefully', async () => {

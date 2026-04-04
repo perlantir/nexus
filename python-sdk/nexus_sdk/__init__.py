@@ -1,13 +1,13 @@
 """
 nexus-sdk
 =========
-Official Python SDK for the Nexus multi-agent memory and decision platform.
+Official Python SDK for the DeciGraph multi-agent memory and decision platform.
 
 Quick start::
 
-    from nexus_sdk import NexusClient
+    from nexus_sdk import DeciGraphClient
 
-    client = NexusClient(base_url="http://localhost:3100", api_key="my-key")
+    client = DeciGraphClient(base_url="http://localhost:3100", api_key="my-key")
 
     project = client.create_project("My Project")
     decision = client.create_decision(
@@ -24,14 +24,14 @@ Quick start::
     )
 """
 
-from .client import NexusClient
+from .client import DeciGraphClient
 from .exceptions import (
-    NexusApiError,
-    NexusAuthError,
-    NexusConnectionError,
-    NexusError,
-    NexusNotFoundError,
-    NexusValidationError,
+    DeciGraphApiError,
+    DeciGraphAuthError,
+    DeciGraphConnectionError,
+    DeciGraphError,
+    DeciGraphNotFoundError,
+    DeciGraphValidationError,
 )
 from .types import (
     Agent,
@@ -54,14 +54,14 @@ __version__ = "0.1.0"
 
 __all__ = [
     # Client
-    "NexusClient",
+    "DeciGraphClient",
     # Exceptions
-    "NexusError",
-    "NexusApiError",
-    "NexusNotFoundError",
-    "NexusAuthError",
-    "NexusValidationError",
-    "NexusConnectionError",
+    "DeciGraphError",
+    "DeciGraphApiError",
+    "DeciGraphNotFoundError",
+    "DeciGraphAuthError",
+    "DeciGraphValidationError",
+    "DeciGraphConnectionError",
     # Types
     "Project",
     "Agent",

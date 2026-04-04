@@ -1,15 +1,15 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { NexusClient } from '../../../sdk/src/index.js';
-import type { NexusServerConfig } from '../server.js';
+import type { DeciGraphClient } from '../../../sdk/src/index.js';
+import type { DeciGraphServerConfig } from '../server.js';
 
 export function registerGraphTools(
   server: McpServer,
-  client: NexusClient,
-  config: NexusServerConfig,
+  client: DeciGraphClient,
+  config: DeciGraphServerConfig,
 ): void {
   server.registerTool(
-    'nexus_get_graph',
+    'decigraph_get_graph',
     {
       title: 'Get decision graph',
       description:
@@ -47,7 +47,7 @@ export function registerGraphTools(
   );
 
   server.registerTool(
-    'nexus_get_impact',
+    'decigraph_get_impact',
     {
       title: 'Get impact analysis',
       description:
@@ -80,7 +80,7 @@ export function registerGraphTools(
   );
 
   server.registerTool(
-    'nexus_get_contradictions',
+    'decigraph_get_contradictions',
     {
       title: 'Get contradictions',
       description: 'Retrieves detected contradictions between decisions in the project.',

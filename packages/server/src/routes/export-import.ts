@@ -1,7 +1,7 @@
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
-import { parseDecision, parseAgent, parseEdge, parseContradiction } from '@nexus/core/db/parsers.js';
-import { NotFoundError, ValidationError } from '@nexus/core/types.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { parseDecision, parseAgent, parseEdge, parseContradiction } from '@decigraph/core/db/parsers.js';
+import { NotFoundError, ValidationError } from '@decigraph/core/types.js';
 import { requireUUID, mapDbError, logAudit } from './validation.js';
 import { randomUUID } from 'node:crypto';
 import { generateEmbedding } from './validation.js';
@@ -11,7 +11,7 @@ import { generateEmbedding } from './validation.js';
 // ---------------------------------------------------------------------------
 
 interface ExportPayload {
-  nexus_export_version: string;
+  decigraph_export_version: string;
   exported_at: string;
   project: {
     name: string;
@@ -132,7 +132,7 @@ export function registerExportImportRoutes(app: Hono): void {
 
     // Build export
     const exportData: ExportPayload = {
-      nexus_export_version: '1.0',
+      decigraph_export_version: '1.0',
       exported_at: new Date().toISOString(),
       project: {
         name: proj.name as string,
@@ -218,8 +218,8 @@ export function registerExportImportRoutes(app: Hono): void {
     const db = getDb();
     const body = await c.req.json<ExportPayload>();
 
-    if (!body.nexus_export_version || !body.project) {
-      throw new ValidationError('Invalid export format: missing nexus_export_version or project');
+    if (!body.decigraph_export_version || !body.project) {
+      throw new ValidationError('Invalid export format: missing decigraph_export_version or project');
     }
 
     const warnings: string[] = [];

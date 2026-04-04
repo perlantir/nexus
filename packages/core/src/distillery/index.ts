@@ -27,7 +27,7 @@ export async function distill(
   sessionId?: string,
 ): Promise<DistilleryResult> {
   if (!conversationText.trim()) {
-    console.warn('[nexus:distillery] Empty conversation text; pipeline skipped.');
+    console.warn('[decigraph:distillery] Empty conversation text; pipeline skipped.');
     return {
       decisions_extracted: 0,
       contradictions_found: 0,
@@ -41,7 +41,7 @@ export async function distill(
   try {
     extracted = await extractDecisions(conversationText);
   } catch (err) {
-    console.error('[nexus:distillery] Stage 1 (extraction) failed:', err);
+    console.error('[decigraph:distillery] Stage 1 (extraction) failed:', err);
     extracted = [];
   }
 
@@ -50,7 +50,7 @@ export async function distill(
   try {
     deduped = await deduplicateDecisions(projectId, extracted);
   } catch (err) {
-    console.error('[nexus:distillery] Stage 2 (deduplication) failed:', err);
+    console.error('[decigraph:distillery] Stage 2 (deduplication) failed:', err);
     deduped = extracted;
   }
 
@@ -59,7 +59,7 @@ export async function distill(
   try {
     createdDecisions = await integrateDecisions(projectId, deduped, sessionId);
   } catch (err) {
-    console.error('[nexus:distillery] Stage 4 (graph integration) failed:', err);
+    console.error('[decigraph:distillery] Stage 4 (graph integration) failed:', err);
     createdDecisions = [];
   }
 
@@ -68,7 +68,7 @@ export async function distill(
   try {
     contradictions = await detectContradictions(projectId, createdDecisions);
   } catch (err) {
-    console.error('[nexus:distillery] Stage 3 (contradiction detection) failed:', err);
+    console.error('[decigraph:distillery] Stage 3 (contradiction detection) failed:', err);
     contradictions = [];
   }
 
@@ -86,7 +86,7 @@ export async function distill(
       createdDecisions,
     );
   } catch (err) {
-    console.error('[nexus:distillery] Stage 5 (session summary) failed:', err);
+    console.error('[decigraph:distillery] Stage 5 (session summary) failed:', err);
     sessionSummary = undefined;
   }
 
@@ -96,7 +96,7 @@ export async function distill(
       decisions_extracted: extracted.length,
       contradictions_found: contradictions.length,
       agent_name: agentName,
-    }).catch((err) => console.warn('[nexus:webhook]', (err as Error).message));
+    }).catch((err) => console.warn('[decigraph:webhook]', (err as Error).message));
   }
 
   return {

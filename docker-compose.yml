@@ -1,18 +1,18 @@
 services:
   postgres:
     image: pgvector/pgvector:pg17
-    container_name: nexus-db
+    container_name: decigraph-db
     environment:
-      POSTGRES_USER: nexus
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexus_dev}
-      POSTGRES_DB: nexus
+      POSTGRES_USER: decigraph
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-decigraph_dev}
+      POSTGRES_DB: decigraph
     ports:
       - "5432:5432"
     volumes:
-      - nexus_pgdata:/var/lib/postgresql/data
+      - decigraph_pgdata:/var/lib/postgresql/data
       - ./supabase/migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nexus"]
+      test: ["CMD-SHELL", "pg_isready -U decigraph"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -21,26 +21,26 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nexus-server
+    container_name: decigraph-server
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://nexus:${POSTGRES_PASSWORD:-nexus_dev}@postgres:5432/nexus}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://decigraph:${POSTGRES_PASSWORD:-decigraph_dev}@postgres:5432/decigraph}
       DATABASE_SSL: ${DATABASE_SSL:-false}
       PORT: 3100
       HOST: 0.0.0.0
       NODE_ENV: production
-      NEXUS_API_KEY: ${NEXUS_API_KEY:-}
+      DECIGRAPH_API_KEY: ${DECIGRAPH_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      NEXUS_EMBEDDINGS_URL: ${NEXUS_EMBEDDINGS_URL:-}
-      NEXUS_EMBEDDINGS_KEY: ${NEXUS_EMBEDDINGS_KEY:-}
-      NEXUS_EMBEDDINGS_MODEL: ${NEXUS_EMBEDDINGS_MODEL:-}
-      NEXUS_LLM_URL: ${NEXUS_LLM_URL:-}
-      NEXUS_LLM_KEY: ${NEXUS_LLM_KEY:-}
-      NEXUS_LLM_MODEL: ${NEXUS_LLM_MODEL:-}
+      DECIGRAPH_EMBEDDINGS_URL: ${DECIGRAPH_EMBEDDINGS_URL:-}
+      DECIGRAPH_EMBEDDINGS_KEY: ${DECIGRAPH_EMBEDDINGS_KEY:-}
+      DECIGRAPH_EMBEDDINGS_MODEL: ${DECIGRAPH_EMBEDDINGS_MODEL:-}
+      DECIGRAPH_LLM_URL: ${DECIGRAPH_LLM_URL:-}
+      DECIGRAPH_LLM_KEY: ${DECIGRAPH_LLM_KEY:-}
+      DECIGRAPH_LLM_MODEL: ${DECIGRAPH_LLM_MODEL:-}
       EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-}
       DISTILLERY_PROVIDER: ${DISTILLERY_PROVIDER:-}
     ports:
@@ -56,7 +56,7 @@ services:
       dockerfile: Dockerfile.dashboard
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:3100}
-    container_name: nexus-dashboard
+    container_name: decigraph-dashboard
     depends_on:
       - server
     ports:
@@ -64,4 +64,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  nexus_pgdata:
+  decigraph_pgdata:

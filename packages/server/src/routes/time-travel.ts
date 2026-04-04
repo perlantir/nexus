@@ -1,6 +1,6 @@
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
-import { NotFoundError, ValidationError } from '@nexus/core/types.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { NotFoundError, ValidationError } from '@decigraph/core/types.js';
 import { requireUUID, requireString } from './validation.js';
 
 // ---------------------------------------------------------------------------

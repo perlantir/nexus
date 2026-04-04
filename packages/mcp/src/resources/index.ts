@@ -1,16 +1,16 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { NexusClient } from '../../../sdk/src/index.js';
-import type { NexusServerConfig } from '../server.js';
+import type { DeciGraphClient } from '../../../sdk/src/index.js';
+import type { DeciGraphServerConfig } from '../server.js';
 
 export function registerResources(
   server: McpServer,
-  client: NexusClient,
-  config: NexusServerConfig,
+  client: DeciGraphClient,
+  config: DeciGraphServerConfig,
 ): void {
   server.registerResource(
-    'nexus-decisions',
-    'nexus://decisions',
+    'decigraph-decisions',
+    'decigraph://decisions',
     {
       description: 'All active decisions for the current project in readable list format.',
       mimeType: 'text/plain',
@@ -29,7 +29,7 @@ export function registerResources(
       return {
         contents: [
           {
-            uri: 'nexus://decisions',
+            uri: 'decigraph://decisions',
             mimeType: 'text/plain',
             text:
               lines.length > 0
@@ -42,8 +42,8 @@ export function registerResources(
   );
 
   server.registerResource(
-    'nexus-decision-detail',
-    new ResourceTemplate('nexus://decisions/{id}', { list: undefined }),
+    'decigraph-decision-detail',
+    new ResourceTemplate('decigraph://decisions/{id}', { list: undefined }),
     {
       description: 'Full detail for a single decision by ID.',
       mimeType: 'application/json',
@@ -65,8 +65,8 @@ export function registerResources(
   );
 
   server.registerResource(
-    'nexus-decision-graph',
-    new ResourceTemplate('nexus://decisions/{id}/graph', { list: undefined }),
+    'decigraph-decision-graph',
+    new ResourceTemplate('decigraph://decisions/{id}/graph', { list: undefined }),
     {
       description: 'Decision graph rooted at the given decision ID (depth 2).',
       mimeType: 'application/json',
@@ -88,8 +88,8 @@ export function registerResources(
   );
 
   server.registerResource(
-    'nexus-contradictions',
-    'nexus://contradictions',
+    'decigraph-contradictions',
+    'decigraph://contradictions',
     {
       description: 'All unresolved contradictions detected between project decisions.',
       mimeType: 'application/json',
@@ -100,7 +100,7 @@ export function registerResources(
       return {
         contents: [
           {
-            uri: 'nexus://contradictions',
+            uri: 'decigraph://contradictions',
             mimeType: 'application/json',
             text: JSON.stringify(contradictions, null, 2),
           },
@@ -110,8 +110,8 @@ export function registerResources(
   );
 
   server.registerResource(
-    'nexus-sessions',
-    'nexus://sessions',
+    'decigraph-sessions',
+    'decigraph://sessions',
     {
       description: 'Recent session summaries for the current project.',
       mimeType: 'application/json',
@@ -122,7 +122,7 @@ export function registerResources(
       return {
         contents: [
           {
-            uri: 'nexus://sessions',
+            uri: 'decigraph://sessions',
             mimeType: 'application/json',
             text: JSON.stringify(sessions, null, 2),
           },
@@ -132,8 +132,8 @@ export function registerResources(
   );
 
   server.registerResource(
-    'nexus-agents',
-    'nexus://agents',
+    'decigraph-agents',
+    'decigraph://agents',
     {
       description: 'All agents registered for the current project.',
       mimeType: 'application/json',
@@ -144,7 +144,7 @@ export function registerResources(
       return {
         contents: [
           {
-            uri: 'nexus://agents',
+            uri: 'decigraph://agents',
             mimeType: 'application/json',
             text: JSON.stringify(agents, null, 2),
           },
@@ -154,8 +154,8 @@ export function registerResources(
   );
 
   server.registerResource(
-    'nexus-project-status',
-    'nexus://project/status',
+    'decigraph-project-status',
+    'decigraph://project/status',
     {
       description:
         'Project health overview — decision counts, contradiction count, agent activity.',
@@ -201,7 +201,7 @@ export function registerResources(
       return {
         contents: [
           {
-            uri: 'nexus://project/status',
+            uri: 'decigraph://project/status',
             mimeType: 'text/plain',
             text,
           },

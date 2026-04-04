@@ -7,7 +7,7 @@ set -e
 # Usage: bash scripts/smoke-test.sh
 # ============================================================
 
-API_URL="${NEXUS_API_URL:-http://localhost:3100}"
+API_URL="${DECIGRAPH_API_URL:-http://localhost:3100}"
 PASS=0
 FAIL=0
 WARN=0

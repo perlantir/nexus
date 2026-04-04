@@ -1,8 +1,8 @@
 """
-Nexus SDK — Data Types
+DeciGraph SDK — Data Types
 ======================
-Dataclass and TypedDict definitions for all core Nexus domain objects.
-These mirror the JSON shapes returned by the Nexus REST API.
+Dataclass and TypedDict definitions for all core DeciGraph domain objects.
+These mirror the JSON shapes returned by the DeciGraph REST API.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ def _parse_dt(value: str | datetime | None) -> datetime | None:
 
 @dataclass
 class Project:
-    """A Nexus project that owns agents, decisions, and artefacts."""
+    """A DeciGraph project that owns agents, decisions, and artefacts."""
 
     id: str
     name: str
@@ -58,7 +58,7 @@ class Project:
 
 @dataclass
 class Agent:
-    """An AI agent registered within a Nexus project."""
+    """An AI agent registered within a DeciGraph project."""
 
     id: str
     project_id: str

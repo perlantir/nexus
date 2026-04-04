@@ -23,7 +23,7 @@ export const webhookConnector: SourceConnector = {
       const chunks: ConversationChunk[] = [];
       for (const item of payload) {
         if (!isWebhookPayload(item)) {
-          console.warn('[nexus:webhook] Skipping invalid payload item:', JSON.stringify(item));
+          console.warn('[decigraph:webhook] Skipping invalid payload item:', JSON.stringify(item));
           continue;
         }
         chunks.push(payloadToChunk(item));
@@ -32,7 +32,7 @@ export const webhookConnector: SourceConnector = {
     }
 
     if (!isWebhookPayload(payload)) {
-      console.warn('[nexus:webhook] Invalid webhook payload received:', JSON.stringify(payload));
+      console.warn('[decigraph:webhook] Invalid webhook payload received:', JSON.stringify(payload));
       return [];
     }
 

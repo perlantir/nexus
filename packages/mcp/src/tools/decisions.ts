@@ -1,19 +1,19 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { NexusClient } from '../../../sdk/src/index.js';
-import type { NexusServerConfig } from '../server.js';
+import type { DeciGraphClient } from '../../../sdk/src/index.js';
+import type { DeciGraphServerConfig } from '../server.js';
 
 export function registerDecisionTools(
   server: McpServer,
-  client: NexusClient,
-  config: NexusServerConfig,
+  client: DeciGraphClient,
+  config: DeciGraphServerConfig,
 ): void {
   server.registerTool(
-    'nexus_record_decision',
+    'decigraph_record_decision',
     {
       title: 'Record a decision',
       description:
-        'Manually records an important decision into the Nexus knowledge graph. Use this for explicit architectural, product, or implementation decisions.',
+        'Manually records an important decision into the DeciGraph knowledge graph. Use this for explicit architectural, product, or implementation decisions.',
       inputSchema: {
         title: z.string().min(1).describe('Short, descriptive title for the decision.'),
         description: z.string().min(1).describe('What was decided and the full context.'),
@@ -91,7 +91,7 @@ export function registerDecisionTools(
   );
 
   server.registerTool(
-    'nexus_list_decisions',
+    'decigraph_list_decisions',
     {
       title: 'List decisions',
       description:
@@ -138,7 +138,7 @@ export function registerDecisionTools(
   );
 
   server.registerTool(
-    'nexus_search_decisions',
+    'decigraph_search_decisions',
     {
       title: 'Search decisions',
       description:
@@ -187,7 +187,7 @@ export function registerDecisionTools(
   );
 
   server.registerTool(
-    'nexus_supersede_decision',
+    'decigraph_supersede_decision',
     {
       title: 'Supersede a decision',
       description:

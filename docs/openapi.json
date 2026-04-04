@@ -1,12 +1,12 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Nexus API",
-    "description": "Decision memory layer for AI agent teams. Nexus provides shared memory, context compilation, contradiction detection, and decision tracking for multi-agent AI systems.",
+    "title": "DeciGraph API",
+    "description": "Decision memory layer for AI agent teams. DeciGraph provides shared memory, context compilation, contradiction detection, and decision tracking for multi-agent AI systems.",
     "version": "1.0.0",
     "contact": {
       "name": "Perlantir",
-      "url": "https://github.com/perlantir/nexus"
+      "url": "https://github.com/perlantir/decigraph"
     },
     "license": {
       "name": "Apache-2.0"
@@ -576,7 +576,7 @@
           "Projects"
         ],
         "summary": "Create project",
-        "description": "Create a new Nexus project.",
+        "description": "Create a new DeciGraph project.",
         "requestBody": {
           "required": true,
           "content": {

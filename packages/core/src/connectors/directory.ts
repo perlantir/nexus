@@ -72,7 +72,7 @@ async function readChunk(filePath: string): Promise<ConversationChunk | null> {
   try {
     text = await fs.readFile(filePath, 'utf-8');
   } catch (err) {
-    console.error('[nexus:directory] Failed to read file:', filePath, err);
+    console.error('[decigraph:directory] Failed to read file:', filePath, err);
     return null;
   }
 
@@ -101,11 +101,11 @@ export const directoryConnector: SourceConnector = {
 
   async *watch(config: WatchConfig): AsyncIterable<ConversationChunk> {
     const dirPath = config.path;
-    const pattern = config.pattern ?? process.env['NEXUS_WATCH_PATTERN'];
+    const pattern = config.pattern ?? process.env['DECIGRAPH_WATCH_PATTERN'];
     const intervalMs = config.poll_interval_ms ?? 30_000;
 
     console.warn(
-      `[nexus:directory] Starting watch on ${dirPath}` +
+      `[decigraph:directory] Starting watch on ${dirPath}` +
         (pattern ? ` (pattern: ${pattern})` : '') +
         ` (interval: ${intervalMs}ms)`,
     );

@@ -6,19 +6,19 @@ import { resolve } from 'node:path';
 import { getClient, getProjectId, handleError } from '../cli-helpers.js';
 
 export function registerExportImportCommands(program: Command): void {
-  // ── nexus export ──────────────────────────────────────────────────────
+  // ── decigraph export ──────────────────────────────────────────────────────
   program
     .command('export')
     .description('Export a project as JSON (writes to stdout)')
-    .option('-p, --project <id>', 'Project ID (defaults to NEXUS_PROJECT_ID)')
+    .option('-p, --project <id>', 'Project ID (defaults to DECIGRAPH_PROJECT_ID)')
     .action(async (opts: { project?: string }) => {
       const client = getClient();
       const projectId = opts.project ?? getProjectId();
       const spinner = ora('Exporting project...').start();
 
       try {
-        const baseUrl = process.env.NEXUS_API_URL ?? 'http://localhost:3000';
-        const apiKey = process.env.NEXUS_API_KEY;
+        const baseUrl = process.env.DECIGRAPH_API_URL ?? 'http://localhost:3000';
+        const apiKey = process.env.DECIGRAPH_API_KEY;
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
@@ -42,7 +42,7 @@ export function registerExportImportCommands(program: Command): void {
       }
     });
 
-  // ── nexus import ──────────────────────────────────────────────────────
+  // ── decigraph import ──────────────────────────────────────────────────────
   program
     .command('import [file]')
     .description('Import a project from a JSON export file (or stdin)')
@@ -84,8 +84,8 @@ export function registerExportImportCommands(program: Command): void {
           process.exit(1);
         }
 
-        const baseUrl = process.env.NEXUS_API_URL ?? 'http://localhost:3000';
-        const apiKey = process.env.NEXUS_API_KEY;
+        const baseUrl = process.env.DECIGRAPH_API_URL ?? 'http://localhost:3000';
+        const apiKey = process.env.DECIGRAPH_API_KEY;
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 

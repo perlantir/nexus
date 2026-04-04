@@ -1,5 +1,5 @@
-import { getDb } from '@nexus/core/db/index.js';
-import { ValidationError, ConflictError } from '@nexus/core/types.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { ValidationError, ConflictError } from '@decigraph/core/types.js';
 
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -65,7 +65,7 @@ export function mapDbError(err: unknown): never {
 }
 
 // Re-export embedding from core (uses centralized LLM config)
-import { generateEmbedding as coreGenerateEmbedding } from '@nexus/core/decision-graph/embeddings.js';
+import { generateEmbedding as coreGenerateEmbedding } from '@decigraph/core/decision-graph/embeddings.js';
 
 export async function generateEmbedding(text: string): Promise<number[] | null> {
   try {
@@ -93,6 +93,6 @@ export function logAudit(
     projectId,
     JSON.stringify(details),
   ]).catch((err: Error) => {
-    console.error('[nexus] Audit log error:', err.message);
+    console.error('[decigraph] Audit log error:', err.message);
   });
 }

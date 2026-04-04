@@ -59,13 +59,13 @@ export async function createAdapter(config?: DatabaseConfig): Promise<DatabaseAd
   // Determine the SQLite file path:
   //  1. config.sqlitePath
   //  2. DATABASE_URL env var (if it looks like a file path, not a pg:// URL)
-  //  3. Default: './nexus.db'
+  //  3. Default: './decigraph.db'
   const sqlitePath =
     config?.sqlitePath ??
     (process.env['DATABASE_URL'] && !process.env['DATABASE_URL'].startsWith('postgres')
       ? process.env['DATABASE_URL']
       : undefined) ??
-    './nexus.db';
+    './decigraph.db';
 
   return new SQLiteAdapter(sqlitePath);
 }

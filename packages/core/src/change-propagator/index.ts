@@ -1,6 +1,6 @@
 import { getDb } from '../db/index.js';
 import { parseSubscription, parseNotification, parseAgent } from '../db/parsers.js';
-import { NexusError, NotFoundError, ValidationError } from '../types.js';
+import { DeciGraphError, NotFoundError, ValidationError } from '../types.js';
 import { getRoleNotificationContext } from '../roles.js';
 import type {
   Agent,
@@ -134,12 +134,12 @@ export async function createSubscription(input: CreateSubscriptionInput): Promis
 
     const row = result.rows[0];
     if (!row) {
-      throw new NexusError('Failed to create subscription', 'CREATE_FAILED', 500);
+      throw new DeciGraphError('Failed to create subscription', 'CREATE_FAILED', 500);
     }
     return parseSubscription(row);
   } catch (err) {
-    if (err instanceof NexusError) throw err;
-    throw new NexusError(
+    if (err instanceof DeciGraphError) throw err;
+    throw new DeciGraphError(
       `Failed to create subscription: ${(err as Error).message}`,
       'DB_ERROR',
       500,
@@ -295,7 +295,7 @@ export async function propagateChange(
   try {
     await invalidateCache(decision.id);
   } catch (err) {
-    console.warn('[nexus:change-propagator] Cache invalidation failed:', (err as Error).message);
+    console.warn('[decigraph:change-propagator] Cache invalidation failed:', (err as Error).message);
   }
 
   try {
@@ -315,7 +315,7 @@ export async function propagateChange(
       ],
     );
   } catch (err) {
-    console.warn('[nexus:change-propagator] Audit log write failed:', (err as Error).message);
+    console.warn('[decigraph:change-propagator] Audit log write failed:', (err as Error).message);
   }
 
   return created;
@@ -390,4 +390,4 @@ export async function markNotificationRead(notificationId: string): Promise<void
 }
 
 // Re-export error classes for convenience
-export { NexusError, NotFoundError, ValidationError };
+export { DeciGraphError, NotFoundError, ValidationError };

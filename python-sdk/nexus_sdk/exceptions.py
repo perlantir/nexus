@@ -1,5 +1,5 @@
 """
-Nexus SDK — Exceptions
+DeciGraph SDK — Exceptions
 ======================
 All SDK-specific exception types.
 """
@@ -7,12 +7,12 @@ All SDK-specific exception types.
 from __future__ import annotations
 
 
-class NexusError(Exception):
-    """Base class for all Nexus SDK errors."""
+class DeciGraphError(Exception):
+    """Base class for all DeciGraph SDK errors."""
 
 
-class NexusApiError(NexusError):
-    """Raised when the Nexus API returns a non-2xx HTTP response."""
+class DeciGraphApiError(DeciGraphError):
+    """Raised when the DeciGraph API returns a non-2xx HTTP response."""
 
     def __init__(self, status_code: int, message: str, response_body: dict | None = None) -> None:
         self.status_code = status_code
@@ -21,27 +21,27 @@ class NexusApiError(NexusError):
         super().__init__(f"HTTP {status_code}: {message}")
 
 
-class NexusNotFoundError(NexusApiError):
+class DeciGraphNotFoundError(DeciGraphApiError):
     """Raised on HTTP 404 responses."""
 
 
-class NexusAuthError(NexusApiError):
+class DeciGraphAuthError(DeciGraphApiError):
     """Raised on HTTP 401 / 403 responses."""
 
 
-class NexusValidationError(NexusApiError):
+class DeciGraphValidationError(DeciGraphApiError):
     """Raised on HTTP 422 validation failures."""
 
 
-class NexusConnectionError(NexusError):
-    """Raised when the SDK cannot reach the Nexus server."""
+class DeciGraphConnectionError(DeciGraphError):
+    """Raised when the SDK cannot reach the DeciGraph server."""
 
 
 __all__ = [
-    "NexusError",
-    "NexusApiError",
-    "NexusNotFoundError",
-    "NexusAuthError",
-    "NexusValidationError",
-    "NexusConnectionError",
+    "DeciGraphError",
+    "DeciGraphApiError",
+    "DeciGraphNotFoundError",
+    "DeciGraphAuthError",
+    "DeciGraphValidationError",
+    "DeciGraphConnectionError",
 ]

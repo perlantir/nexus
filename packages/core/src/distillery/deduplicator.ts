@@ -26,7 +26,7 @@ export async function deduplicateDecisions(
       embedding = await generateEmbedding(textToEmbed);
     } catch (err) {
       console.error(
-        `[nexus:distillery] deduplicateDecisions: embedding failed for "${decision.title}":`,
+        `[decigraph:distillery] deduplicateDecisions: embedding failed for "${decision.title}":`,
         err,
       );
       // Include when we can't verify — better a near-duplicate than silent drop
@@ -61,7 +61,7 @@ export async function deduplicateDecisions(
       rows = result.rows;
     } catch (err) {
       console.error(
-        `[nexus:distillery] deduplicateDecisions: similarity query failed for "${decision.title}":`,
+        `[decigraph:distillery] deduplicateDecisions: similarity query failed for "${decision.title}":`,
         err,
       );
       unique.push(decision);
@@ -70,7 +70,7 @@ export async function deduplicateDecisions(
 
     if (rows.length > 0) {
       console.warn(
-        `[nexus:distillery] Duplicate detected for "${decision.title}" ` +
+        `[decigraph:distillery] Duplicate detected for "${decision.title}" ` +
           `(similarity=${rows[0]?.similarity?.toFixed(4)}); skipping.`,
       );
       continue;

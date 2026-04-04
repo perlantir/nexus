@@ -32,7 +32,7 @@ describe('extractAgentName', () => {
   it('returns the default agent name for a bare "workspace" segment', () => {
     const filePath = ['/home', 'user', 'workspace', 'conversations', 'notes.md'].join(path.sep);
     // No suffix after "workspace" → falls back to env var or 'main'
-    delete process.env.NEXUS_OPENCLAW_DEFAULT_AGENT;
+    delete process.env.DECIGRAPH_OPENCLAW_DEFAULT_AGENT;
     expect(extractAgentName(filePath)).toBe('main');
   });
 

@@ -1,6 +1,6 @@
 # CrewAI Integration Guide
 
-The `nexus-crewai` package gives CrewAI agents persistent, shared decision memory backed by Nexus. Task outputs are automatically extracted by the distillery pipeline, so every agent in the crew benefits from decisions made by every other agent — across sessions.
+The `decigraph-crewai` package gives CrewAI agents persistent, shared decision memory backed by DeciGraph. Task outputs are automatically extracted by the distillery pipeline, so every agent in the crew benefits from decisions made by every other agent — across sessions.
 
 ---
 
@@ -9,12 +9,12 @@ The `nexus-crewai` package gives CrewAI agents persistent, shared decision memor
 - [How It Works](#how-it-works)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [NexusCrewMemory](#nexuscrewmemory)
+- [DeciGraphCrewMemory](#decigraphcrewmemory)
   - [Constructor Parameters](#constructor-parameters)
   - [The `save()` Method](#the-save-method)
   - [The `search()` Method](#the-search-method)
   - [Batched Distillation](#batched-distillation)
-- [NexusCrewCallback](#nexuscrewcallback)
+- [DeciGraphCrewCallback](#decigraphcrewcallback)
   - [Constructor Parameters](#constructor-parameters-1)
   - [Task Lifecycle Hooks](#task-lifecycle-hooks)
   - [Crew Lifecycle Hooks](#crew-lifecycle-hooks)
@@ -33,74 +33,74 @@ The `nexus-crewai` package gives CrewAI agents persistent, shared decision memor
 CrewAI Task completes
        │
        ▼
-NexusCrewCallback.on_task_complete(task, output)
+DeciGraphCrewCallback.on_task_complete(task, output)
        │
-       ├──► Nexus Distillery  ──► Extracts decisions from task output
+       ├──► DeciGraph Distillery  ──► Extracts decisions from task output
        │                     ──► Stores in PostgreSQL
        │
        ▼
 Next Task: agent.search("What did we decide about X?")
        │
        ▼
-NexusCrewMemory.search(query)
+DeciGraphCrewMemory.search(query)
        │
        ▼
-Nexus compile_context  ──► 5-signal scoring ──► Ranked decisions
+DeciGraph compile_context  ──► 5-signal scoring ──► Ranked decisions
        │
        ▼
 Returns [(context_blob, score=1.0), (decision1, score), ...]
 ```
 
-Each agent in your crew gets memory scoped to its role. When agent B asks "what architectural decisions have been made?", Nexus returns decisions sorted by relevance to B's role and task — including decisions made by agent A in a previous session.
+Each agent in your crew gets memory scoped to its role. When agent B asks "what architectural decisions have been made?", DeciGraph returns decisions sorted by relevance to B's role and task — including decisions made by agent A in a previous session.
 
 ---
 
 ## Installation
 
 ```bash
-pip install nexus-sdk nexus-crewai crewai
+pip install decigraph-sdk decigraph-crewai crewai
 ```
 
 Or install from the repository:
 
 ```bash
-cd /path/to/nexus/integrations/crewai
+cd /path/to/decigraph/integrations/crewai
 pip install -e .
 ```
 
 **Supported versions:**
 - Python 3.10+
 - CrewAI 0.28+
-- nexus-sdk 0.1+
+- decigraph-sdk 0.1+
 
 ---
 
 ## Quick Start
 
 ```python
-from nexus_sdk import NexusClient
-from nexus_crewai import NexusCrewMemory, NexusCrewCallback
+from decigraph_sdk import DeciGraphClient
+from decigraph_crewai import DeciGraphCrewMemory, DeciGraphCrewCallback
 from crewai import Agent, Task, Crew, Process
 
-# 1. Initialize Nexus
-client = NexusClient(base_url="http://localhost:3100")
+# 1. Initialize DeciGraph
+client = DeciGraphClient(base_url="http://localhost:3100")
 PROJECT_ID = "proj_01hx..."
 
 # 2. Create memory backend for each agent
-researcher_memory = NexusCrewMemory(
+researcher_memory = DeciGraphCrewMemory(
     client=client,
     project_id=PROJECT_ID,
     agent_name="researcher",
 )
 
-writer_memory = NexusCrewMemory(
+writer_memory = DeciGraphCrewMemory(
     client=client,
     project_id=PROJECT_ID,
     agent_name="writer",
 )
 
 # 3. Create callback for automatic extraction
-callback = NexusCrewCallback(
+callback = DeciGraphCrewCallback(
     client=client,
     project_id=PROJECT_ID,
     agent_name="crew",
@@ -151,21 +151,21 @@ crew = Crew(
 
 result = crew.kickoff()
 
-# 8. Finalize — creates a session summary in Nexus
+# 8. Finalize — creates a session summary in DeciGraph
 callback.on_crew_complete(crew_output=result, crew=crew)
 ```
 
 ---
 
-## NexusCrewMemory
+## DeciGraphCrewMemory
 
-`NexusCrewMemory` implements the CrewAI memory backend interface. Attach it to an agent to give that agent access to Nexus-backed recall.
+`DeciGraphCrewMemory` implements the CrewAI memory backend interface. Attach it to an agent to give that agent access to DeciGraph-backed recall.
 
 ### Constructor Parameters
 
 ```python
-NexusCrewMemory(
-    client: NexusClient,
+DeciGraphCrewMemory(
+    client: DeciGraphClient,
     project_id: str,
     agent_name: str,
     default_task_description: str = "Perform the current crew task.",
@@ -176,8 +176,8 @@ NexusCrewMemory(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `client` | `NexusClient` | required | Initialized Nexus client |
-| `project_id` | `str` | required | Nexus project ID |
+| `client` | `DeciGraphClient` | required | Initialized DeciGraph client |
+| `project_id` | `str` | required | DeciGraph project ID |
 | `agent_name` | `str` | required | Agent name for context scoping and attribution |
 | `default_task_description` | `str` | `"Perform the current crew task."` | Fallback task description for `search()` calls |
 | `max_tokens` | `int \| None` | `None` | Token budget for context compilation |
@@ -195,12 +195,12 @@ memory.save(
 )
 ```
 
-When `distill_on_save=True` (default), the text is immediately sent to the Nexus distillery. The distillery uses an LLM to extract structured decisions, which are stored with embeddings in the decision graph.
+When `distill_on_save=True` (default), the text is immediately sent to the DeciGraph distillery. The distillery uses an LLM to extract structured decisions, which are stored with embeddings in the decision graph.
 
 When `distill_on_save=False`, saves are buffered and must be flushed manually:
 
 ```python
-memory = NexusCrewMemory(client=client, project_id=PROJECT_ID, agent_name="researcher", distill_on_save=False)
+memory = DeciGraphCrewMemory(client=client, project_id=PROJECT_ID, agent_name="researcher", distill_on_save=False)
 
 # ... crew runs ...
 
@@ -233,7 +233,7 @@ The first element is always the full compiled context text. Subsequent elements 
 For long-running crews with many tasks, batching reduces API calls:
 
 ```python
-memory = NexusCrewMemory(
+memory = DeciGraphCrewMemory(
     client=client,
     project_id=PROJECT_ID,
     agent_name="researcher",
@@ -252,21 +252,21 @@ memory.flush()
 ### Resetting the Buffer
 
 ```python
-# Discard buffered (not-yet-distilled) content without sending to Nexus
+# Discard buffered (not-yet-distilled) content without sending to DeciGraph
 memory.reset()
 ```
 
 ---
 
-## NexusCrewCallback
+## DeciGraphCrewCallback
 
-`NexusCrewCallback` hooks into CrewAI's callback system to automatically capture task outputs and create session summaries.
+`DeciGraphCrewCallback` hooks into CrewAI's callback system to automatically capture task outputs and create session summaries.
 
 ### Constructor Parameters
 
 ```python
-NexusCrewCallback(
-    client: NexusClient,
+DeciGraphCrewCallback(
+    client: DeciGraphClient,
     project_id: str,
     agent_name: str = "crew",
     create_session_on_crew_end: bool = True,
@@ -275,8 +275,8 @@ NexusCrewCallback(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `client` | `NexusClient` | required | Initialized Nexus client |
-| `project_id` | `str` | required | Nexus project ID |
+| `client` | `DeciGraphClient` | required | Initialized DeciGraph client |
+| `project_id` | `str` | required | DeciGraph project ID |
 | `agent_name` | `str` | `"crew"` | Default agent name for session summaries |
 | `create_session_on_crew_end` | `bool` | `True` | Create a `SessionSummary` when `on_crew_complete()` is called |
 
@@ -298,7 +298,7 @@ CrewAI passes the `Task` object and its `TaskOutput`. The callback:
 
 1. Extracts the output text (handles `str`, `TaskOutput.raw`, `TaskOutput.result`, etc.)
 2. Formats it as `"Task: {description}\n\nOutput:\n{text}"`
-3. Sends it to the Nexus distillery
+3. Sends it to the DeciGraph distillery
 4. Accumulates extracted decision IDs for the final session summary
 
 #### `on_step(step)`
@@ -306,7 +306,7 @@ CrewAI passes the `Task` object and its `TaskOutput`. The callback:
 Pass as `step_callback` to hook into individual agent steps. The default implementation is a no-op — override or subclass to capture intermediate reasoning:
 
 ```python
-class MyCallback(NexusCrewCallback):
+class MyCallback(DeciGraphCrewCallback):
     def on_step(self, step):
         print(f"Agent step: {step}")
         super().on_step(step)
@@ -328,14 +328,14 @@ callback.on_crew_complete(crew_output=result, crew=crew)
 
 This:
 1. Builds a session summary including task count and the final output preview
-2. Creates a `SessionSummary` in Nexus linking all decisions extracted during the run
+2. Creates a `SessionSummary` in DeciGraph linking all decisions extracted during the run
 3. Resets the callback's internal state for potential re-use
 
 If `create_session_on_crew_end=False`, only the reset happens.
 
 #### Using the Callback as a Callable
 
-`NexusCrewCallback` is directly callable, so it can be passed to CrewAI's `task_callback` without `.on_task_complete`:
+`DeciGraphCrewCallback` is directly callable, so it can be passed to CrewAI's `task_callback` without `.on_task_complete`:
 
 ```python
 crew = Crew(
@@ -351,34 +351,34 @@ A full end-to-end example with persistent memory across runs:
 
 ```python
 import os
-from nexus_sdk import NexusClient
-from nexus_crewai import NexusCrewMemory, NexusCrewCallback
+from decigraph_sdk import DeciGraphClient
+from decigraph_crewai import DeciGraphCrewMemory, DeciGraphCrewCallback
 from crewai import Agent, Task, Crew, Process
 from crewai.tools import tool
 from langchain_openai import ChatOpenAI
 
 # Initialize
-client = NexusClient(base_url=os.environ["NEXUS_API_URL"])
-PROJECT_ID = os.environ["NEXUS_PROJECT_ID"]
+client = DeciGraphClient(base_url=os.environ["DECIGRAPH_API_URL"])
+PROJECT_ID = os.environ["DECIGRAPH_PROJECT_ID"]
 llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
 
 # Create memories (one per agent role)
 memories = {
-    "architect": NexusCrewMemory(
+    "architect": DeciGraphCrewMemory(
         client=client,
         project_id=PROJECT_ID,
         agent_name="architect",
         default_task_description="Design the system architecture.",
         max_tokens=4096,
     ),
-    "security": NexusCrewMemory(
+    "security": DeciGraphCrewMemory(
         client=client,
         project_id=PROJECT_ID,
         agent_name="security",
         default_task_description="Review security implications.",
         max_tokens=4096,
     ),
-    "reviewer": NexusCrewMemory(
+    "reviewer": DeciGraphCrewMemory(
         client=client,
         project_id=PROJECT_ID,
         agent_name="reviewer",
@@ -388,7 +388,7 @@ memories = {
 }
 
 # Callback for automatic session capture
-callback = NexusCrewCallback(
+callback = DeciGraphCrewCallback(
     client=client,
     project_id=PROJECT_ID,
     agent_name="architecture-crew",
@@ -437,7 +437,7 @@ tech_reviewer._memory_handler = memories["reviewer"]
 # Tasks
 architecture_task = Task(
     description=(
-        "Design the authentication system for the Nexus API. "
+        "Design the authentication system for the DeciGraph API. "
         "Consider: token types (JWT vs API keys), expiry policies, "
         "refresh mechanisms, and integration with existing auth providers. "
         "Document your decisions clearly with rationale."
@@ -491,27 +491,27 @@ crew = Crew(
 print("Starting architecture review crew...")
 result = crew.kickoff()
 
-# Finalize — creates a SessionSummary in Nexus
+# Finalize — creates a SessionSummary in DeciGraph
 callback.on_crew_complete(crew_output=result, crew=crew)
 
 print("\n=== Crew Complete ===")
 print(f"Final output:\n{result}")
-print("\nDecisions have been captured in Nexus and are available for future crews.")
+print("\nDecisions have been captured in DeciGraph and are available for future crews.")
 ```
 
 ---
 
 ## Multi-Agent Crew with Role-Based Context
 
-Nexus has 16 built-in role templates. When your agent name matches a role (e.g., `"architect"`, `"security"`, `"reviewer"`), Nexus automatically applies higher relevance scoring for decisions tagged with that role.
+DeciGraph has 16 built-in role templates. When your agent name matches a role (e.g., `"architect"`, `"security"`, `"reviewer"`), DeciGraph automatically applies higher relevance scoring for decisions tagged with that role.
 
 ```python
-from nexus_sdk import NexusClient
-from nexus_crewai import NexusCrewMemory
+from decigraph_sdk import DeciGraphClient
+from decigraph_crewai import DeciGraphCrewMemory
 
-client = NexusClient(base_url="http://localhost:3100")
+client = DeciGraphClient(base_url="http://localhost:3100")
 
-# These names map to Nexus built-in roles — agents automatically
+# These names map to DeciGraph built-in roles — agents automatically
 # get higher relevance scores for decisions affecting their role
 ROLE_AGENTS = [
     "architect",    # architectural decisions
@@ -523,7 +523,7 @@ ROLE_AGENTS = [
 ]
 
 memories = {
-    role: NexusCrewMemory(
+    role: DeciGraphCrewMemory(
         client=client,
         project_id="proj_01hx...",
         agent_name=role,
@@ -547,9 +547,9 @@ curl http://localhost:3100/api/projects/proj_01hx.../agents \
 For critical decisions, bypass the distillery and record them directly with full metadata:
 
 ```python
-from nexus_sdk import NexusClient
+from decigraph_sdk import DeciGraphClient
 
-client = NexusClient(base_url="http://localhost:3100")
+client = DeciGraphClient(base_url="http://localhost:3100")
 
 # Record a specific decision with full metadata
 decision = client.record_decision(
@@ -576,11 +576,11 @@ print(f"Decision recorded: {decision['id']}")
 
 ## Configuration Reference
 
-### NexusClient Options
+### DeciGraphClient Options
 
 ```python
-client = NexusClient(
-    base_url="http://localhost:3100",  # Nexus API URL
+client = DeciGraphClient(
+    base_url="http://localhost:3100",  # DeciGraph API URL
     api_key="nxk_...",                 # optional API key
     timeout=30,                        # request timeout in seconds
 )
@@ -591,20 +591,20 @@ client = NexusClient(
 If you prefer environment-based configuration:
 
 ```bash
-export NEXUS_API_URL=http://localhost:3100
-export NEXUS_PROJECT_ID=proj_01hx...
-export NEXUS_API_KEY=nxk_...
+export DECIGRAPH_API_URL=http://localhost:3100
+export DECIGRAPH_PROJECT_ID=proj_01hx...
+export DECIGRAPH_API_KEY=nxk_...
 ```
 
 Then instantiate without arguments:
 
 ```python
 import os
-from nexus_sdk import NexusClient
+from decigraph_sdk import DeciGraphClient
 
-client = NexusClient(
-    base_url=os.environ["NEXUS_API_URL"],
-    api_key=os.environ.get("NEXUS_API_KEY"),
+client = DeciGraphClient(
+    base_url=os.environ["DECIGRAPH_API_URL"],
+    api_key=os.environ.get("DECIGRAPH_API_KEY"),
 )
 ```
 
@@ -612,22 +612,22 @@ client = NexusClient(
 
 ## Best Practices
 
-**One memory instance per agent role.** Don't share a single `NexusCrewMemory` across multiple agents — each agent should have its own instance with its own `agent_name`. This ensures context is compiled with the correct role-based weighting.
+**One memory instance per agent role.** Don't share a single `DeciGraphCrewMemory` across multiple agents — each agent should have its own instance with its own `agent_name`. This ensures context is compiled with the correct role-based weighting.
 
 **Use `distill_on_save=False` for large crews.** If you have 10+ tasks producing long outputs, batching reduces API latency and cost. Call `memory.flush()` at the end.
 
-**Set `default_task_description` accurately.** This description is used when `search()` is called without an explicit task context. The more specific it is, the better Nexus can rank relevant context.
+**Set `default_task_description` accurately.** This description is used when `search()` is called without an explicit task context. The more specific it is, the better DeciGraph can rank relevant context.
 
-**Name agents to match Nexus roles.** Using `agent_name="architect"`, `"security"`, `"qa"`, etc. activates the built-in role templates and improves context relevance automatically.
+**Name agents to match DeciGraph roles.** Using `agent_name="architect"`, `"security"`, `"qa"`, etc. activates the built-in role templates and improves context relevance automatically.
 
-**Always call `on_crew_complete()`.** Without this call, no session summary is created in Nexus, and the crew run will not appear in the dashboard or contribute to cross-session context.
+**Always call `on_crew_complete()`.** Without this call, no session summary is created in DeciGraph, and the crew run will not appear in the dashboard or contribute to cross-session context.
 
 **Check for contradictions before long runs.** If your crew is about to make architectural decisions, fetch current contradictions first:
 
 ```python
-from nexus_sdk import NexusClient
+from decigraph_sdk import DeciGraphClient
 
-client = NexusClient(base_url="http://localhost:3100")
+client = DeciGraphClient(base_url="http://localhost:3100")
 contradictions = client.get_contradictions(project_id="proj_01hx...")
 if contradictions:
     print(f"Warning: {len(contradictions)} contradictions found. Resolve before running crew.")
@@ -641,7 +641,7 @@ if contradictions:
 
 ### Memory search returns empty results
 
-Ensure the Nexus server is running and has decisions stored:
+Ensure the DeciGraph server is running and has decisions stored:
 
 ```bash
 curl http://localhost:3100/api/projects/proj_01hx.../decisions | jq length
@@ -682,9 +682,9 @@ For CrewAI ≥ 0.41, use the custom memory API directly:
 ```python
 from crewai.memory.storage.interface import Storage
 
-class NexusStorage(Storage):
-    def __init__(self, nexus_memory):
-        self._mem = nexus_memory
+class DeciGraphStorage(Storage):
+    def __init__(self, decigraph_memory):
+        self._mem = decigraph_memory
 
     def save(self, value, metadata=None, **kwargs):
         self._mem.save(value, metadata=metadata)
@@ -699,12 +699,12 @@ agent = Agent(
 )
 ```
 
-### ImportError: nexus_crewai not found
+### ImportError: decigraph_crewai not found
 
 Install from the repository:
 
 ```bash
-cd /path/to/nexus/integrations/crewai
+cd /path/to/decigraph/integrations/crewai
 pip install -e .
 ```
 
@@ -712,5 +712,5 @@ Or ensure you are using the correct virtual environment:
 
 ```bash
 which python
-pip show nexus-crewai
+pip show decigraph-crewai
 ```

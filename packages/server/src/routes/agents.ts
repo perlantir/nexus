@@ -1,8 +1,8 @@
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
-import { parseAgent } from '@nexus/core/db/parsers.js';
-import { NotFoundError } from '@nexus/core/types.js';
-import { getRoleProfile } from '@nexus/core/roles.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { parseAgent } from '@decigraph/core/db/parsers.js';
+import { NotFoundError } from '@decigraph/core/types.js';
+import { getRoleProfile } from '@decigraph/core/roles.js';
 import { requireUUID, requireString, mapDbError } from './validation.js';
 import { randomUUID } from 'node:crypto';
 

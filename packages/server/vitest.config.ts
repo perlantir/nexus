@@ -10,9 +10,9 @@ export default defineConfig({
       include: ['src/**/*.ts'],
     },
     testTimeout: 30000,
-    // Allow mocking of @nexus/core modules
+    // Allow mocking of @decigraph/core modules
     deps: {
-      inline: ['@nexus/core'],
+      inline: ['@decigraph/core'],
     },
   },
 });

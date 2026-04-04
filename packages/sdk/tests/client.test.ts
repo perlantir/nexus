@@ -1,9 +1,9 @@
-// NexusClient SDK Tests
+// DeciGraphClient SDK Tests
 // Mocks `fetch` globally so no real network calls are made.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { NexusClient } from '../src/client.js';
-import { NexusApiError } from '../src/types.js';
+import { DeciGraphClient } from '../src/client.js';
+import { DeciGraphApiError } from '../src/types.js';
 
 // ── Fetch mock helpers ────────────────────────────────────────────────────────
 
@@ -33,10 +33,10 @@ function mockFetch(opts: MockResponseInit) {
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
-let client: NexusClient;
+let client: DeciGraphClient;
 
 beforeEach(() => {
-  client = new NexusClient({ baseUrl: 'http://localhost:4000' });
+  client = new DeciGraphClient({ baseUrl: 'http://localhost:4000' });
 });
 
 afterEach(() => {
@@ -45,9 +45,9 @@ afterEach(() => {
 
 // ── Constructor ───────────────────────────────────────────────────────────────
 
-describe('NexusClient constructor', () => {
+describe('DeciGraphClient constructor', () => {
   it('strips trailing slash from baseUrl', async () => {
-    const clientWithSlash = new NexusClient({ baseUrl: 'http://localhost:4000/' });
+    const clientWithSlash = new DeciGraphClient({ baseUrl: 'http://localhost:4000/' });
     const spy = mockFetch({
       body: { status: 'ok', version: '0.1.0', timestamp: new Date().toISOString() },
     });
@@ -57,12 +57,12 @@ describe('NexusClient constructor', () => {
   });
 
   it('constructs without apiKey', () => {
-    expect(() => new NexusClient({ baseUrl: 'http://localhost:4000' })).not.toThrow();
+    expect(() => new DeciGraphClient({ baseUrl: 'http://localhost:4000' })).not.toThrow();
   });
 
   it('constructs with apiKey', () => {
     expect(
-      () => new NexusClient({ baseUrl: 'http://localhost:4000', apiKey: 'nx_live_abc123' }),
+      () => new DeciGraphClient({ baseUrl: 'http://localhost:4000', apiKey: 'nx_live_abc123' }),
     ).not.toThrow();
   });
 });
@@ -81,7 +81,7 @@ describe('Authorization header', () => {
   });
 
   it('includes Bearer Authorization header when apiKey is provided', async () => {
-    const authedClient = new NexusClient({
+    const authedClient = new DeciGraphClient({
       baseUrl: 'http://localhost:4000',
       apiKey: 'nx_live_abc123',
     });
@@ -160,7 +160,7 @@ describe('getProject()', () => {
   it('sends GET /api/projects/:id and returns parsed response', async () => {
     const mockProject = {
       id: 'proj-xyz',
-      name: 'Nexus Demo',
+      name: 'DeciGraph Demo',
       created_at: '2026-01-01T00:00:00.000Z',
       updated_at: '2026-01-01T00:00:00.000Z',
       metadata: {},
@@ -290,13 +290,13 @@ describe('updateDecision()', () => {
 // ── Error Handling ────────────────────────────────────────────────────────────
 
 describe('error handling', () => {
-  it('throws NexusApiError with statusCode 404 for not-found responses', async () => {
+  it('throws DeciGraphApiError with statusCode 404 for not-found responses', async () => {
     mockFetch({
       status: 404,
       body: { error: { code: 'NOT_FOUND', message: 'Project not found: xyz' } },
     });
 
-    await expect(client.getProject('xyz')).rejects.toThrow(NexusApiError);
+    await expect(client.getProject('xyz')).rejects.toThrow(DeciGraphApiError);
 
     // Also check the error properties
     try {
@@ -306,21 +306,21 @@ describe('error handling', () => {
       });
       await client.getProject('xyz');
     } catch (err) {
-      expect(err).toBeInstanceOf(NexusApiError);
-      const apiErr = err as NexusApiError;
+      expect(err).toBeInstanceOf(DeciGraphApiError);
+      const apiErr = err as DeciGraphApiError;
       expect(apiErr.statusCode).toBe(404);
       expect(apiErr.code).toBe('NOT_FOUND');
       expect(apiErr.message).toBe('Project not found: xyz');
     }
   });
 
-  it('throws NexusApiError with statusCode 500 for server errors', async () => {
+  it('throws DeciGraphApiError with statusCode 500 for server errors', async () => {
     mockFetch({
       status: 500,
       body: { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
     });
 
-    await expect(client.health()).rejects.toThrow(NexusApiError);
+    await expect(client.health()).rejects.toThrow(DeciGraphApiError);
 
     try {
       mockFetch({
@@ -329,22 +329,22 @@ describe('error handling', () => {
       });
       await client.health();
     } catch (err) {
-      const apiErr = err as NexusApiError;
+      const apiErr = err as DeciGraphApiError;
       expect(apiErr.statusCode).toBe(500);
       expect(apiErr.code).toBe('INTERNAL_ERROR');
     }
   });
 
-  it('throws NexusApiError with code NETWORK_ERROR for network failures', async () => {
+  it('throws DeciGraphApiError with code NETWORK_ERROR for network failures', async () => {
     mockFetch({ networkError: 'ECONNREFUSED' });
 
-    await expect(client.health()).rejects.toThrow(NexusApiError);
+    await expect(client.health()).rejects.toThrow(DeciGraphApiError);
 
     try {
       mockFetch({ networkError: 'ECONNREFUSED' });
       await client.health();
     } catch (err) {
-      const apiErr = err as NexusApiError;
+      const apiErr = err as DeciGraphApiError;
       expect(apiErr.code).toBe('NETWORK_ERROR');
       expect(apiErr.statusCode).toBe(0);
       expect(apiErr.message).toContain('ECONNREFUSED');
@@ -360,7 +360,7 @@ describe('error handling', () => {
     try {
       await client.createProject({ name: 'X' });
     } catch (err) {
-      const apiErr = err as NexusApiError;
+      const apiErr = err as DeciGraphApiError;
       expect(apiErr.code).toBe('API_ERROR');
       expect(apiErr.statusCode).toBe(422);
     }
@@ -372,16 +372,16 @@ describe('error handling', () => {
       new Response('Internal Server Error', { status: 500 }),
     );
 
-    await expect(client.health()).rejects.toThrow(NexusApiError);
+    await expect(client.health()).rejects.toThrow(DeciGraphApiError);
   });
 
-  it('NexusApiError is an instance of Error', async () => {
+  it('DeciGraphApiError is an instance of Error', async () => {
     mockFetch({ status: 404, body: { error: { code: 'NOT_FOUND', message: 'Not found' } } });
     try {
       await client.getProject('missing');
     } catch (err) {
       expect(err).toBeInstanceOf(Error);
-      expect(err).toBeInstanceOf(NexusApiError);
+      expect(err).toBeInstanceOf(DeciGraphApiError);
     }
   });
 });

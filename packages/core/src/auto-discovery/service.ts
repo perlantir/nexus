@@ -18,22 +18,22 @@ export class AutoDiscoveryService {
    * Starts the auto-discovery service for the given project.
    *
    * Reads configuration from environment variables:
-   *   NEXUS_OPENCLAW_PATH        — enables the OpenClaw connector
-   *   NEXUS_WATCH_DIR            — enables the generic directory connector
-   *   NEXUS_WATCH_PATTERN        — optional glob pattern for directory connector
-   *   NEXUS_DISCOVERY_INTERVAL   — poll interval in ms (default: 60000)
+   *   DECIGRAPH_OPENCLAW_PATH        — enables the OpenClaw connector
+   *   DECIGRAPH_WATCH_DIR            — enables the generic directory connector
+   *   DECIGRAPH_WATCH_PATTERN        — optional glob pattern for directory connector
+   *   DECIGRAPH_DISCOVERY_INTERVAL   — poll interval in ms (default: 60000)
    */
   async start(projectId: string): Promise<void> {
     if (this.running) {
-      console.warn('[nexus:auto-discovery] Service is already running.');
+      console.warn('[decigraph:auto-discovery] Service is already running.');
       return;
     }
 
     this.running = true;
 
-    const intervalMs = parseInt(process.env['NEXUS_DISCOVERY_INTERVAL'] ?? '60000', 10);
-    const openClawPath = process.env['NEXUS_OPENCLAW_PATH'];
-    const watchDir = process.env['NEXUS_WATCH_DIR'];
+    const intervalMs = parseInt(process.env['DECIGRAPH_DISCOVERY_INTERVAL'] ?? '60000', 10);
+    const openClawPath = process.env['DECIGRAPH_OPENCLAW_PATH'];
+    const watchDir = process.env['DECIGRAPH_WATCH_DIR'];
 
     let connectorCount = 0;
 
@@ -45,7 +45,7 @@ export class AutoDiscoveryService {
       this.intervals.push(handle);
 
       console.warn(
-        `[nexus:auto-discovery] OpenClaw connector started` +
+        `[decigraph:auto-discovery] OpenClaw connector started` +
           ` (path: ${openClawPath}, interval: ${intervalMs}ms)`,
       );
 
@@ -60,9 +60,9 @@ export class AutoDiscoveryService {
       }, intervalMs);
       this.intervals.push(handle);
 
-      const pattern = process.env['NEXUS_WATCH_PATTERN'];
+      const pattern = process.env['DECIGRAPH_WATCH_PATTERN'];
       console.warn(
-        `[nexus:auto-discovery] Directory connector started` +
+        `[decigraph:auto-discovery] Directory connector started` +
           ` (dir: ${watchDir}` +
           (pattern ? `, pattern: ${pattern}` : '') +
           `, interval: ${intervalMs}ms)`,
@@ -74,12 +74,12 @@ export class AutoDiscoveryService {
 
     if (connectorCount === 0) {
       console.warn(
-        '[nexus:auto-discovery] No connectors configured. ' +
-          'Set NEXUS_OPENCLAW_PATH or NEXUS_WATCH_DIR to enable auto-discovery.',
+        '[decigraph:auto-discovery] No connectors configured. ' +
+          'Set DECIGRAPH_OPENCLAW_PATH or DECIGRAPH_WATCH_DIR to enable auto-discovery.',
       );
     } else {
       console.warn(
-        `[nexus:auto-discovery] Service started for project "${projectId}" ` +
+        `[decigraph:auto-discovery] Service started for project "${projectId}" ` +
           `with ${connectorCount} connector(s).`,
       );
     }
@@ -94,7 +94,7 @@ export class AutoDiscoveryService {
     }
     this.intervals = [];
     this.running = false;
-    console.warn('[nexus:auto-discovery] Service stopped.');
+    console.warn('[decigraph:auto-discovery] Service stopped.');
   }
 
   // ---------------------------------------------------------------------------
@@ -102,10 +102,10 @@ export class AutoDiscoveryService {
   // ---------------------------------------------------------------------------
 
   private async runOpenClawConnector(projectId: string): Promise<void> {
-    const basePath = process.env['NEXUS_OPENCLAW_PATH'];
+    const basePath = process.env['DECIGRAPH_OPENCLAW_PATH'];
     if (!basePath) return;
 
-    const intervalMs = parseInt(process.env['NEXUS_DISCOVERY_INTERVAL'] ?? '60000', 10);
+    const intervalMs = parseInt(process.env['DECIGRAPH_DISCOVERY_INTERVAL'] ?? '60000', 10);
 
     // Collect up to MAX_CHUNKS_PER_CYCLE from the async generator in a single tick
     const chunks: ConversationChunk[] = [];
@@ -121,7 +121,7 @@ export class AutoDiscoveryService {
         if (chunks.length >= MAX_CHUNKS_PER_CYCLE) break;
       }
     } catch (err) {
-      console.error('[nexus:auto-discovery] OpenClaw connector error:', err);
+      console.error('[decigraph:auto-discovery] OpenClaw connector error:', err);
     }
 
     if (chunks.length === 0) return;
@@ -129,20 +129,20 @@ export class AutoDiscoveryService {
     try {
       const result = await processBatch(projectId, chunks, openClawConnector.name);
       console.warn(
-        `[nexus:auto-discovery] OpenClaw: processed=${result.processed}` +
+        `[decigraph:auto-discovery] OpenClaw: processed=${result.processed}` +
           ` decisions=${result.decisions_extracted} errors=${result.errors}`,
       );
     } catch (err) {
-      console.error('[nexus:auto-discovery] OpenClaw batch processing error:', err);
+      console.error('[decigraph:auto-discovery] OpenClaw batch processing error:', err);
     }
   }
 
   private async runDirectoryConnector(projectId: string): Promise<void> {
-    const watchDir = process.env['NEXUS_WATCH_DIR'];
+    const watchDir = process.env['DECIGRAPH_WATCH_DIR'];
     if (!watchDir) return;
 
-    const pattern = process.env['NEXUS_WATCH_PATTERN'];
-    const intervalMs = parseInt(process.env['NEXUS_DISCOVERY_INTERVAL'] ?? '60000', 10);
+    const pattern = process.env['DECIGRAPH_WATCH_PATTERN'];
+    const intervalMs = parseInt(process.env['DECIGRAPH_DISCOVERY_INTERVAL'] ?? '60000', 10);
 
     const chunks: ConversationChunk[] = [];
 
@@ -158,7 +158,7 @@ export class AutoDiscoveryService {
         if (chunks.length >= MAX_CHUNKS_PER_CYCLE) break;
       }
     } catch (err) {
-      console.error('[nexus:auto-discovery] Directory connector error:', err);
+      console.error('[decigraph:auto-discovery] Directory connector error:', err);
     }
 
     if (chunks.length === 0) return;
@@ -166,11 +166,11 @@ export class AutoDiscoveryService {
     try {
       const result = await processBatch(projectId, chunks, directoryConnector.name);
       console.warn(
-        `[nexus:auto-discovery] Directory: processed=${result.processed}` +
+        `[decigraph:auto-discovery] Directory: processed=${result.processed}` +
           ` decisions=${result.decisions_extracted} errors=${result.errors}`,
       );
     } catch (err) {
-      console.error('[nexus:auto-discovery] Directory batch processing error:', err);
+      console.error('[decigraph:auto-discovery] Directory batch processing error:', err);
     }
   }
 }

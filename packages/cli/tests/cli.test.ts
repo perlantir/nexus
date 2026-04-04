@@ -6,10 +6,10 @@ import { tmpdir } from 'node:os';
 
 // We test the CLI by spawning it as a child process using tsx.
 // This validates command parsing, output formatting, and exit codes end-to-end.
-// The NexusClient is NOT mocked here — instead we expect the CLI to fail with
+// The DeciGraphClient is NOT mocked here — instead we expect the CLI to fail with
 // a connection error and verify it exits code 1 and prints a useful message.
 
-const CLI_ENTRY = join(import.meta.dirname, '../src/nexus-cli.ts');
+const CLI_ENTRY = join(import.meta.dirname, '../src/decigraph-cli.ts');
 const TSX = join(import.meta.dirname, '../node_modules/.bin/tsx');
 
 function runCli(
@@ -19,9 +19,9 @@ function runCli(
   const result = spawnSync(TSX, [CLI_ENTRY, ...args], {
     env: {
       ...process.env,
-      NEXUS_API_URL: 'http://localhost:19999', // intentionally unreachable
-      NEXUS_PROJECT_ID: 'proj-test-123',
-      NEXUS_API_KEY: 'test-key',
+      DECIGRAPH_API_URL: 'http://localhost:19999', // intentionally unreachable
+      DECIGRAPH_PROJECT_ID: 'proj-test-123',
+      DECIGRAPH_API_KEY: 'test-key',
       NO_COLOR: '1', // disable chalk colour codes for assertion stability
       FORCE_COLOR: '0',
       ...env,
@@ -40,7 +40,7 @@ describe('CLI — --help', () => {
   it('--help prints usage without errors and exits 0', () => {
     const result = runCli(['--help']);
     expect(result.status).toBe(0);
-    expect(result.stdout).toMatch(/nexus/i);
+    expect(result.stdout).toMatch(/decigraph/i);
     expect(result.stdout).toMatch(/Usage/i);
   });
 });
@@ -110,7 +110,7 @@ describe('CLI — output formatting', () => {
 describe('CLI — error handling', () => {
   it('shows error when server is unreachable', () => {
     const result = runCli(['decisions', 'list'], {
-      NEXUS_API_URL: 'http://localhost:19999',
+      DECIGRAPH_API_URL: 'http://localhost:19999',
     });
     expect(result.status).toBe(1);
     const combined = result.stdout + result.stderr;
@@ -129,13 +129,13 @@ describe('CLI — error handling', () => {
     expect(result.status).toBe(1);
   });
 
-  it('shows useful error when NEXUS_PROJECT_ID is not set', () => {
+  it('shows useful error when DECIGRAPH_PROJECT_ID is not set', () => {
     const result = runCli(['decisions', 'list'], {
-      NEXUS_PROJECT_ID: '', // unset
+      DECIGRAPH_PROJECT_ID: '', // unset
     });
     expect(result.status).toBe(1);
     const combined = result.stdout + result.stderr;
-    expect(combined).toMatch(/NEXUS_PROJECT_ID/i);
+    expect(combined).toMatch(/DECIGRAPH_PROJECT_ID/i);
   });
 
   it('distill shows file not found error for missing file', () => {
@@ -146,7 +146,7 @@ describe('CLI — error handling', () => {
   });
 
   it('distill shows empty file error', () => {
-    const tmpFile = join(tmpdir(), `nexus-test-empty-${Date.now()}.txt`);
+    const tmpFile = join(tmpdir(), `decigraph-test-empty-${Date.now()}.txt`);
     writeFileSync(tmpFile, '   \n', 'utf-8');
     try {
       const result = runCli(['distill', tmpFile]);
@@ -160,13 +160,13 @@ describe('CLI — error handling', () => {
 });
 
 describe('CLI — notifications command', () => {
-  it('shows error when --agent flag and NEXUS_AGENT_ID are both absent', () => {
+  it('shows error when --agent flag and DECIGRAPH_AGENT_ID are both absent', () => {
     const result = runCli(['notifications'], {
-      NEXUS_AGENT_ID: '',
+      DECIGRAPH_AGENT_ID: '',
     });
     expect(result.status).toBe(1);
     const combined = result.stdout + result.stderr;
-    expect(combined).toMatch(/--agent|NEXUS_AGENT_ID/i);
+    expect(combined).toMatch(/--agent|DECIGRAPH_AGENT_ID/i);
   });
 });
 

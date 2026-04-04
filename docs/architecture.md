@@ -1,6 +1,6 @@
 # Architecture
 
-This document explains how Nexus works internally. Understanding the architecture helps you tune performance, extend the system, and reason about what agents will and won't see.
+This document explains how DeciGraph works internally. Understanding the architecture helps you tune performance, extend the system, and reason about what agents will and won't see.
 
 ---
 
@@ -53,7 +53,7 @@ This document explains how Nexus works internally. Understanding the architectur
 
 ## Layer 1: Decision Graph
 
-The Decision Graph is the core data structure of Nexus. It is a directed multigraph where:
+The Decision Graph is the core data structure of DeciGraph. It is a directed multigraph where:
 
 - **Nodes** are `Decision` records stored in the `decisions` table.
 - **Edges** are `DecisionEdge` records stored in `decision_edges`.
@@ -98,7 +98,7 @@ Every decision carries:
 
 ### Graph traversal
 
-Nexus uses a recursive CTE to traverse the graph:
+DeciGraph uses a recursive CTE to traverse the graph:
 
 ```sql
 WITH RECURSIVE graph AS (
@@ -120,7 +120,7 @@ A PostgreSQL stored function `get_connected_decisions($id, $depth)` wraps this q
 
 ## Layer 2: Context Compiler
 
-The Context Compiler is the heart of Nexus. It takes a `CompileRequest` (agent name, project ID, task description, optional token budget) and returns a `ContextPackage` — a ranked, token-budgeted bundle of decisions, artifacts, notifications, and session summaries.
+The Context Compiler is the heart of DeciGraph. It takes a `CompileRequest` (agent name, project ID, task description, optional token budget) and returns a `ContextPackage` — a ranked, token-budgeted bundle of decisions, artifacts, notifications, and session summaries.
 
 ### Full pipeline
 
@@ -316,7 +316,7 @@ Topics are matched against decision `tags` using an exact-match lookup. When a d
 
 ## Layer 4: Distillery
 
-The Distillery processes raw conversation text through an LLM pipeline to extract structured decisions. Nexus is provider-agnostic: all LLM calls (embeddings and chat completions) route through a centralized configuration module (`packages/core/src/config/llm.ts`) that supports any OpenAI-compatible API. A single `OPENROUTER_API_KEY` enables both features, or users can point to Ollama, Together AI, Groq, Azure OpenAI, or any other endpoint via explicit URL/key overrides. Without any LLM keys configured, Nexus functions fully — semantic search falls back to PostgreSQL text matching and decisions are recorded manually.
+The Distillery processes raw conversation text through an LLM pipeline to extract structured decisions. DeciGraph is provider-agnostic: all LLM calls (embeddings and chat completions) route through a centralized configuration module (`packages/core/src/config/llm.ts`) that supports any OpenAI-compatible API. A single `OPENROUTER_API_KEY` enables both features, or users can point to Ollama, Together AI, Groq, Azure OpenAI, or any other endpoint via explicit URL/key overrides. Without any LLM keys configured, DeciGraph functions fully — semantic search falls back to PostgreSQL text matching and decisions are recorded manually.
 
 ### Pipeline
 
@@ -354,7 +354,7 @@ DistilleryResult {
 
 ### Contradiction detection
 
-After inserting a new decision, Nexus queries for decisions in the same project with high embedding cosine similarity (distance < 0.15 in pgvector cosine space) and different implications. Detected contradictions are inserted into the `contradictions` table with `status = 'unresolved'` and trigger notifications to affected agents.
+After inserting a new decision, DeciGraph queries for decisions in the same project with high embedding cosine similarity (distance < 0.15 in pgvector cosine space) and different implications. Detected contradictions are inserted into the `contradictions` table with `status = 'unresolved'` and trigger notifications to affected agents.
 
 ---
 
@@ -393,7 +393,7 @@ The Context Compiler surfaces temporal signals inline in the formatted Markdown 
 
 ## Role Templates
 
-Nexus ships 16 built-in role templates. Each template defines a `RelevanceProfile`:
+DeciGraph ships 16 built-in role templates. Each template defines a `RelevanceProfile`:
 
 ```typescript
 interface RelevanceProfile {
@@ -453,7 +453,7 @@ Override any field when creating an agent:
 
 ### Embedding model
 
-Nexus uses OpenAI's `text-embedding-3-small` (1536 dimensions). The embedding text for a decision is built as:
+DeciGraph uses OpenAI's `text-embedding-3-small` (1536 dimensions). The embedding text for a decision is built as:
 
 ```
 {title} {description} {reasoning} {tags.join(" ")} {affects.join(" ")}
@@ -499,7 +499,7 @@ CREATE TABLE relevance_feedback (
 );
 ```
 
-Agents submit feedback via the `POST /api/feedback` endpoint (or `nexus_feedback` MCP tool). The `Relevance Learner` module aggregates feedback per (agent_role, tag) pair and can adjust tag weights in the agent's relevance profile:
+Agents submit feedback via the `POST /api/feedback` endpoint (or `decigraph_feedback` MCP tool). The `Relevance Learner` module aggregates feedback per (agent_role, tag) pair and can adjust tag weights in the agent's relevance profile:
 
 ```
 new_weight[tag] = old_weight[tag] × (1 - learning_rate)
@@ -515,7 +515,7 @@ Where `useful_rate[tag]` is the fraction of decisions with that tag that receive
 ```
 Agent submits task description
         ↓
-Nexus embeds task with text-embedding-3-small
+DeciGraph embeds task with text-embedding-3-small
         ↓
 Fetch all project decisions
         ↓

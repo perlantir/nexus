@@ -1,6 +1,6 @@
 # nexus-sdk
 
-Official Python SDK for the [Nexus](https://github.com/nexus-platform/nexus) multi-agent memory and decision platform.
+Official Python SDK for the [DeciGraph](https://github.com/nexus-platform/nexus) multi-agent memory and decision platform.
 
 ## Installation
 
@@ -18,9 +18,9 @@ pip install -e ".[dev]"
 ## Quick Start
 
 ```python
-from nexus_sdk import NexusClient
+from nexus_sdk import DeciGraphClient
 
-client = NexusClient(base_url="http://localhost:3100", api_key="my-key")
+client = DeciGraphClient(base_url="http://localhost:3100", api_key="my-key")
 
 # Create a project
 project = client.create_project("My Project", "A demonstration project")

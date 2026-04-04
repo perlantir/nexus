@@ -30,7 +30,7 @@ export async function integrateDecisions(
       const embedding = await generateEmbedding(`${ext.title}\n${ext.description}`).catch(
         (err: unknown) => {
           console.warn(
-            `[nexus:distillery] integrateDecisions: embedding failed for "${ext.title}":`,
+            `[decigraph:distillery] integrateDecisions: embedding failed for "${ext.title}":`,
             err,
           );
           return null;
@@ -55,7 +55,7 @@ export async function integrateDecisions(
            LIMIT 1`,
           [vectorLiteral, projectId, vectorLiteral, SUPERSEDE_SIMILARITY_THRESHOLD],
         ).catch((err: unknown) => {
-          console.warn('[nexus:distillery] Supersede candidate query failed:', err);
+          console.warn('[decigraph:distillery] Supersede candidate query failed:', err);
           return { rows: [] as SupersedeCandidate[] };
         });
 
@@ -65,7 +65,7 @@ export async function integrateDecisions(
       const db = getDb();
 
       // Auto-approve logic: high confidence → active, medium/low → pending review
-      const autoApproveThreshold = parseFloat(process.env.NEXUS_AUTO_APPROVE_THRESHOLD ?? '0.85');
+      const autoApproveThreshold = parseFloat(process.env.DECIGRAPH_AUTO_APPROVE_THRESHOLD ?? '0.85');
       const confidenceScore = ext.confidence === 'high' ? 0.9 : ext.confidence === 'medium' ? 0.6 : 0.3;
       const autoApproved = confidenceScore >= autoApproveThreshold;
       const decisionStatus = autoApproved ? 'active' : 'pending';
@@ -126,7 +126,7 @@ export async function integrateDecisions(
             [dec.id, supersedes_id],
           );
 
-          console.warn(`[nexus:distillery] "${dec.title}" supersedes decision ${supersedes_id}`);
+          console.warn(`[decigraph:distillery] "${dec.title}" supersedes decision ${supersedes_id}`);
         }
 
         return dec;
@@ -136,10 +136,10 @@ export async function integrateDecisions(
 
       // Fire-and-forget; errors caught inside propagateChange
       propagateChange(decision, 'decision_created' as NotificationType).catch((err: unknown) => {
-        console.warn(`[nexus:distillery] propagateChange failed for decision ${decision.id}:`, err);
+        console.warn(`[decigraph:distillery] propagateChange failed for decision ${decision.id}:`, err);
       });
     } catch (err) {
-      console.error(`[nexus:distillery] integrateDecisions: failed to insert "${ext.title}":`, err);
+      console.error(`[decigraph:distillery] integrateDecisions: failed to insert "${ext.title}":`, err);
     }
   }
 

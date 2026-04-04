@@ -1,6 +1,6 @@
 # LangChain / LangGraph Integration Guide
 
-The `nexus-langchain` package provides three integration points for LangChain and LangGraph: a `BaseMemory` implementation that injects compiled Nexus context into chains, a `BaseCallbackHandler` that automatically captures LLM and tool outputs for distillation, and a `BaseCheckpointSaver` that stores LangGraph graph state as Nexus session summaries.
+The `decigraph-langchain` package provides three integration points for LangChain and LangGraph: a `BaseMemory` implementation that injects compiled DeciGraph context into chains, a `BaseCallbackHandler` that automatically captures LLM and tool outputs for distillation, and a `BaseCheckpointSaver` that stores LangGraph graph state as DeciGraph session summaries.
 
 ---
 
@@ -8,18 +8,18 @@ The `nexus-langchain` package provides three integration points for LangChain an
 
 - [How It Works](#how-it-works)
 - [Installation](#installation)
-- [NexusMemory — Chain Memory](#nexusmemory--chain-memory)
+- [DeciGraphMemory — Chain Memory](#decigraphmemory--chain-memory)
   - [Constructor Parameters](#constructor-parameters)
   - [With LLMChain](#with-llmchain)
   - [With LCEL (LangChain Expression Language)](#with-lcel-langchain-expression-language)
   - [Accessing Individual Decisions](#accessing-individual-decisions)
   - [Distillation Frequency](#distillation-frequency)
-- [NexusCallbackHandler — Automatic Capture](#nexuscallbackhandler--automatic-capture)
+- [DeciGraphCallbackHandler — Automatic Capture](#decigraphcallbackhandler--automatic-capture)
   - [Constructor Parameters](#constructor-parameters-1)
   - [With any Chain or Agent](#with-any-chain-or-agent)
   - [Controlling What Gets Captured](#controlling-what-gets-captured)
   - [Manual Flush](#manual-flush)
-- [NexusCheckpointer — LangGraph State Persistence](#nexuscheckpointer--langgraph-state-persistence)
+- [DeciGraphCheckpointer — LangGraph State Persistence](#decigraphcheckpointer--langgraph-state-persistence)
   - [Constructor Parameters](#constructor-parameters-2)
   - [Basic LangGraph Integration](#basic-langgraph-integration)
   - [Multi-Agent Graph with Checkpointing](#multi-agent-graph-with-checkpointing)
@@ -40,19 +40,19 @@ The `nexus-langchain` package provides three integration points for LangChain an
 LLMChain.invoke({"input": "..."})
     │
     ▼
-NexusMemory.load_memory_variables(inputs)
+DeciGraphMemory.load_memory_variables(inputs)
     │── compile_context(agent_name, task_description)
     │      └── 5-signal scoring + graph BFS
     ▼
-{"nexus_context": "<compiled decisions>", ...}
+{"decigraph_context": "<compiled decisions>", ...}
     │
     ▼  (LLM generates response)
     │
-NexusMemory.save_context(inputs, outputs)
+DeciGraphMemory.save_context(inputs, outputs)
     │── buffer exchange
     │── flush to distillery every N exchanges
     ▼
-Nexus decision graph updated
+DeciGraph decision graph updated
 ```
 
 ### Callback Flow
@@ -69,12 +69,12 @@ chain.invoke(inputs, config={"callbacks": [handler]})
 ### Checkpointer Flow
 
 ```
-graph.compile(checkpointer=NexusCheckpointer(...))
+graph.compile(checkpointer=DeciGraphCheckpointer(...))
 
 graph.invoke(state, config={"configurable": {"thread_id": "t1"}})
     │
     ├── put(config, checkpoint, metadata, ...)
-    │       └── create_session_summary in Nexus
+    │       └── create_session_summary in DeciGraph
     │
     └── get_tuple(config)
             └── list_session_summaries → deserialize checkpoint
@@ -85,7 +85,7 @@ graph.invoke(state, config={"configurable": {"thread_id": "t1"}})
 ## Installation
 
 ```bash
-pip install nexus-sdk nexus-langchain langchain-core langchain-openai
+pip install decigraph-sdk decigraph-langchain langchain-core langchain-openai
 ```
 
 For LangGraph checkpointing, also install:
@@ -97,31 +97,31 @@ pip install langgraph
 Or install from the repository:
 
 ```bash
-cd /path/to/nexus/integrations/langchain
+cd /path/to/decigraph/integrations/langchain
 pip install -e .
 ```
 
 **Supported versions:**
 - Python 3.10+
 - langchain-core ≥ 0.3.0
-- langgraph ≥ 0.2 (for `NexusCheckpointer`)
-- nexus-sdk 0.1+
+- langgraph ≥ 0.2 (for `DeciGraphCheckpointer`)
+- decigraph-sdk 0.1+
 
 ---
 
-## NexusMemory — Chain Memory
+## DeciGraphMemory — Chain Memory
 
-`NexusMemory` extends LangChain's `BaseMemory`. Attach it to any chain to inject compiled Nexus context before each LLM call.
+`DeciGraphMemory` extends LangChain's `BaseMemory`. Attach it to any chain to inject compiled DeciGraph context before each LLM call.
 
 ### Constructor Parameters
 
 ```python
-NexusMemory(
-    client: NexusClient,
+DeciGraphMemory(
+    client: DeciGraphClient,
     project_id: str,
     agent_name: str,
     task_description: str,
-    memory_key: str = "nexus_context",
+    memory_key: str = "decigraph_context",
     input_key: str = "input",
     output_key: str = "output",
     max_tokens: int | None = None,
@@ -132,29 +132,29 @@ NexusMemory(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `client` | `NexusClient` | required | Initialized Nexus client |
-| `project_id` | `str` | required | Nexus project ID |
+| `client` | `DeciGraphClient` | required | Initialized DeciGraph client |
+| `project_id` | `str` | required | DeciGraph project ID |
 | `agent_name` | `str` | required | Agent name for context scoping |
 | `task_description` | `str` | required | What the agent is doing — used to rank relevant decisions |
-| `memory_key` | `str` | `"nexus_context"` | Key injected into chain inputs |
+| `memory_key` | `str` | `"decigraph_context"` | Key injected into chain inputs |
 | `input_key` | `str` | `"input"` | Key for the human input in chain inputs |
 | `output_key` | `str` | `"output"` | Key for the AI response in chain outputs |
 | `max_tokens` | `int \| None` | `None` | Token budget for context compilation |
 | `distill_every` | `int` | `1` | Distil after every N exchanges (1 = every exchange) |
-| `return_messages` | `bool` | `False` | Also return raw decision list under `nexus_decisions` |
+| `return_messages` | `bool` | `False` | Also return raw decision list under `decigraph_decisions` |
 
 ### With LLMChain
 
 ```python
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusMemory
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphMemory
 from langchain.chains import LLMChain
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-client = NexusClient(base_url="http://localhost:3100")
+client = DeciGraphClient(base_url="http://localhost:3100")
 
-memory = NexusMemory(
+memory = DeciGraphMemory(
     client=client,
     project_id="proj_01hx...",
     agent_name="coder-agent",
@@ -163,7 +163,7 @@ memory = NexusMemory(
 )
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a software engineer.\n\n{nexus_context}"),
+    ("system", "You are a software engineer.\n\n{decigraph_context}"),
     ("human", "{input}"),
 ])
 
@@ -177,20 +177,20 @@ response = chain.invoke({"input": "How should I implement JWT refresh tokens?"})
 print(response["text"])
 ```
 
-The `{nexus_context}` variable in the prompt is automatically populated with compiled decisions from Nexus before each invocation.
+The `{decigraph_context}` variable in the prompt is automatically populated with compiled decisions from DeciGraph before each invocation.
 
 ### With LCEL (LangChain Expression Language)
 
 ```python
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusMemory
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphMemory
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 
-client = NexusClient(base_url="http://localhost:3100")
+client = DeciGraphClient(base_url="http://localhost:3100")
 
-memory = NexusMemory(
+memory = DeciGraphMemory(
     client=client,
     project_id="proj_01hx...",
     agent_name="architect",
@@ -198,7 +198,7 @@ memory = NexusMemory(
 )
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a software architect.\n\n{nexus_context}"),
+    ("system", "You are a software architect.\n\n{decigraph_context}"),
     ("human", "{input}"),
 ])
 
@@ -206,20 +206,20 @@ llm = ChatOpenAI(model="gpt-4o-mini")
 
 
 def load_memory(inputs):
-    """Load Nexus context and merge with chain inputs."""
+    """Load DeciGraph context and merge with chain inputs."""
     mem_vars = memory.load_memory_variables(inputs)
     return {**inputs, **mem_vars}
 
 
 def save_memory(inputs_and_output):
-    """Save the exchange to Nexus after the chain completes."""
+    """Save the exchange to DeciGraph after the chain completes."""
     inputs, output = inputs_and_output
     memory.save_context(inputs, {"output": output.content})
     return output
 
 
 chain = (
-    RunnablePassthrough.assign(**{"nexus_context": lambda x: memory.load_memory_variables(x)["nexus_context"]})
+    RunnablePassthrough.assign(**{"decigraph_context": lambda x: memory.load_memory_variables(x)["decigraph_context"]})
     | prompt
     | llm
 )
@@ -237,7 +237,7 @@ print(response.content)
 Set `return_messages=True` to also get the raw decision list:
 
 ```python
-memory = NexusMemory(
+memory = DeciGraphMemory(
     client=client,
     project_id="proj_01hx...",
     agent_name="reviewer",
@@ -248,10 +248,10 @@ memory = NexusMemory(
 vars = memory.load_memory_variables({"input": "Is the token implementation correct?"})
 
 # Full compiled text
-print(vars["nexus_context"])
+print(vars["decigraph_context"])
 
 # Individual decisions
-for dec in vars["nexus_decisions"]:
+for dec in vars["decigraph_decisions"]:
     print(f"[{dec['confidence']:.0%}] {dec['title']}")
 ```
 
@@ -261,7 +261,7 @@ By default, `distill_every=1` sends each exchange to the distillery immediately.
 
 ```python
 # Distil after every 5 exchanges
-memory = NexusMemory(
+memory = DeciGraphMemory(
     client=client,
     project_id="proj_01hx...",
     agent_name="analyst",
@@ -272,15 +272,15 @@ memory = NexusMemory(
 
 ---
 
-## NexusCallbackHandler — Automatic Capture
+## DeciGraphCallbackHandler — Automatic Capture
 
-`NexusCallbackHandler` implements `BaseCallbackHandler` and can be attached to any LangChain chain, agent, or LLM. It automatically buffers LLM outputs and tool results, then flushes them to the Nexus distillery when the top-level chain completes.
+`DeciGraphCallbackHandler` implements `BaseCallbackHandler` and can be attached to any LangChain chain, agent, or LLM. It automatically buffers LLM outputs and tool results, then flushes them to the DeciGraph distillery when the top-level chain completes.
 
 ### Constructor Parameters
 
 ```python
-NexusCallbackHandler(
-    client: NexusClient,
+DeciGraphCallbackHandler(
+    client: DeciGraphClient,
     project_id: str,
     agent_name: str,
     capture_tool_outputs: bool = True,
@@ -291,8 +291,8 @@ NexusCallbackHandler(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `client` | `NexusClient` | required | Initialized Nexus client |
-| `project_id` | `str` | required | Nexus project ID |
+| `client` | `DeciGraphClient` | required | Initialized DeciGraph client |
+| `project_id` | `str` | required | DeciGraph project ID |
 | `agent_name` | `str` | required | Agent attribution for extracted decisions |
 | `capture_tool_outputs` | `bool` | `True` | Include tool call results in the distillery buffer |
 | `capture_llm_outputs` | `bool` | `True` | Include LLM generation text in the buffer |
@@ -303,14 +303,14 @@ NexusCallbackHandler(
 Pass the handler in the `config` dict:
 
 ```python
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusCallbackHandler
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphCallbackHandler
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
-client = NexusClient(base_url="http://localhost:3100")
+client = DeciGraphClient(base_url="http://localhost:3100")
 
-handler = NexusCallbackHandler(
+handler = DeciGraphCallbackHandler(
     client=client,
     project_id="proj_01hx...",
     agent_name="code-reviewer",
@@ -340,11 +340,11 @@ print(response.content)
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusCallbackHandler
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphCallbackHandler
 
-client = NexusClient(base_url="http://localhost:3100")
-handler = NexusCallbackHandler(
+client = DeciGraphClient(base_url="http://localhost:3100")
+handler = DeciGraphCallbackHandler(
     client=client,
     project_id="proj_01hx...",
     agent_name="research-agent",
@@ -367,7 +367,7 @@ result = executor.invoke(
     config={"callbacks": [handler]},
 )
 
-# All tool outputs and LLM responses are buffered and sent to Nexus
+# All tool outputs and LLM responses are buffered and sent to DeciGraph
 print(result["output"])
 ```
 
@@ -375,7 +375,7 @@ print(result["output"])
 
 ```python
 # Only capture LLM outputs, not tool outputs
-handler = NexusCallbackHandler(
+handler = DeciGraphCallbackHandler(
     client=client,
     project_id="proj_01hx...",
     agent_name="analyst",
@@ -384,7 +384,7 @@ handler = NexusCallbackHandler(
 )
 
 # Disable automatic flush — call manually
-handler = NexusCallbackHandler(
+handler = DeciGraphCallbackHandler(
     client=client,
     project_id="proj_01hx...",
     agent_name="analyst",
@@ -410,15 +410,15 @@ handler.clear()
 
 ---
 
-## NexusCheckpointer — LangGraph State Persistence
+## DeciGraphCheckpointer — LangGraph State Persistence
 
-`NexusCheckpointer` implements LangGraph's `BaseCheckpointSaver` interface. It stores each LangGraph checkpoint as a Nexus `SessionSummary` (with the full checkpoint JSON embedded in the metadata), enabling cross-session graph state persistence without any additional infrastructure.
+`DeciGraphCheckpointer` implements LangGraph's `BaseCheckpointSaver` interface. It stores each LangGraph checkpoint as a DeciGraph `SessionSummary` (with the full checkpoint JSON embedded in the metadata), enabling cross-session graph state persistence without any additional infrastructure.
 
 ### Constructor Parameters
 
 ```python
-NexusCheckpointer(
-    client: NexusClient,
+DeciGraphCheckpointer(
+    client: DeciGraphClient,
     project_id: str,
     agent_name: str,
     task_description: str = "Continue the current task.",
@@ -428,8 +428,8 @@ NexusCheckpointer(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `client` | `NexusClient` | required | Initialized Nexus client |
-| `project_id` | `str` | required | Nexus project ID |
+| `client` | `DeciGraphClient` | required | Initialized DeciGraph client |
+| `project_id` | `str` | required | DeciGraph project ID |
 | `agent_name` | `str` | required | Agent name for context compilation |
 | `task_description` | `str` | `"Continue the current task."` | Used for context compilation on checkpoint restore |
 | `max_tokens` | `int \| None` | `None` | Token budget for context compilation |
@@ -441,12 +441,12 @@ import operator
 from typing import Annotated, TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusCheckpointer
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphCheckpointer
 
-client = NexusClient(base_url="http://localhost:3100")
+client = DeciGraphClient(base_url="http://localhost:3100")
 
-checkpointer = NexusCheckpointer(
+checkpointer = DeciGraphCheckpointer(
     client=client,
     project_id="proj_01hx...",
     agent_name="orchestrator",
@@ -480,7 +480,7 @@ workflow.set_entry_point("analyze")
 workflow.add_edge("analyze", "decide")
 workflow.add_edge("decide", END)
 
-# Compile with Nexus checkpointer
+# Compile with DeciGraph checkpointer
 app = workflow.compile(checkpointer=checkpointer)
 
 # Each invocation with the same thread_id resumes from the last checkpoint
@@ -502,14 +502,14 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import BaseMessage, HumanMessage
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusCheckpointer, NexusMemory
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphCheckpointer, DeciGraphMemory
 
-client = NexusClient(base_url="http://localhost:3100")
+client = DeciGraphClient(base_url="http://localhost:3100")
 PROJECT_ID = "proj_01hx..."
 
 # Checkpointer for state persistence
-checkpointer = NexusCheckpointer(
+checkpointer = DeciGraphCheckpointer(
     client=client,
     project_id=PROJECT_ID,
     agent_name="orchestrator",
@@ -517,14 +517,14 @@ checkpointer = NexusCheckpointer(
 )
 
 # Memory for context compilation per agent role
-architect_memory = NexusMemory(
+architect_memory = DeciGraphMemory(
     client=client,
     project_id=PROJECT_ID,
     agent_name="architect",
     task_description="Design system architecture.",
 )
 
-security_memory = NexusMemory(
+security_memory = DeciGraphMemory(
     client=client,
     project_id=PROJECT_ID,
     agent_name="security",
@@ -539,12 +539,12 @@ class GraphState(TypedDict):
 
 # Nodes
 def architect_node(state: GraphState) -> dict:
-    # Load Nexus context for the architect
+    # Load DeciGraph context for the architect
     context_vars = architect_memory.load_memory_variables({"input": state["messages"][-1].content})
-    nexus_context = context_vars.get("nexus_context", "")
+    decigraph_context = context_vars.get("decigraph_context", "")
 
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
-    system = f"You are a software architect.\n\n{nexus_context}"
+    system = f"You are a software architect.\n\n{decigraph_context}"
     response = llm.invoke([
         {"role": "system", "content": system},
         *state["messages"],
@@ -564,10 +564,10 @@ def architect_node(state: GraphState) -> dict:
 
 def security_node(state: GraphState) -> dict:
     context_vars = security_memory.load_memory_variables({"input": state["messages"][-1].content})
-    nexus_context = context_vars.get("nexus_context", "")
+    decigraph_context = context_vars.get("decigraph_context", "")
 
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
-    system = f"You are a security engineer.\n\n{nexus_context}"
+    system = f"You are a security engineer.\n\n{decigraph_context}"
     response = llm.invoke([
         {"role": "system", "content": system},
         *state["messages"],
@@ -616,14 +616,14 @@ for msg in result["messages"]:
 
 ### Resuming from a Checkpoint
 
-Because checkpoints are stored in Nexus, they persist across process restarts:
+Because checkpoints are stored in DeciGraph, they persist across process restarts:
 
 ```python
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusCheckpointer
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphCheckpointer
 
-client = NexusClient(base_url="http://localhost:3100")
-checkpointer = NexusCheckpointer(
+client = DeciGraphClient(base_url="http://localhost:3100")
+checkpointer = DeciGraphCheckpointer(
     client=client,
     project_id="proj_01hx...",
     agent_name="orchestrator",
@@ -644,7 +644,7 @@ result = app.invoke(
 
 ### How Checkpoints Are Stored
 
-Each `put()` call creates a Nexus `SessionSummary` with:
+Each `put()` call creates a DeciGraph `SessionSummary` with:
 - `summary`: Human-readable description (`"LangGraph checkpoint for thread 'X'"`)
 - `metadata.thread_id`: The LangGraph thread ID
 - `metadata.checkpoint_id`: The checkpoint's unique ID
@@ -658,22 +658,22 @@ On `get_tuple()`, the checkpointer queries session summaries filtered by `thread
 
 ## Complete Example: Research Agent
 
-A complete LangChain agent that combines memory, callback, and Nexus decisions:
+A complete LangChain agent that combines memory, callback, and DeciGraph decisions:
 
 ```python
 import os
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusMemory, NexusCallbackHandler
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphMemory, DeciGraphCallbackHandler
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
 
-client = NexusClient(base_url=os.environ["NEXUS_API_URL"])
-PROJECT_ID = os.environ["NEXUS_PROJECT_ID"]
+client = DeciGraphClient(base_url=os.environ["DECIGRAPH_API_URL"])
+PROJECT_ID = os.environ["DECIGRAPH_PROJECT_ID"]
 
 # Memory loads relevant context before each LLM call
-memory = NexusMemory(
+memory = DeciGraphMemory(
     client=client,
     project_id=PROJECT_ID,
     agent_name="researcher",
@@ -683,7 +683,7 @@ memory = NexusMemory(
 )
 
 # Callback captures all outputs for automatic extraction
-callback = NexusCallbackHandler(
+callback = DeciGraphCallbackHandler(
     client=client,
     project_id=PROJECT_ID,
     agent_name="researcher",
@@ -706,8 +706,8 @@ tools = [search_documentation, benchmark_database]
 prompt = ChatPromptTemplate.from_messages([
     ("system", """You are a database research specialist.
 
-NEXUS CONTEXT (existing project decisions):
-{nexus_context}
+DECIGRAPH CONTEXT (existing project decisions):
+{decigraph_context}
 
 When you make a recommendation, state it clearly as a decision with:
 - What was decided
@@ -732,14 +732,14 @@ result = executor.invoke(
 )
 
 print(result["output"])
-print("\nDecisions extracted and stored in Nexus for future agent context.")
+print("\nDecisions extracted and stored in DeciGraph for future agent context.")
 ```
 
 ---
 
 ## Complete Example: Multi-Agent LangGraph
 
-A production-ready multi-agent graph with full Nexus integration:
+A production-ready multi-agent graph with full DeciGraph integration:
 
 ```python
 import os
@@ -748,13 +748,13 @@ from typing import Annotated, Literal, TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from nexus_sdk import NexusClient
-from nexus_langchain import NexusCheckpointer, NexusCallbackHandler
+from decigraph_sdk import DeciGraphClient
+from decigraph_langchain import DeciGraphCheckpointer, DeciGraphCallbackHandler
 
-client = NexusClient(base_url=os.environ["NEXUS_API_URL"])
-PROJECT_ID = os.environ["NEXUS_PROJECT_ID"]
+client = DeciGraphClient(base_url=os.environ["DECIGRAPH_API_URL"])
+PROJECT_ID = os.environ["DECIGRAPH_PROJECT_ID"]
 
-checkpointer = NexusCheckpointer(
+checkpointer = DeciGraphCheckpointer(
     client=client,
     project_id=PROJECT_ID,
     agent_name="orchestrator",
@@ -762,7 +762,7 @@ checkpointer = NexusCheckpointer(
 )
 
 # Shared callback for all nodes
-nexus_callback = NexusCallbackHandler(
+decigraph_callback = DeciGraphCallbackHandler(
     client=client,
     project_id=PROJECT_ID,
     agent_name="pipeline",
@@ -777,18 +777,18 @@ class PipelineState(TypedDict):
 llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
 
 def make_agent_node(role: str, system_prompt: str):
-    """Factory for agent nodes with Nexus context injection."""
+    """Factory for agent nodes with DeciGraph context injection."""
     def node(state: PipelineState) -> dict:
-        # Compile Nexus context for this role
+        # Compile DeciGraph context for this role
         ctx = client.compile_context(
             project_id=PROJECT_ID,
             agent_name=role,
             task_description=state["messages"][-1].content if state["messages"] else "",
             max_tokens=4096,
         )
-        nexus_context = ctx.get("compiled_text", "")
+        decigraph_context = ctx.get("compiled_text", "")
 
-        full_system = f"{system_prompt}\n\n{nexus_context}" if nexus_context else system_prompt
+        full_system = f"{system_prompt}\n\n{decigraph_context}" if decigraph_context else system_prompt
         messages = [{"role": "system", "content": full_system}] + [
             {"role": m.type, "content": m.content}
             for m in state["messages"]
@@ -796,7 +796,7 @@ def make_agent_node(role: str, system_prompt: str):
 
         response = llm.invoke(
             messages,
-            config={"callbacks": [nexus_callback]},
+            config={"callbacks": [decigraph_callback]},
         )
         return {"messages": [response], "current_agent": role}
 
@@ -840,19 +840,19 @@ result = app.invoke(
 )
 
 # Flush any remaining captures to the distillery
-nexus_callback.flush()
+decigraph_callback.flush()
 
-print("Pipeline complete. All decisions captured in Nexus.")
+print("Pipeline complete. All decisions captured in DeciGraph.")
 ```
 
 ---
 
 ## Configuration Reference
 
-### NexusClient
+### DeciGraphClient
 
 ```python
-NexusClient(
+DeciGraphClient(
     base_url="http://localhost:3100",
     api_key=None,       # optional API key
     timeout=30,         # seconds
@@ -862,47 +862,47 @@ NexusClient(
 ### Environment Variables
 
 ```bash
-NEXUS_API_URL=http://localhost:3100
-NEXUS_PROJECT_ID=proj_01hx...
-NEXUS_API_KEY=nxk_...    # optional
+DECIGRAPH_API_URL=http://localhost:3100
+DECIGRAPH_PROJECT_ID=proj_01hx...
+DECIGRAPH_API_KEY=nxk_...    # optional
 ```
 
 ---
 
 ## Best Practices
 
-**Use `NexusMemory` for interactive chains, `NexusCallbackHandler` for agents.** Memory is better for chains where you control the prompt template (inject `{nexus_context}`). Callbacks are better for agents where you cannot modify the prompt.
+**Use `DeciGraphMemory` for interactive chains, `DeciGraphCallbackHandler` for agents.** Memory is better for chains where you control the prompt template (inject `{decigraph_context}`). Callbacks are better for agents where you cannot modify the prompt.
 
-**Set `task_description` precisely.** The more specific the task description, the better Nexus can rank relevant decisions. "Implement JWT authentication for the payments service" outperforms "implement authentication".
+**Set `task_description` precisely.** The more specific the task description, the better DeciGraph can rank relevant decisions. "Implement JWT authentication for the payments service" outperforms "implement authentication".
 
-**Align `agent_name` with Nexus role templates.** Using names like `"architect"`, `"security"`, `"reviewer"` automatically activates role-based weighting in the 5-signal scoring algorithm.
+**Align `agent_name` with DeciGraph role templates.** Using names like `"architect"`, `"security"`, `"reviewer"` automatically activates role-based weighting in the 5-signal scoring algorithm.
 
 **Use thread IDs consistently for LangGraph.** The checkpointer stores state by `thread_id`. Use stable, meaningful thread IDs like `"project-auth-design"` rather than random UUIDs, so you can resume the same conversation across sessions.
 
 **For long-running graphs, set `distill_on_chain_end=False` and flush manually.** This gives you control over when decisions are extracted and avoids mid-graph API calls.
 
-**Avoid creating multiple `NexusMemory` instances with the same `agent_name` in the same process.** Each instance maintains its own distillation buffer. Two instances will produce duplicate distillery calls.
+**Avoid creating multiple `DeciGraphMemory` instances with the same `agent_name` in the same process.** Each instance maintains its own distillation buffer. Two instances will produce duplicate distillery calls.
 
 ---
 
 ## Troubleshooting
 
-### `nexus_context` key not found in chain inputs
+### `decigraph_context` key not found in chain inputs
 
-Ensure your prompt template includes `{nexus_context}` and the `memory_key` matches:
+Ensure your prompt template includes `{decigraph_context}` and the `memory_key` matches:
 
 ```python
-memory = NexusMemory(..., memory_key="nexus_context")
+memory = DeciGraphMemory(..., memory_key="decigraph_context")
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "Context: {nexus_context}"),  # must match memory_key
+    ("system", "Context: {decigraph_context}"),  # must match memory_key
     ("human", "{input}"),
 ])
 ```
 
 ### Checkpointer returns `None` for an existing thread
 
-Check that sessions with the `langgraph-checkpoint` tag exist in Nexus:
+Check that sessions with the `langgraph-checkpoint` tag exist in DeciGraph:
 
 ```bash
 curl "http://localhost:3100/api/projects/proj_01hx.../sessions" \
@@ -922,7 +922,7 @@ pip install --upgrade langgraph
 If you are on langgraph 0.1.x, the checkpointer imports from `langgraph.checkpoint`:
 
 ```python
-# The NexusCheckpointer handles both versions gracefully
+# The DeciGraphCheckpointer handles both versions gracefully
 # If you see import errors, ensure langgraph >= 0.2.0
 ```
 
@@ -930,7 +930,7 @@ If you are on langgraph 0.1.x, the checkpointer imports from `langgraph.checkpoi
 
 Context compilation is typically 100–300ms. If it is slower:
 
-1. Check the Nexus server logs for slow queries
+1. Check the DeciGraph server logs for slow queries
 2. Reduce `max_tokens` to limit the scope of compilation
 3. Verify the HNSW index exists: `\d decisions` in psql should show an index on `embedding`
 4. Consider caching: the same `(agent_name, task_description)` pair is cached for 1 hour

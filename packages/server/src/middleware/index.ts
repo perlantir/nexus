@@ -1,17 +1,17 @@
 import type { Context, MiddlewareHandler } from 'hono';
 import { createMiddleware } from 'hono/factory';
-import { NexusError } from '@nexus/core/types.js';
-import { getDb } from '@nexus/core/db/index.js';
+import { DeciGraphError } from '@decigraph/core/types.js';
+import { getDb } from '@decigraph/core/db/index.js';
 import crypto from 'node:crypto';
 
 // API key cached at startup — never re-read per request
-const NEXUS_API_KEY: string | undefined = process.env.NEXUS_API_KEY;
+const DECIGRAPH_API_KEY: string | undefined = process.env.DECIGRAPH_API_KEY;
 function isDev(): boolean {
   return process.env.NODE_ENV !== 'production';
 }
 
-if (!NEXUS_API_KEY) {
-  console.warn('[nexus] WARNING: NEXUS_API_KEY is not set — running in unauthenticated dev mode');
+if (!DECIGRAPH_API_KEY) {
+  console.warn('[decigraph] WARNING: DECIGRAPH_API_KEY is not set — running in unauthenticated dev mode');
 }
 
 // Timing-safe comparison that handles length mismatches without leaking length info.
@@ -51,7 +51,7 @@ function sanitisePgError(err: unknown): string {
 
 // Error Handler
 export const errorHandler = (err: Error, c: Context) => {
-  if (err instanceof NexusError) {
+  if (err instanceof DeciGraphError) {
     // 404 errors must not expose the route path
     if (err.statusCode === 404) {
       return c.json({ error: { code: 'NOT_FOUND', message: 'Not found' } }, 404);
@@ -63,7 +63,7 @@ export const errorHandler = (err: Error, c: Context) => {
   }
 
   // Log full error to stderr — never returned to the client
-  console.error('[nexus] Unhandled error:', err);
+  console.error('[decigraph] Unhandled error:', err);
 
   // Check for PostgreSQL error shape
   if (
@@ -143,7 +143,7 @@ export const authMiddleware: MiddlewareHandler = createMiddleware(async (c, next
   }
 
   // Dev mode without a key set: skip auth entirely
-  if (isDev() && !NEXUS_API_KEY) {
+  if (isDev() && !DECIGRAPH_API_KEY) {
     await next();
     return;
   }
@@ -156,7 +156,7 @@ export const authMiddleware: MiddlewareHandler = createMiddleware(async (c, next
     getDb().query(`INSERT INTO audit_log (event_type, details) VALUES (?, ?)`, [
       'auth_failure',
       JSON.stringify({ ip, path, reason: message }),
-    ]).catch((e: Error) => console.error('[nexus] audit_log write error:', e.message));
+    ]).catch((e: Error) => console.error('[decigraph] audit_log write error:', e.message));
 
     return c.json({ error: { code: 'UNAUTHORIZED', message } }, 401);
   };
@@ -171,13 +171,13 @@ export const authMiddleware: MiddlewareHandler = createMiddleware(async (c, next
 
   const token = authHeader.slice(7);
 
-  if (!NEXUS_API_KEY) {
+  if (!DECIGRAPH_API_KEY) {
     // Key required in production but not set — reject
     return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }, 500);
   }
 
   const tokenBuf = Buffer.from(token, 'utf8');
-  const keyBuf = Buffer.from(NEXUS_API_KEY, 'utf8');
+  const keyBuf = Buffer.from(DECIGRAPH_API_KEY, 'utf8');
 
   if (!safeEqual(tokenBuf, keyBuf)) {
     return fail('Invalid API key');
@@ -216,7 +216,7 @@ export const auditMiddleware: MiddlewareHandler = createMiddleware(async (c, nex
     'api_request',
     projectId ?? null,
     JSON.stringify({ method, path, status, ...extra }),
-  ]).catch((e: Error) => console.error('[nexus] audit_log write error:', e.message));
+  ]).catch((e: Error) => console.error('[decigraph] audit_log write error:', e.message));
 });
 
 // Rate Limiter

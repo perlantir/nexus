@@ -14,8 +14,8 @@ import { registerExportImportCommands } from './commands/export-import.js';
 const program = new Command();
 
 program
-  .name('nexus')
-  .description('Nexus — AI team memory, decision tracking, and context compilation')
+  .name('decigraph')
+  .description('DeciGraph — AI team memory, decision tracking, and context compilation')
   .version('0.1.0');
 
 registerInitCommand(program);

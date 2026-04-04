@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import type { Agent } from '@nexus/sdk';
+import type { Agent } from '@decigraph/sdk';
 import { getClient, getProjectId, handleError, formatAgent } from '../cli-helpers.js';
 
 export function registerAgentCommands(program: Command): void {

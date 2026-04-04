@@ -1,13 +1,13 @@
 {
-  "name": "@nexus/mcp",
+  "name": "@decigraph/mcp",
   "version": "0.1.0",
-  "description": "MCP server for Nexus — primary entry point for AI agents",
+  "description": "MCP server for DeciGraph — primary entry point for AI agents",
   "author": "Perlantir",
-  "repository": {"type": "git", "url": "https://github.com/perlantir/nexus"},
+  "repository": {"type": "git", "url": "https://github.com/perlantir/decigraph"},
   "type": "module",
   "main": "./dist/mcp/src/index.js",
   "bin": {
-    "nexus-mcp": "./dist/mcp/src/index.js"
+    "decigraph-mcp": "./dist/mcp/src/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -17,7 +17,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@nexus/core": "workspace:*",
+    "@decigraph/core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.7.0",
     "zod": "^3.23.0"
   },

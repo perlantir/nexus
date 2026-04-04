@@ -1,13 +1,13 @@
 """
-Nexus SDK — Client
+DeciGraph SDK — Client
 ==================
-Synchronous HTTP client wrapping every Nexus REST endpoint.
+Synchronous HTTP client wrapping every DeciGraph REST endpoint.
 
 Usage::
 
-    from nexus_sdk import NexusClient
+    from nexus_sdk import DeciGraphClient
 
-    client = NexusClient(base_url="http://localhost:3100", api_key="my-key")
+    client = DeciGraphClient(base_url="http://localhost:3100", api_key="my-key")
     project = client.create_project("My Project", "A test project")
     decision = client.create_decision(
         project_id=project["id"],
@@ -27,24 +27,24 @@ import requests
 from requests import Response, Session
 
 from .exceptions import (
-    NexusApiError,
-    NexusAuthError,
-    NexusConnectionError,
-    NexusNotFoundError,
-    NexusValidationError,
+    DeciGraphApiError,
+    DeciGraphAuthError,
+    DeciGraphConnectionError,
+    DeciGraphNotFoundError,
+    DeciGraphValidationError,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class NexusClient:
+class DeciGraphClient:
     """
-    Synchronous client for the Nexus REST API.
+    Synchronous client for the DeciGraph REST API.
 
     Parameters
     ----------
     base_url:
-        Base URL of the running Nexus server (default ``http://localhost:3100``).
+        Base URL of the running DeciGraph server (default ``http://localhost:3100``).
     api_key:
         Optional bearer token.  When provided it is sent as
         ``Authorization: Bearer <api_key>`` on every request.
@@ -89,39 +89,39 @@ class NexusClient:
         message = body.get("message") or body.get("error") or resp.reason or "Unknown error"
 
         if resp.status_code == 401 or resp.status_code == 403:
-            raise NexusAuthError(resp.status_code, message, body)
+            raise DeciGraphAuthError(resp.status_code, message, body)
         if resp.status_code == 404:
-            raise NexusNotFoundError(resp.status_code, message, body)
+            raise DeciGraphNotFoundError(resp.status_code, message, body)
         if resp.status_code == 422:
-            raise NexusValidationError(resp.status_code, message, body)
-        raise NexusApiError(resp.status_code, message, body)
+            raise DeciGraphValidationError(resp.status_code, message, body)
+        raise DeciGraphApiError(resp.status_code, message, body)
 
     def _get(self, path: str, params: dict | None = None) -> Any:
         try:
             resp = self._session.get(self._url(path), params=params, timeout=self.timeout)
         except requests.ConnectionError as exc:
-            raise NexusConnectionError(f"Cannot connect to Nexus at {self.base_url}") from exc
+            raise DeciGraphConnectionError(f"Cannot connect to DeciGraph at {self.base_url}") from exc
         return self._handle_response(resp)
 
     def _post(self, path: str, json: dict | None = None) -> Any:
         try:
             resp = self._session.post(self._url(path), json=json, timeout=self.timeout)
         except requests.ConnectionError as exc:
-            raise NexusConnectionError(f"Cannot connect to Nexus at {self.base_url}") from exc
+            raise DeciGraphConnectionError(f"Cannot connect to DeciGraph at {self.base_url}") from exc
         return self._handle_response(resp)
 
     def _patch(self, path: str, json: dict | None = None) -> Any:
         try:
             resp = self._session.patch(self._url(path), json=json, timeout=self.timeout)
         except requests.ConnectionError as exc:
-            raise NexusConnectionError(f"Cannot connect to Nexus at {self.base_url}") from exc
+            raise DeciGraphConnectionError(f"Cannot connect to DeciGraph at {self.base_url}") from exc
         return self._handle_response(resp)
 
     def _delete(self, path: str) -> None:
         try:
             resp = self._session.delete(self._url(path), timeout=self.timeout)
         except requests.ConnectionError as exc:
-            raise NexusConnectionError(f"Cannot connect to Nexus at {self.base_url}") from exc
+            raise DeciGraphConnectionError(f"Cannot connect to DeciGraph at {self.base_url}") from exc
         self._handle_response(resp)
 
     # ------------------------------------------------------------------
@@ -130,7 +130,7 @@ class NexusClient:
 
     def create_project(self, name: str, description: str | None = None) -> dict[str, Any]:
         """
-        Create a new Nexus project.
+        Create a new DeciGraph project.
 
         Parameters
         ----------
@@ -463,7 +463,7 @@ class NexusClient:
         """
         Compile relevant context for an agent about to start a task.
 
-        Nexus selects recent decisions, session summaries, and unread
+        DeciGraph selects recent decisions, session summaries, and unread
         notifications that are relevant to *task_description* and packages
         them into a single ``ContextPackage``.
 
@@ -836,11 +836,11 @@ class NexusClient:
         """Close the underlying HTTP session."""
         self._session.close()
 
-    def __enter__(self) -> "NexusClient":
+    def __enter__(self) -> "DeciGraphClient":
         return self
 
     def __exit__(self, *_: object) -> None:
         self.close()
 
     def __repr__(self) -> str:
-        return f"NexusClient(base_url={self.base_url!r})"
+        return f"DeciGraphClient(base_url={self.base_url!r})"

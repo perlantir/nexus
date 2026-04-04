@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import type { Decision } from '@nexus/sdk';
+import type { Decision } from '@decigraph/sdk';
 import {
   getClient,
   getProjectId,
@@ -11,7 +11,7 @@ import {
   formatDecision,
   renderAsciiGraph,
 } from '../cli-helpers.js';
-import type { GraphResult } from '@nexus/sdk';
+import type { GraphResult } from '@decigraph/sdk';
 
 export function registerDecisionCommands(program: Command): void {
   const decisions = program.command('decisions').description('Manage decisions');

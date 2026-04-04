@@ -5,7 +5,7 @@ import { query, getClient } from './pool.js';
 export async function runMigrations(migrationsDir: string): Promise<void> {
   // Ensure migrations tracking table exists
   await query(`
-    CREATE TABLE IF NOT EXISTS _nexus_migrations (
+    CREATE TABLE IF NOT EXISTS _decigraph_migrations (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
       applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -13,7 +13,7 @@ export async function runMigrations(migrationsDir: string): Promise<void> {
   `);
 
   // Get already applied migrations
-  const applied = await query<{ name: string }>('SELECT name FROM _nexus_migrations ORDER BY id');
+  const applied = await query<{ name: string }>('SELECT name FROM _decigraph_migrations ORDER BY id');
   const appliedSet = new Set(applied.rows.map((r) => r.name));
 
   // Read migration files
@@ -32,12 +32,12 @@ export async function runMigrations(migrationsDir: string): Promise<void> {
     try {
       await client.query('BEGIN');
       await client.query(sql);
-      await client.query('INSERT INTO _nexus_migrations (name) VALUES ($1)', [file]);
+      await client.query('INSERT INTO _decigraph_migrations (name) VALUES ($1)', [file]);
       await client.query('COMMIT');
-      console.warn(`[nexus] Migration applied: ${file}`);
+      console.warn(`[decigraph] Migration applied: ${file}`);
     } catch (err) {
       await client.query('ROLLBACK');
-      console.error(`[nexus] Migration failed: ${file}`, err);
+      console.error(`[decigraph] Migration failed: ${file}`, err);
       throw err;
     } finally {
       client.release();

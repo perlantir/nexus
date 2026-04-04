@@ -32,7 +32,7 @@ function loadSpec(): Record<string, unknown> {
   // Fallback: return minimal spec
   openApiSpec = {
     openapi: '3.1.0',
-    info: { title: 'Nexus API', version: '1.0.0' },
+    info: { title: 'DeciGraph API', version: '1.0.0' },
     paths: {},
   };
   return openApiSpec;
@@ -48,7 +48,7 @@ function swaggerHtml(specUrl: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nexus API Docs</title>
+  <title>DeciGraph API Docs</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
   <style>
     body { margin: 0; background: #fafafa; }

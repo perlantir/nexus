@@ -11,7 +11,7 @@ import { createApp } from '../src/app.js';
 // ── DB Mock ───────────────────────────────────────────────────────────────────
 
 const mockQuery = vi.fn();
-vi.mock('@nexus/core/db/index.js', () => ({
+vi.mock('@decigraph/core/db/index.js', () => ({
   getDb: () => ({
     query: mockQuery,
     transaction: vi.fn().mockImplementation(async (fn: Function) => fn(mockQuery)),
@@ -23,7 +23,7 @@ vi.mock('@nexus/core/db/index.js', () => ({
   closeDb: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('@nexus/core/db/pool.js', () => ({
+vi.mock('@decigraph/core/db/pool.js', () => ({
   query: mockQuery,
   getPool: vi.fn(),
   getClient: vi.fn(),
@@ -32,7 +32,7 @@ vi.mock('@nexus/core/db/pool.js', () => ({
   transaction: vi.fn().mockImplementation(async (fn: Function) => fn({ query: mockQuery })),
 }));
 
-vi.mock('@nexus/core/db/parsers.js', () => ({
+vi.mock('@decigraph/core/db/parsers.js', () => ({
   parseProject: vi.fn((row: Record<string, unknown>) => row),
   parseAgent: vi.fn((row: Record<string, unknown>) => row),
   parseDecision: vi.fn((row: Record<string, unknown>) => row),

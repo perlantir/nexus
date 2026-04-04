@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import type { Notification } from '@nexus/sdk';
+import type { Notification } from '@decigraph/sdk';
 import { getClient, handleError, formatNotification } from '../cli-helpers.js';
 
 export function registerNotificationCommands(program: Command): void {
@@ -12,11 +12,11 @@ export function registerNotificationCommands(program: Command): void {
     .option('--all', 'Show all notifications including read')
     .action(async (opts: { agent?: string; all?: boolean }) => {
       const client = getClient();
-      const agentId = opts.agent ?? process.env.NEXUS_AGENT_ID;
+      const agentId = opts.agent ?? process.env.DECIGRAPH_AGENT_ID;
 
       if (!agentId) {
         console.error(
-          chalk.red('Error: --agent <id> or NEXUS_AGENT_ID environment variable is required'),
+          chalk.red('Error: --agent <id> or DECIGRAPH_AGENT_ID environment variable is required'),
         );
         process.exit(1);
       }
@@ -81,9 +81,9 @@ export function registerNotificationCommands(program: Command): void {
     )
     .action(async (opts: { status?: string }) => {
       const client = getClient();
-      const projectId = process.env.NEXUS_PROJECT_ID;
+      const projectId = process.env.DECIGRAPH_PROJECT_ID;
       if (!projectId) {
-        console.error(chalk.red('Error: NEXUS_PROJECT_ID environment variable is not set.'));
+        console.error(chalk.red('Error: DECIGRAPH_PROJECT_ID environment variable is not set.'));
         process.exit(1);
       }
       const spinner = ora('Fetching contradictions...').start();

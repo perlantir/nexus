@@ -1,19 +1,19 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { NexusClient } from '../../../sdk/src/index.js';
-import type { NexusServerConfig } from '../server.js';
+import type { DeciGraphClient } from '../../../sdk/src/index.js';
+import type { DeciGraphServerConfig } from '../server.js';
 
 export function registerCaptureTools(
   server: McpServer,
-  client: NexusClient,
-  config: NexusServerConfig,
+  client: DeciGraphClient,
+  config: DeciGraphServerConfig,
 ): void {
   server.registerTool(
-    'nexus_auto_capture',
+    'decigraph_auto_capture',
     {
       title: 'Auto-capture decisions from conversation',
       description:
-        'Analyzes conversation text and automatically extracts decisions, assumptions, and contradictions using the Nexus distillery pipeline.',
+        'Analyzes conversation text and automatically extracts decisions, assumptions, and contradictions using the DeciGraph distillery pipeline.',
       inputSchema: {
         conversation_text: z
           .string()

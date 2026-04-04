@@ -46,12 +46,12 @@ export async function callLLM(systemPrompt: string, userMessage: string): Promis
   const endpoint = resolveLLMConfig().distillery;
 
   if (!endpoint) {
-    console.warn('[nexus:distillery] No LLM provider configured. Running in mock mode.');
+    console.warn('[decigraph:distillery] No LLM provider configured. Running in mock mode.');
     return '[]';
   }
 
   if (!checkRateLimit()) {
-    console.warn('[nexus:distillery] Rate limit exceeded (max 10/min); skipping LLM call.');
+    console.warn('[decigraph:distillery] Rate limit exceeded (max 10/min); skipping LLM call.');
     return '[]';
   }
 
@@ -124,7 +124,7 @@ export function parseJsonSafe<T>(raw: string): T | null {
   }
 }
 
-const EXTRACTION_SYSTEM_PROMPT = `You are the Nexus Distillery — a precise decision extraction engine.
+const EXTRACTION_SYSTEM_PROMPT = `You are the DeciGraph Distillery — a precise decision extraction engine.
 
 CRITICAL RULES:
 - ONLY extract decisions the team has clearly committed to.
@@ -220,14 +220,14 @@ export async function extractDecisions(
   try {
     rawResponse = await callLLM(EXTRACTION_SYSTEM_PROMPT, INJECTION_GUARD + safeText);
   } catch (err) {
-    console.error('[nexus:distillery] extractDecisions LLM call failed');
+    console.error('[decigraph:distillery] extractDecisions LLM call failed');
     return [];
   }
 
   const parsed = parseJsonSafe<unknown[]>(rawResponse);
   if (!Array.isArray(parsed)) {
     console.warn(
-      '[nexus:distillery] extractDecisions: LLM returned non-array JSON; treating as empty.',
+      '[decigraph:distillery] extractDecisions: LLM returned non-array JSON; treating as empty.',
     );
     return [];
   }
@@ -238,7 +238,7 @@ export async function extractDecisions(
     try {
       decisions.push(normaliseExtractedDecision(item as Record<string, unknown>));
     } catch (err) {
-      console.warn('[nexus:distillery] Failed to normalise extracted decision item:', err);
+      console.warn('[decigraph:distillery] Failed to normalise extracted decision item:', err);
     }
   }
 

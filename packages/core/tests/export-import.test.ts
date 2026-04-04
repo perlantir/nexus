@@ -112,7 +112,7 @@ function makeWebhookRow() {
     events: '["contradiction_detected","decision_created"]',
     enabled: 1,
     secret: 'super-secret-key',
-    metadata: '{"channel":"#nexus"}',
+    metadata: '{"channel":"#decigraph"}',
   };
 }
 
@@ -216,7 +216,7 @@ describe('Export', () => {
 
 describe('Import', () => {
   const VALID_EXPORT = {
-    nexus_export_version: '1.0',
+    decigraph_export_version: '1.0',
     exported_at: '2026-04-03T20:00:00Z',
     project: { name: 'bouts', description: 'AI competition', metadata: {} },
     agents: [{ name: 'maks', role: 'builder', relevance_profile: {}, context_budget_tokens: 50000 }],
@@ -317,7 +317,7 @@ describe('Import', () => {
 
   it('handles empty export gracefully', () => {
     const emptyExport = {
-      nexus_export_version: '1.0',
+      decigraph_export_version: '1.0',
       exported_at: '2026-04-03T20:00:00Z',
       project: { name: 'empty', description: null, metadata: {} },
       agents: [],

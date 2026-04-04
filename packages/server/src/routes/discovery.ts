@@ -1,8 +1,8 @@
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
-import { distill } from '@nexus/core/distillery/index.js';
-import { scanProjectContradictions } from '@nexus/core/contradiction-detector/index.js';
-import { dispatchWebhooks } from '@nexus/core/webhooks/index.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { distill } from '@decigraph/core/distillery/index.js';
+import { scanProjectContradictions } from '@decigraph/core/contradiction-detector/index.js';
+import { dispatchWebhooks } from '@decigraph/core/webhooks/index.js';
 import {
   requireUUID,
   requireString,
@@ -12,8 +12,8 @@ import {
 
 import crypto from 'node:crypto';
 
-function getNexusApiKey(): string | undefined {
-  return process.env.NEXUS_API_KEY;
+function getDeciGraphApiKey(): string | undefined {
+  return process.env.DECIGRAPH_API_KEY;
 }
 
 function safeEqual(a: string, b: string): boolean {
@@ -109,7 +109,7 @@ export function registerDiscoveryRoutes(app: Hono): void {
   // POST /api/ingest/webhook — Webhook receiver
   app.post('/api/ingest/webhook', async (c) => {
     // Bearer token auth (independent of session auth)
-    const apiKey = getNexusApiKey();
+    const apiKey = getDeciGraphApiKey();
     if (apiKey) {
       const authHeader = c.req.header('Authorization') ?? '';
       const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
@@ -153,7 +153,7 @@ export function registerDiscoveryRoutes(app: Hono): void {
         });
       })
       .catch((err: unknown) => {
-        console.error('[nexus] Webhook processing failed:', (err as Error).message);
+        console.error('[decigraph] Webhook processing failed:', (err as Error).message);
       });
 
     return c.json({ queued: true, source_id: sourceId });
@@ -305,11 +305,11 @@ export function registerDiscoveryRoutes(app: Hono): void {
       dispatchWebhooks(projectId, 'scan_completed', {
         pairs_checked: result.pairs_checked,
         contradictions_found: result.contradictions_found,
-      }).catch((err) => console.warn('[nexus:webhook]', (err as Error).message));
+      }).catch((err) => console.warn('[decigraph:webhook]', (err as Error).message));
 
       return c.json(result);
     } catch (err) {
-      console.error('[nexus] Contradiction scan failed:', (err as Error).message);
+      console.error('[decigraph] Contradiction scan failed:', (err as Error).message);
       return c.json({ error: 'Contradiction scan failed', details: (err as Error).message }, 500);
     }
   });

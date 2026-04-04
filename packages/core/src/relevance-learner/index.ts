@@ -186,7 +186,7 @@ export async function recordBatchFeedback(
       );
       recorded++;
     } catch (err) {
-      console.warn(`[nexus:learner] Feedback skipped for ${entry.decision_id}: ${(err as Error).message}`);
+      console.warn(`[decigraph:learner] Feedback skipped for ${entry.decision_id}: ${(err as Error).message}`);
     }
   }
 
@@ -323,13 +323,13 @@ export async function computeAndApplyWeightUpdates(
       [randomUUID(), agentId, JSON.stringify(weightsAfter), new Date().toISOString()],
     );
   } catch (err) {
-    console.warn('[nexus:learner] Weight snapshot failed:', (err as Error).message);
+    console.warn('[decigraph:learner] Weight snapshot failed:', (err as Error).message);
   }
 
   // Log changes
   for (const u of updates) {
     console.warn(
-      `[nexus:learner] Agent "${agentId}" weight updated: ${u.tag}: ${u.current_weight.toFixed(2)} → ${u.new_weight.toFixed(2)} (${u.adjustment > 0 ? '+' : ''}${u.adjustment.toFixed(4)}, ${u.feedback_count} entries)`,
+      `[decigraph:learner] Agent "${agentId}" weight updated: ${u.tag}: ${u.current_weight.toFixed(2)} → ${u.new_weight.toFixed(2)} (${u.adjustment > 0 ? '+' : ''}${u.adjustment.toFixed(4)}, ${u.feedback_count} entries)`,
     );
   }
 

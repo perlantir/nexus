@@ -61,7 +61,7 @@ interface SimilarDecision {
 async function findSimilarDecisions(newDecision: Decision): Promise<SimilarDecision[]> {
   if (!newDecision.embedding || newDecision.embedding.length === 0) {
     console.warn(
-      `[nexus:contradiction] Decision "${newDecision.id}" has no embedding — skipping similarity scan.`,
+      `[decigraph:contradiction] Decision "${newDecision.id}" has no embedding — skipping similarity scan.`,
     );
     return [];
   }
@@ -86,7 +86,7 @@ async function findSimilarDecisions(newDecision: Decision): Promise<SimilarDecis
     rows = result.rows;
   } catch (err) {
     console.error(
-      '[nexus:contradiction] Stage 1 pgvector query failed:',
+      '[decigraph:contradiction] Stage 1 pgvector query failed:',
       (err as Error).message,
     );
     return [];
@@ -104,7 +104,7 @@ async function findSimilarDecisions(newDecision: Decision): Promise<SimilarDecis
         delete cleanRow['_distance'];
         similar.push({ decision: parseDecision(cleanRow), similarity });
       } catch (err) {
-        console.warn('[nexus:contradiction] Failed to parse similar decision row:', err);
+        console.warn('[decigraph:contradiction] Failed to parse similar decision row:', err);
       }
     }
   }
@@ -175,7 +175,7 @@ async function analyzeConflict(
 ): Promise<ContradictionAnalysis | null> {
   if (!checkContradictionRateLimit()) {
     console.warn(
-      '[nexus:contradiction] Rate limit exceeded (max 5/min); skipping LLM conflict check.',
+      '[decigraph:contradiction] Rate limit exceeded (max 5/min); skipping LLM conflict check.',
     );
     return null;
   }
@@ -193,7 +193,7 @@ async function analyzeConflict(
     rawResponse = await callLLM(CONTRADICTION_SYSTEM_PROMPT, userMessage);
   } catch (err) {
     console.error(
-      '[nexus:contradiction] LLM call failed for conflict analysis:',
+      '[decigraph:contradiction] LLM call failed for conflict analysis:',
       (err as Error).message,
     );
     return null;
@@ -206,7 +206,7 @@ async function analyzeConflict(
     Array.isArray(parsed)
   ) {
     console.warn(
-      '[nexus:contradiction] LLM returned unexpected shape; treating as no conflict.',
+      '[decigraph:contradiction] LLM returned unexpected shape; treating as no conflict.',
     );
     return null;
   }
@@ -214,7 +214,7 @@ async function analyzeConflict(
   const obj = parsed as Record<string, unknown>;
 
   if (typeof obj['conflicts'] !== 'boolean') {
-    console.warn('[nexus:contradiction] LLM response missing "conflicts" boolean field.');
+    console.warn('[decigraph:contradiction] LLM response missing "conflicts" boolean field.');
     return null;
   }
 
@@ -286,7 +286,7 @@ async function storeContradiction(
     });
   } catch (err) {
     console.error(
-      '[nexus:contradiction] Failed to store contradiction:',
+      '[decigraph:contradiction] Failed to store contradiction:',
       (err as Error).message,
     );
     return null;
@@ -335,14 +335,14 @@ async function notifyGovernors(
         notified++;
       } catch (err) {
         console.warn(
-          `[nexus:contradiction] Failed to notify governor agent ${agentId}:`,
+          `[decigraph:contradiction] Failed to notify governor agent ${agentId}:`,
           (err as Error).message,
         );
       }
     }
   } catch (err) {
     console.warn(
-      '[nexus:contradiction] Failed to query governor agents:',
+      '[decigraph:contradiction] Failed to query governor agents:',
       (err as Error).message,
     );
   }
@@ -380,7 +380,7 @@ export async function checkForContradictions(decision: Decision): Promise<Contra
         analysis = await analyzeConflict(decision, existingDecision);
       } catch (err) {
         console.error(
-          '[nexus:contradiction] Unexpected error during conflict analysis:',
+          '[decigraph:contradiction] Unexpected error during conflict analysis:',
           (err as Error).message,
         );
         continue;
@@ -405,7 +405,7 @@ export async function checkForContradictions(decision: Decision): Promise<Contra
         await propagateChange(decision, 'contradiction_detected');
       } catch (err) {
         console.warn(
-          '[nexus:contradiction] propagateChange failed:',
+          '[decigraph:contradiction] propagateChange failed:',
           (err as Error).message,
         );
       }
@@ -416,20 +416,20 @@ export async function checkForContradictions(decision: Decision): Promise<Contra
         decision_a_title: decision.title,
         decision_b_title: existingDecision.title,
         severity: analysis.severity,
-      }).catch((err) => console.warn('[nexus:webhook]', (err as Error).message));
+      }).catch((err) => console.warn('[decigraph:webhook]', (err as Error).message));
 
       // Stage 3c: Always notify governor agents regardless of subscriptions
       const governorCount = await notifyGovernors(decision, existingDecision, analysis);
 
       console.warn(
-        `[nexus:contradiction] ${analysis.severity.toUpperCase()}: ` +
+        `[decigraph:contradiction] ${analysis.severity.toUpperCase()}: ` +
           `"${decision.title}" conflicts with "${existingDecision.title}" ` +
           `— notifying ${governorCount} agents`,
       );
     }
   } catch (err) {
     console.error(
-      '[nexus:contradiction] Unexpected top-level error in checkForContradictions:',
+      '[decigraph:contradiction] Unexpected top-level error in checkForContradictions:',
       (err as Error).message,
     );
   }
@@ -471,13 +471,13 @@ export async function scanProjectContradictions(
       try {
         decisions.push(parseDecision(row));
       } catch (err) {
-        console.warn('[nexus:contradiction] Failed to parse decision during scan:', err);
+        console.warn('[decigraph:contradiction] Failed to parse decision during scan:', err);
       }
     }
 
     if (decisions.length < 2) {
       console.warn(
-        `[nexus:contradiction] scanProjectContradictions: fewer than 2 decisions with ` +
+        `[decigraph:contradiction] scanProjectContradictions: fewer than 2 decisions with ` +
           `embeddings in project ${projectId} — nothing to scan.`,
       );
       return { pairs_checked: 0, contradictions_found: 0 };
@@ -545,7 +545,7 @@ export async function scanProjectContradictions(
           }
         } catch (err) {
           console.warn(
-            '[nexus:contradiction] Duplicate check query failed:',
+            '[decigraph:contradiction] Duplicate check query failed:',
             (err as Error).message,
           );
         }
@@ -556,7 +556,7 @@ export async function scanProjectContradictions(
           analysis = await analyzeConflict(decisionA, decisionB);
         } catch (err) {
           console.error(
-            '[nexus:contradiction] scanProjectContradictions: analysis error:',
+            '[decigraph:contradiction] scanProjectContradictions: analysis error:',
             (err as Error).message,
           );
           continue;
@@ -580,7 +580,7 @@ export async function scanProjectContradictions(
           await propagateChange(decisionA, 'contradiction_detected');
         } catch (err) {
           console.warn(
-            '[nexus:contradiction] propagateChange failed during scan:',
+            '[decigraph:contradiction] propagateChange failed during scan:',
             (err as Error).message,
           );
         }
@@ -588,7 +588,7 @@ export async function scanProjectContradictions(
         const governorCount = await notifyGovernors(decisionA, decisionB, analysis);
 
         console.warn(
-          `[nexus:contradiction] ${analysis.severity.toUpperCase()}: ` +
+          `[decigraph:contradiction] ${analysis.severity.toUpperCase()}: ` +
             `"${decisionA.title}" conflicts with "${decisionB.title}" ` +
             `— notifying ${governorCount} agents`,
         );
@@ -602,7 +602,7 @@ export async function scanProjectContradictions(
     }
   } catch (err) {
     console.error(
-      '[nexus:contradiction] Unexpected top-level error in scanProjectContradictions:',
+      '[decigraph:contradiction] Unexpected top-level error in scanProjectContradictions:',
       (err as Error).message,
     );
   }
@@ -618,12 +618,12 @@ export function logContradictionConfig(): void {
   const config = resolveLLMConfig();
   if (config.distillery) {
     console.warn(
-      `[nexus:contradiction] Contradiction detection enabled ` +
+      `[decigraph:contradiction] Contradiction detection enabled ` +
         `(${config.distillery.model} via ${config.distillery.provider})`,
     );
   } else {
     console.warn(
-      '[nexus:contradiction] Contradiction detection disabled — no LLM provider configured.',
+      '[decigraph:contradiction] Contradiction detection disabled — no LLM provider configured.',
     );
   }
 }

@@ -72,7 +72,7 @@ export async function createSessionSummary(
       };
     }
   } catch (err) {
-    console.error('[nexus:distillery] createSessionSummary LLM call failed');
+    console.error('[decigraph:distillery] createSessionSummary LLM call failed');
     // Continue with default summary
   }
 
@@ -81,7 +81,7 @@ export async function createSessionSummary(
 
   const summaryEmbedding = await generateEmbedding(`${topic}\n${summaryData.summary}`).catch(
     (err: unknown) => {
-      console.warn('[nexus:distillery] Session summary embedding failed:', err);
+      console.warn('[decigraph:distillery] Session summary embedding failed:', err);
       return null;
     },
   );
@@ -136,7 +136,7 @@ export async function createSessionSummary(
     if (!row) throw new Error('session_summaries insert returned no rows');
     return parseSession(row);
   } catch (err) {
-    console.error('[nexus:distillery] createSessionSummary DB insert failed:', err);
+    console.error('[decigraph:distillery] createSessionSummary DB insert failed:', err);
     throw err;
   }
 }

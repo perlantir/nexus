@@ -1,11 +1,11 @@
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
-import { parseDecision } from '@nexus/core/db/parsers.js';
-import { NotFoundError, ValidationError } from '@nexus/core/types.js';
-import type { Decision, NotificationType } from '@nexus/core/types.js';
-import { propagateChange } from '@nexus/core/change-propagator/index.js';
-import { checkForContradictions } from '@nexus/core/contradiction-detector/index.js';
-import { dispatchWebhooks } from '@nexus/core/webhooks/index.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { parseDecision } from '@decigraph/core/db/parsers.js';
+import { NotFoundError, ValidationError } from '@decigraph/core/types.js';
+import type { Decision, NotificationType } from '@decigraph/core/types.js';
+import { propagateChange } from '@decigraph/core/change-propagator/index.js';
+import { checkForContradictions } from '@decigraph/core/contradiction-detector/index.js';
+import { dispatchWebhooks } from '@decigraph/core/webhooks/index.js';
 import { requireUUID, logAudit, generateEmbedding } from './validation.js';
 
 export function registerReviewRoutes(app: Hono): void {
@@ -48,7 +48,7 @@ export function registerReviewRoutes(app: Hono): void {
 
     // Trigger all creation side effects that were skipped for pending
     propagateChange(decision, 'decision_created' as NotificationType).catch((err) =>
-      console.error('[nexus] Change propagation failed:', (err as Error).message),
+      console.error('[decigraph] Change propagation failed:', (err as Error).message),
     );
 
     dispatchWebhooks(decision.project_id, 'decision_created', {
@@ -56,10 +56,10 @@ export function registerReviewRoutes(app: Hono): void {
       title: decision.title,
       made_by: decision.made_by,
       approved_from_review: true,
-    }).catch((err) => console.warn('[nexus:webhook]', (err as Error).message));
+    }).catch((err) => console.warn('[decigraph:webhook]', (err as Error).message));
 
     checkForContradictions(decision).catch((err) =>
-      console.error('[nexus] Contradiction check failed:', (err as Error).message),
+      console.error('[decigraph] Contradiction check failed:', (err as Error).message),
     );
 
     // Generate embedding (fire-and-forget)

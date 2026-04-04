@@ -1,4 +1,4 @@
-"""Manages the Nexus Node.js server process."""
+"""Manages the DeciGraph Node.js server process."""
 
 import subprocess
 import platform
@@ -7,25 +7,25 @@ import os
 import secrets
 from pathlib import Path
 
-class NexusServer:
-    def __init__(self, db_path="./nexus.db", port=3100):
+class DeciGraphServer:
+    def __init__(self, db_path="./decigraph.db", port=3100):
         self.db_path = str(Path(db_path).resolve())
         self.port = port
-        self.api_key = os.environ.get("NEXUS_API_KEY", f"nx_{secrets.token_hex(20)}")
+        self.api_key = os.environ.get("DECIGRAPH_API_KEY", f"nx_{secrets.token_hex(20)}")
         self._process = None
 
     def start(self):
         binary = self._get_binary_path()
         if not binary:
             raise RuntimeError(
-                "Nexus server binary not found. "
+                "DeciGraph server binary not found. "
                 "Install Node.js and run: npx @nexus/cli start"
             )
         env = {
             **os.environ,
-            "NEXUS_DB_PATH": self.db_path,
+            "DECIGRAPH_DB_PATH": self.db_path,
             "PORT": str(self.port),
-            "NEXUS_API_KEY": self.api_key,
+            "DECIGRAPH_API_KEY": self.api_key,
         }
         self._process = subprocess.Popen(
             [str(binary), "start"],
@@ -83,7 +83,7 @@ class NexusServer:
                     return
             except Exception:
                 time.sleep(0.5)
-        raise TimeoutError("Nexus server did not start within timeout")
+        raise TimeoutError("DeciGraph server did not start within timeout")
     
     def __enter__(self):
         self.start()

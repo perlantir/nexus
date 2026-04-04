@@ -5,13 +5,13 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { NexusClient } from '@nexus/sdk';
+import { DeciGraphClient } from '@decigraph/sdk';
 import { getClient, prompt, handleError } from '../cli-helpers.js';
 
 const _require = createRequire(import.meta.url);
 
 /**
- * Generate a Nexus-style API key: "nx_" + 16 random alphanumeric characters.
+ * Generate a DeciGraph-style API key: "nx_" + 16 random alphanumeric characters.
  */
 function generateApiKey(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -28,8 +28,8 @@ function generateApiKey(): string {
 }
 
 /**
- * Spawn the Nexus server as a detached background process and write a PID
- * file so that `nexus stop` can terminate it later.
+ * Spawn the DeciGraph server as a detached background process and write a PID
+ * file so that `decigraph stop` can terminate it later.
  */
 function spawnServer(
   dir: string,
@@ -42,11 +42,11 @@ function spawnServer(
     let serverEntry: string;
     try {
       // When installed via npm both packages land next to each other.
-      serverEntry = _require.resolve('@nexus/server');
+      serverEntry = _require.resolve('@decigraph/server');
     } catch {
       // Fallback for monorepo / development usage.
       serverEntry = path.resolve(
-        path.dirname(_require.resolve('@nexus/cli/package.json')),
+        path.dirname(_require.resolve('@decigraph/cli/package.json')),
         '..',
         'server',
         'dist',
@@ -61,8 +61,8 @@ function spawnServer(
         ...process.env,
         PORT: String(port),
         HOST: '127.0.0.1',
-        NEXUS_SQLITE_PATH: sqlitePath,
-        NEXUS_API_KEY: apiKey,
+        DECIGRAPH_SQLITE_PATH: sqlitePath,
+        DECIGRAPH_API_KEY: apiKey,
       },
       cwd: dir,
     });
@@ -71,14 +71,14 @@ function spawnServer(
 
     child.unref();
 
-    // Write PID file so `nexus stop` can signal the process.
+    // Write PID file so `decigraph stop` can signal the process.
     const pid = child.pid;
     if (pid === undefined) {
       reject(new Error('Failed to obtain server PID'));
       return;
     }
 
-    const pidFile = path.join(dir, '.nexus.pid');
+    const pidFile = path.join(dir, '.decigraph.pid');
     fs.writeFileSync(pidFile, String(pid), 'utf-8');
 
     resolve(pid);
@@ -88,14 +88,14 @@ function spawnServer(
 export function registerInitCommand(program: Command): void {
   program
     .command('init [name]')
-    .description('Create a new Nexus project (or initialise a local server if no API URL is set)')
+    .description('Create a new DeciGraph project (or initialise a local server if no API URL is set)')
     .option('-d, --description <desc>', 'Project description')
     .option('-p, --port <port>', 'Port for the local server', '3100')
     .action(async (name?: string, opts?: { description?: string; port?: string }) => {
-      const apiUrl = process.env.NEXUS_API_URL;
+      const apiUrl = process.env.DECIGRAPH_API_URL;
 
       // ------------------------------------------------------------------
-      // Remote-API mode: NEXUS_API_URL is set → existing behaviour
+      // Remote-API mode: DECIGRAPH_API_URL is set → existing behaviour
       // ------------------------------------------------------------------
       if (apiUrl) {
         const client = getClient();
@@ -122,7 +122,7 @@ export function registerInitCommand(program: Command): void {
           console.warn(
             `\n${chalk.dim('Set the following environment variable to use this project:')}`,
           );
-          console.warn(chalk.yellow(`  export NEXUS_PROJECT_ID="${project.id}"`));
+          console.warn(chalk.yellow(`  export DECIGRAPH_PROJECT_ID="${project.id}"`));
         } catch (err) {
           handleError(err, spinner);
         }
@@ -130,7 +130,7 @@ export function registerInitCommand(program: Command): void {
       }
 
       // ------------------------------------------------------------------
-      // Local SQLite mode: no NEXUS_API_URL → zero-infrastructure setup
+      // Local SQLite mode: no DECIGRAPH_API_URL → zero-infrastructure setup
       // ------------------------------------------------------------------
       const port = parseInt(opts?.port ?? '3100', 10);
 
@@ -146,14 +146,14 @@ export function registerInitCommand(program: Command): void {
         dir = process.cwd();
       }
 
-      const sqlitePath = path.join(dir, 'nexus.db');
+      const sqlitePath = path.join(dir, 'decigraph.db');
       const apiKey = generateApiKey();
 
-      const spinner = ora('Initialising local Nexus…').start();
+      const spinner = ora('Initialising local DeciGraph…').start();
 
       try {
         // Initialise the SQLite database (runs migrations via the adapter).
-        const { initDb, closeDb } = await import('@nexus/core/db/index.js');
+        const { initDb, closeDb } = await import('@decigraph/core/db/index.js');
         const db = await initDb({ dialect: 'sqlite', sqlitePath });
         // Verify it's reachable.
         await db.query('SELECT 1 AS ok');
@@ -169,9 +169,9 @@ export function registerInitCommand(program: Command): void {
         // success banner.
         await new Promise((r) => setTimeout(r, 800));
 
-        spinner.succeed(chalk.green('✓ Nexus is running!'));
+        spinner.succeed(chalk.green('✓ DeciGraph is running!'));
 
-        const relativePath = path.relative(process.cwd(), sqlitePath) || './nexus.db';
+        const relativePath = path.relative(process.cwd(), sqlitePath) || './decigraph.db';
         console.warn('');
         console.warn(`  ${chalk.bold('API:')}       http://localhost:${port}`);
         console.warn(`  ${chalk.bold('Dashboard:')} http://localhost:${port}/dashboard`);
@@ -180,7 +180,7 @@ export function registerInitCommand(program: Command): void {
         console.warn('');
         console.warn(chalk.dim('  Open the dashboard to set up your first project.'));
         console.warn('');
-        console.warn(chalk.dim(`  To stop the server run: nexus stop`));
+        console.warn(chalk.dim(`  To stop the server run: decigraph stop`));
         if (name) {
           console.warn(chalk.dim(`  To use this project, cd into: ${name}`));
         }

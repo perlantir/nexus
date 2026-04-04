@@ -38,13 +38,13 @@ importers:
 
   packages/cli:
     dependencies:
-      '@nexus/core':
+      '@decigraph/core':
         specifier: workspace:*
         version: link:../core
-      '@nexus/sdk':
+      '@decigraph/sdk':
         specifier: workspace:*
         version: link:../sdk
-      '@nexus/server':
+      '@decigraph/server':
         specifier: workspace:*
         version: link:../server
       better-sqlite3:
@@ -173,12 +173,12 @@ importers:
 
   packages/mcp:
     dependencies:
+      '@decigraph/core':
+        specifier: workspace:*
+        version: link:../core
       '@modelcontextprotocol/sdk':
         specifier: ^1.7.0
         version: 1.29.0(zod@3.25.76)
-      '@nexus/core':
-        specifier: workspace:*
-        version: link:../core
       zod:
         specifier: ^3.23.0
         version: 3.25.76
@@ -208,12 +208,12 @@ importers:
 
   packages/server:
     dependencies:
+      '@decigraph/core':
+        specifier: workspace:*
+        version: link:../core
       '@hono/node-server':
         specifier: ^1.13.0
         version: 1.19.12(hono@4.12.10)
-      '@nexus/core':
-        specifier: workspace:*
-        version: link:../core
       hono:
         specifier: ^4.6.0
         version: 4.12.10
@@ -4309,14 +4309,6 @@ snapshots:
     optionalDependencies:
       vite: 5.4.21(@types/node@22.19.17)(lightningcss@1.32.0)
 
-  '@vitest/mocker@2.1.9(vite@5.4.21(@types/node@25.5.2)(lightningcss@1.32.0))':
-    dependencies:
-      '@vitest/spy': 2.1.9
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-    optionalDependencies:
-      vite: 5.4.21(@types/node@25.5.2)(lightningcss@1.32.0)
-
   '@vitest/mocker@4.1.2(vite@6.4.1(@types/node@25.5.2)(jiti@1.21.7)(lightningcss@1.32.0)(tsx@4.21.0))':
     dependencies:
       '@vitest/spy': 4.1.2
@@ -6250,7 +6242,7 @@ snapshots:
   vitest@2.1.9(@types/node@25.5.2)(jsdom@29.0.1)(lightningcss@1.32.0):
     dependencies:
       '@vitest/expect': 2.1.9
-      '@vitest/mocker': 2.1.9(vite@5.4.21(@types/node@25.5.2)(lightningcss@1.32.0))
+      '@vitest/mocker': 2.1.9(vite@5.4.21(@types/node@22.19.17)(lightningcss@1.32.0))
       '@vitest/pretty-format': 2.1.9
       '@vitest/runner': 2.1.9
       '@vitest/snapshot': 2.1.9

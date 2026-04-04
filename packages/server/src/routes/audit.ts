@@ -1,6 +1,6 @@
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
-import { parseAuditEntry } from '@nexus/core/db/parsers.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { parseAuditEntry } from '@decigraph/core/db/parsers.js';
 import { requireUUID } from './validation.js';
 
 export function registerAuditRoutes(app: Hono): void {

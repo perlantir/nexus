@@ -1,12 +1,12 @@
 {
-  "name": "@nexus/cli",
+  "name": "@decigraph/cli",
   "version": "0.1.0",
-  "description": "Command-line interface for Nexus",
+  "description": "Command-line interface for DeciGraph",
   "author": "Perlantir",
-  "repository": {"type": "git", "url": "https://github.com/perlantir/nexus"},
+  "repository": {"type": "git", "url": "https://github.com/perlantir/decigraph"},
   "type": "module",
   "bin": {
-    "nexus": "./dist/nexus-cli.js"
+    "decigraph": "./dist/decigraph-cli.js"
   },
   "files": [
     "dist",
@@ -14,14 +14,14 @@
   ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/nexus-cli.ts",
+    "dev": "tsx src/decigraph-cli.ts",
     "test": "vitest run",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@nexus/core": "workspace:*",
-    "@nexus/sdk": "workspace:*",
-    "@nexus/server": "workspace:*",
+    "@decigraph/core": "workspace:*",
+    "@decigraph/sdk": "workspace:*",
+    "@decigraph/server": "workspace:*",
     "better-sqlite3": "^12.8.0",
     "commander": "^12.1.0",
     "chalk": "^5.3.0",

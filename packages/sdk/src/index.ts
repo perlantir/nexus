@@ -1,8 +1,8 @@
-export { NexusClient } from './client.js';
+export { DeciGraphClient } from './client.js';
 
 export type {
   // Client options
-  NexusClientOptions,
+  DeciGraphClientOptions,
 
   // Domain types
   Project,
@@ -49,7 +49,7 @@ export type {
   ImpactAnalysis,
   AuditEntry,
   ProjectStats,
-  NexusError,
+  DeciGraphError,
 } from './types.js';
 
-export { NexusApiError } from './types.js';
+export { DeciGraphApiError } from './types.js';

@@ -1,6 +1,6 @@
 {
-  "name": "Nexus",
-  "short_name": "Nexus",
+  "name": "DeciGraph",
+  "short_name": "DeciGraph",
   "description": "Decision memory for AI agent teams",
   "start_url": "/",
   "display": "standalone",

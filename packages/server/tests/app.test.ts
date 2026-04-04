@@ -5,11 +5,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createApp } from '../src/app.js';
 
 // ── DB Mock ───────────────────────────────────────────────────────────────────
-// We mock @nexus/core/db/index.js before importing the app so that all
+// We mock @decigraph/core/db/index.js before importing the app so that all
 // database calls in app.ts resolve to controlled values.
 
 const mockQuery = vi.fn();
-vi.mock('@nexus/core/db/index.js', () => ({
+vi.mock('@decigraph/core/db/index.js', () => ({
   getDb: () => ({
     query: mockQuery,
     transaction: vi.fn().mockImplementation(async (fn: Function) => fn(mockQuery)),
@@ -22,7 +22,7 @@ vi.mock('@nexus/core/db/index.js', () => ({
 }));
 
 // Keep backward compat mock for any code still importing pool.js
-vi.mock('@nexus/core/db/pool.js', () => ({
+vi.mock('@decigraph/core/db/pool.js', () => ({
   query: mockQuery,
   getPool: vi.fn(),
   getClient: vi.fn(),
@@ -32,7 +32,7 @@ vi.mock('@nexus/core/db/pool.js', () => ({
 }));
 
 // Also stub parsers used in app.ts
-vi.mock('@nexus/core/db/parsers.js', () => ({
+vi.mock('@decigraph/core/db/parsers.js', () => ({
   parseProject: vi.fn((row: Record<string, unknown>) => row),
   parseAgent: vi.fn((row: Record<string, unknown>) => row),
   parseDecision: vi.fn((row: Record<string, unknown>) => row),

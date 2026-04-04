@@ -1,9 +1,9 @@
 {
-  "name": "@nexus/server",
+  "name": "@decigraph/server",
   "version": "0.1.0",
-  "description": "Hono REST API server for Nexus",
+  "description": "Hono REST API server for DeciGraph",
   "author": "Perlantir",
-  "repository": {"type": "git", "url": "https://github.com/perlantir/nexus"},
+  "repository": {"type": "git", "url": "https://github.com/perlantir/decigraph"},
   "type": "module",
   "main": "./dist/index.js",
   "exports": {
@@ -24,7 +24,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@nexus/core": "workspace:*",
+    "@decigraph/core": "workspace:*",
     "hono": "^4.6.0",
     "@hono/node-server": "^1.13.0",
     "zod": "^3.23.0"

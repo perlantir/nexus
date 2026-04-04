@@ -1,7 +1,7 @@
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
-import { NotFoundError, ValidationError } from '@nexus/core/types.js';
-import { testWebhook } from '@nexus/core/webhooks/index.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { NotFoundError, ValidationError } from '@decigraph/core/types.js';
+import { testWebhook } from '@decigraph/core/webhooks/index.js';
 import { requireUUID, requireString, mapDbError, logAudit } from './validation.js';
 import { randomUUID } from 'node:crypto';
 

@@ -327,7 +327,7 @@ export function Wizard({ onComplete }: WizardProps) {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <GitBranch size={16} className="text-white" />
           </div>
-          <span className="font-semibold text-lg tracking-tight">Nexus</span>
+          <span className="font-semibold text-lg tracking-tight">DeciGraph</span>
         </div>
 
         <StepDots current={step} />
@@ -340,13 +340,13 @@ export function Wizard({ onComplete }: WizardProps) {
                 <GitBranch size={28} className="text-primary" />
               </div>
               <h1 className="text-2xl font-semibold mb-3">
-                Welcome to Nexus
+                Welcome to DeciGraph
               </h1>
               <p className="text-base text-[var(--text-secondary)] leading-relaxed mb-2 max-w-md mx-auto">
                 Your team's shared decision memory.
               </p>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-8 max-w-md mx-auto">
-                Nexus captures every architectural choice, product decision, and trade-off your
+                DeciGraph captures every architectural choice, product decision, and trade-off your
                 team makes — then surfaces the right context to each AI agent at the right time.
                 No more repeated debates. No more lost rationale.
               </p>
@@ -585,7 +585,7 @@ export function Wizard({ onComplete }: WizardProps) {
                       icon: <FileText size={20} className="text-primary" />,
                       title: 'Import from conversations',
                       description:
-                        'Paste a conversation and Nexus will extract decisions automatically.',
+                        'Paste a conversation and DeciGraph will extract decisions automatically.',
                     },
                     {
                       id: 'connect' as SeedOption,

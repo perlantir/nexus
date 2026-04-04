@@ -7,7 +7,7 @@
 //   DATABASE_URL — PostgreSQL connection string
 // Optional:
 //   OPENAI_API_KEY — enables embedding & semantic search tests
-//   NEXUS_BASE_URL — base URL for HTTP-level smoke tests (default: http://localhost:4000)
+//   DECIGRAPH_BASE_URL — base URL for HTTP-level smoke tests (default: http://localhost:4000)
 
 import { getPool, closePool, healthCheck, query } from '../packages/core/src/db/pool.js';
 import {

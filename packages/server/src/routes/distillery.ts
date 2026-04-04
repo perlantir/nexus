@@ -1,9 +1,9 @@
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
-import { parseDecision, parseSession } from '@nexus/core/db/parsers.js';
-import type { Decision } from '@nexus/core/types.js';
-import { distill } from '@nexus/core/distillery/index.js';
-import { getModelIdentifier } from '@nexus/core/distillery/extractor.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { parseDecision, parseSession } from '@decigraph/core/db/parsers.js';
+import type { Decision } from '@decigraph/core/types.js';
+import { distill } from '@decigraph/core/distillery/index.js';
+import { getModelIdentifier } from '@decigraph/core/distillery/extractor.js';
 import {
   requireUUID,
   requireString,

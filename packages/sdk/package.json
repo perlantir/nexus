@@ -1,9 +1,9 @@
 {
-  "name": "@nexus/sdk",
+  "name": "@decigraph/sdk",
   "version": "0.1.0",
-  "description": "TypeScript SDK client for Nexus API",
+  "description": "TypeScript SDK client for DeciGraph API",
   "author": "Perlantir",
-  "repository": {"type": "git", "url": "https://github.com/perlantir/nexus"},
+  "repository": {"type": "git", "url": "https://github.com/perlantir/decigraph"},
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

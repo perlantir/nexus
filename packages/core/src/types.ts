@@ -435,7 +435,7 @@ export interface ProjectStats {
 }
 
 // --- Error Types ---
-export class NexusError extends Error {
+export class DeciGraphError extends Error {
   constructor(
     message: string,
     public code: string,
@@ -443,23 +443,23 @@ export class NexusError extends Error {
     public details?: unknown,
   ) {
     super(message);
-    this.name = 'NexusError';
+    this.name = 'DeciGraphError';
   }
 }
 
-export class NotFoundError extends NexusError {
+export class NotFoundError extends DeciGraphError {
   constructor(resource: string, id: string) {
     super(`${resource} not found: ${id}`, 'NOT_FOUND', 404);
   }
 }
 
-export class ValidationError extends NexusError {
+export class ValidationError extends DeciGraphError {
   constructor(message: string, details?: unknown) {
     super(message, 'VALIDATION_ERROR', 400, details);
   }
 }
 
-export class ConflictError extends NexusError {
+export class ConflictError extends DeciGraphError {
   constructor(message: string) {
     super(message, 'CONFLICT', 409);
   }

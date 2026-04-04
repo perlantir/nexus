@@ -57,7 +57,7 @@ export function extractAgentName(filePath: string): string {
   let agentName = segment.slice('workspace'.length).replace(/^[-_]/, '').trim();
 
   if (!agentName) {
-    agentName = process.env.NEXUS_OPENCLAW_DEFAULT_AGENT || 'main';
+    agentName = process.env.DECIGRAPH_OPENCLAW_DEFAULT_AGENT || 'main';
   }
 
   return agentName;
@@ -85,7 +85,7 @@ async function readChunk(filePath: string): Promise<ConversationChunk | null> {
   try {
     text = await fs.readFile(filePath, 'utf-8');
   } catch (err) {
-    console.error('[nexus:openclaw] Failed to read file:', filePath, err);
+    console.error('[decigraph:openclaw] Failed to read file:', filePath, err);
     return null;
   }
 
@@ -117,7 +117,7 @@ export const openClawConnector: SourceConnector = {
     const basePath = config.path;
     const intervalMs = config.poll_interval_ms ?? 30_000;
 
-    console.warn(`[nexus:openclaw] Starting watch on ${basePath} (interval: ${intervalMs}ms)`);
+    console.warn(`[decigraph:openclaw] Starting watch on ${basePath} (interval: ${intervalMs}ms)`);
 
     while (true) {
       const files = await findConversationFiles(basePath);

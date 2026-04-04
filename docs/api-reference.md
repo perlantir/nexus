@@ -1,6 +1,6 @@
 # API Reference
 
-The Nexus REST API is built with [Hono](https://hono.dev) and runs on port 3100 by default.
+The DeciGraph REST API is built with [Hono](https://hono.dev) and runs on port 3100 by default.
 
 **Base URL:** `http://localhost:3100`
 
@@ -8,13 +8,13 @@ The Nexus REST API is built with [Hono](https://hono.dev) and runs on port 3100 
 
 ## Authentication
 
-All endpoints accept an optional Bearer token. Set `NEXUS_API_KEY` in `.env` and pass it with requests:
+All endpoints accept an optional Bearer token. Set `DECIGRAPH_API_KEY` in `.env` and pass it with requests:
 
 ```
 Authorization: Bearer <your-api-key>
 ```
 
-When `NEXUS_API_KEY` is unset, authentication is disabled (development mode). In production, always set a secret and pass it with all requests.
+When `DECIGRAPH_API_KEY` is unset, authentication is disabled (development mode). In production, always set a secret and pass it with all requests.
 
 ---
 

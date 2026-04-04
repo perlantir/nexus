@@ -1,7 +1,7 @@
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
-import { parseProject } from '@nexus/core/db/parsers.js';
-import { NotFoundError } from '@nexus/core/types.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { parseProject } from '@decigraph/core/db/parsers.js';
+import { NotFoundError } from '@decigraph/core/types.js';
 import { requireUUID, requireString, optionalString, mapDbError } from './validation.js';
 
 export function registerProjectRoutes(app: Hono): void {

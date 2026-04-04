@@ -1,15 +1,15 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { NexusClient } from '../../../sdk/src/index.js';
-import type { NexusServerConfig } from '../server.js';
+import type { DeciGraphClient } from '../../../sdk/src/index.js';
+import type { DeciGraphServerConfig } from '../server.js';
 
 export function registerSessionTools(
   server: McpServer,
-  client: NexusClient,
-  config: NexusServerConfig,
+  client: DeciGraphClient,
+  config: DeciGraphServerConfig,
 ): void {
   server.registerTool(
-    'nexus_record_session',
+    'decigraph_record_session',
     {
       title: 'Record a session summary',
       description:
@@ -69,7 +69,7 @@ export function registerSessionTools(
   );
 
   server.registerTool(
-    'nexus_get_notifications',
+    'decigraph_get_notifications',
     {
       title: 'Get notifications',
       description:
@@ -114,7 +114,7 @@ export function registerSessionTools(
   );
 
   server.registerTool(
-    'nexus_feedback',
+    'decigraph_feedback',
     {
       title: 'Record relevance feedback',
       description:

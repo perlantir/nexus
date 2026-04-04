@@ -11,7 +11,7 @@ export const langSmithConnector: SourceConnector = {
 
   async poll(_config: PollConfig): Promise<ConversationChunk[]> {
     console.warn(
-      '[nexus:langsmith] LangSmith connector is not yet implemented. ' +
+      '[decigraph:langsmith] LangSmith connector is not yet implemented. ' +
         'Returning empty result. Set LANGSMITH_API_KEY and implement poll() to enable.',
     );
     return [];

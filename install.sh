@@ -14,7 +14,7 @@ echo " |  \| |/ _ \ \/ / | | / __| "
 echo " | |\  |  __/>  <| |_| \__ \ "
 echo " |_| \_|\___/_/\_\\__,_|___/ "
 echo -e "${NC}"
-echo "Nexus Installer v1.0"
+echo "DeciGraph Installer v1.0"
 echo "================================"
 echo ""
 
@@ -46,7 +46,7 @@ fi
 echo -e "${GREEN}All prerequisites met${NC}"
 echo ""
 
-INSTALL_DIR="${NEXUS_INSTALL_DIR:-/opt/nexus}"
+INSTALL_DIR="${DECIGRAPH_INSTALL_DIR:-/opt/decigraph}"
 echo -e "${BLUE}Install directory: ${INSTALL_DIR}${NC}"
 
 if [ -d "$INSTALL_DIR" ]; then
@@ -54,8 +54,8 @@ if [ -d "$INSTALL_DIR" ]; then
     cd "$INSTALL_DIR"
     git pull origin main
 else
-    echo "Cloning Nexus..."
-    git clone https://github.com/perlantir/nexus.git "$INSTALL_DIR"
+    echo "Cloning DeciGraph..."
+    git clone https://github.com/perlantir/decigraph.git "$INSTALL_DIR"
     cd "$INSTALL_DIR"
 fi
 
@@ -65,23 +65,23 @@ echo -e "${BLUE}Configuration${NC}"
 echo "============="
 echo ""
 
-if [ -f .env ] && grep -q "NEXUS_API_KEY" .env; then
+if [ -f .env ] && grep -q "DECIGRAPH_API_KEY" .env; then
     echo -e "${GREEN}Existing .env found — keeping current config${NC}"
     source .env 2>/dev/null || true
 else
-    NEXUS_KEY="nx_$(openssl rand -hex 20)"
-    echo -e "Generated NEXUS_API_KEY: ${GREEN}${NEXUS_KEY}${NC}"
-    echo -e "${YELLOW}Save this key — your agents will use it to connect to Nexus${NC}"
+    DECIGRAPH_KEY="nx_$(openssl rand -hex 20)"
+    echo -e "Generated DECIGRAPH_API_KEY: ${GREEN}${DECIGRAPH_KEY}${NC}"
+    echo -e "${YELLOW}Save this key — your agents will use it to connect to DeciGraph${NC}"
     echo ""
 
-    echo "Nexus can use an LLM for semantic search and auto-extraction."
-    echo "This is optional — Nexus works without it."
+    echo "DeciGraph can use an LLM for semantic search and auto-extraction."
+    echo "This is optional — DeciGraph works without it."
     echo ""
     echo "Enter your OpenRouter API key (or press Enter to skip):"
     read -r OPENROUTER_KEY
 
     cat > .env << ENVEOF
-NEXUS_API_KEY=${NEXUS_KEY}
+DECIGRAPH_API_KEY=${DECIGRAPH_KEY}
 ENVEOF
 
     if [ -n "$OPENROUTER_KEY" ]; then
@@ -94,11 +94,11 @@ fi
 
 echo ""
 
-echo -e "${BLUE}Starting Nexus...${NC}"
+echo -e "${BLUE}Starting DeciGraph...${NC}"
 docker compose up -d --build 2>&1 | tail -5
 
 echo ""
-echo "Waiting for Nexus to start..."
+echo "Waiting for DeciGraph to start..."
 MAX_WAIT=120
 WAITED=0
 while [ $WAITED -lt $MAX_WAIT ]; do
@@ -112,14 +112,14 @@ done
 echo ""
 
 if [ $WAITED -ge $MAX_WAIT ]; then
-    echo -e "${RED}Nexus did not start within ${MAX_WAIT}s${NC}"
+    echo -e "${RED}DeciGraph did not start within ${MAX_WAIT}s${NC}"
     echo "Check logs: docker compose logs server"
     exit 1
 fi
 
 echo ""
 echo -e "${GREEN}================================${NC}"
-echo -e "${GREEN}  Nexus is running!${NC}"
+echo -e "${GREEN}  DeciGraph is running!${NC}"
 echo -e "${GREEN}================================${NC}"
 echo ""
 
@@ -148,7 +148,7 @@ echo ""
 echo -e "  ${BLUE}Open the dashboard to set up your first project:${NC}"
 echo -e "  ${GREEN}http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'localhost'):3200${NC}"
 echo ""
-echo -e "  Your API key: ${YELLOW}$(grep NEXUS_API_KEY .env | cut -d= -f2)${NC}"
+echo -e "  Your API key: ${YELLOW}$(grep DECIGRAPH_API_KEY .env | cut -d= -f2)${NC}"
 echo ""
-echo "  Docs:  https://github.com/perlantir/nexus/blob/main/docs/getting-started.md"
+echo "  Docs:  https://github.com/perlantir/decigraph/blob/main/docs/getting-started.md"
 echo ""

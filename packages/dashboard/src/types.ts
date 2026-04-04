@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Shared types for the Nexus dashboard                              */
+/*  Shared types for the DeciGraph dashboard                              */
 /* ------------------------------------------------------------------ */
 
 export type DecisionStatus = 'active' | 'superseded' | 'reverted' | 'pending';

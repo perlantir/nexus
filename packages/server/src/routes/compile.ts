@@ -1,14 +1,14 @@
 import crypto from 'node:crypto';
 import type { Hono } from 'hono';
-import { getDb } from '@nexus/core/db/index.js';
+import { getDb } from '@decigraph/core/db/index.js';
 import {
   parseDecision,
   parseArtifact,
   parseSession,
   parseNotification,
-} from '@nexus/core/db/parsers.js';
-import { NotFoundError } from '@nexus/core/types.js';
-import type { Decision } from '@nexus/core/types.js';
+} from '@decigraph/core/db/parsers.js';
+import { NotFoundError } from '@decigraph/core/types.js';
+import type { Decision } from '@decigraph/core/types.js';
 import {
   requireUUID,
   requireString,
@@ -125,7 +125,7 @@ export function registerCompileRoutes(app: Hono): void {
     const artifacts = artifactResult.rows.map((r) => parseArtifact(r as Record<string, unknown>));
 
     const formattedMarkdown = [
-      `# Nexus Context Package`,
+      `# DeciGraph Context Package`,
       `**Agent:** ${agent_name}`,
       `**Task:** ${task_description}`,
       `**Compiled:** ${new Date().toISOString()}`,
@@ -192,7 +192,7 @@ export function registerCompileRoutes(app: Hono): void {
         ],
       );
     } catch (err) {
-      console.warn('[nexus:compile] History recording failed:', (err as Error).message);
+      console.warn('[decigraph:compile] History recording failed:', (err as Error).message);
     }
 
     // Build debug info if requested

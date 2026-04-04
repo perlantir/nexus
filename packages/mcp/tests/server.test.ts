@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, type MockedFunction } from 'vitest';
-import { createNexusServer } from '../src/server.js';
+import { createDeciGraphServer } from '../src/server.js';
 import { AutoCapture } from '../src/auto-capture.js';
-import { NexusClient } from '../../sdk/src/index.js';
+import { DeciGraphClient } from '../../sdk/src/index.js';
 import type {
   Decision,
   DistilleryResult,
@@ -18,26 +18,26 @@ import type {
 } from '../../sdk/src/index.js';
 
 vi.mock('../../sdk/src/index.js', () => {
-  const NexusClient = vi.fn();
-  NexusClient.prototype.distill = vi.fn();
-  NexusClient.prototype.createDecision = vi.fn();
-  NexusClient.prototype.getDecision = vi.fn();
-  NexusClient.prototype.listDecisions = vi.fn();
-  NexusClient.prototype.searchDecisions = vi.fn();
-  NexusClient.prototype.supersedeDecision = vi.fn();
-  NexusClient.prototype.getImpact = vi.fn();
-  NexusClient.prototype.getContradictions = vi.fn();
-  NexusClient.prototype.compileContext = vi.fn();
-  NexusClient.prototype.createSession = vi.fn();
-  NexusClient.prototype.listSessions = vi.fn();
-  NexusClient.prototype.getNotifications = vi.fn();
-  NexusClient.prototype.listAgents = vi.fn();
-  NexusClient.prototype.getProjectStats = vi.fn();
-  NexusClient.prototype.getProject = vi.fn();
-  NexusClient.prototype.getGraph = vi.fn();
-  NexusClient.prototype.recordFeedback = vi.fn();
-  NexusClient.prototype.health = vi.fn();
-  return { NexusClient };
+  const DeciGraphClient = vi.fn();
+  DeciGraphClient.prototype.distill = vi.fn();
+  DeciGraphClient.prototype.createDecision = vi.fn();
+  DeciGraphClient.prototype.getDecision = vi.fn();
+  DeciGraphClient.prototype.listDecisions = vi.fn();
+  DeciGraphClient.prototype.searchDecisions = vi.fn();
+  DeciGraphClient.prototype.supersedeDecision = vi.fn();
+  DeciGraphClient.prototype.getImpact = vi.fn();
+  DeciGraphClient.prototype.getContradictions = vi.fn();
+  DeciGraphClient.prototype.compileContext = vi.fn();
+  DeciGraphClient.prototype.createSession = vi.fn();
+  DeciGraphClient.prototype.listSessions = vi.fn();
+  DeciGraphClient.prototype.getNotifications = vi.fn();
+  DeciGraphClient.prototype.listAgents = vi.fn();
+  DeciGraphClient.prototype.getProjectStats = vi.fn();
+  DeciGraphClient.prototype.getProject = vi.fn();
+  DeciGraphClient.prototype.getGraph = vi.fn();
+  DeciGraphClient.prototype.recordFeedback = vi.fn();
+  DeciGraphClient.prototype.health = vi.fn();
+  return { DeciGraphClient };
 });
 
 const BASE_CONFIG = {
@@ -81,7 +81,7 @@ function makeDistillResult(overrides: Partial<DistilleryResult> = {}): Distiller
   };
 }
 
-function getToolHandler(server: ReturnType<typeof createNexusServer>, toolName: string) {
+function getToolHandler(server: ReturnType<typeof createDeciGraphServer>, toolName: string) {
   const tools = (server as unknown as { _registeredTools: Record<string, { handler: Function }> })
     ._registeredTools;
   const entry = tools[toolName];
@@ -89,29 +89,29 @@ function getToolHandler(server: ReturnType<typeof createNexusServer>, toolName: 
   return entry.handler;
 }
 
-function getClient(server: ReturnType<typeof createNexusServer>): NexusClient {
-  return (NexusClient as unknown as { mock: { instances: NexusClient[] } }).mock.instances[0]!;
+function getClient(server: ReturnType<typeof createDeciGraphServer>): DeciGraphClient {
+  return (DeciGraphClient as unknown as { mock: { instances: DeciGraphClient[] } }).mock.instances[0]!;
 }
 
-describe('createNexusServer — tool registration', () => {
+describe('createDeciGraphServer — tool registration', () => {
   it('registers all 12 tools', () => {
-    const server = createNexusServer(BASE_CONFIG);
+    const server = createDeciGraphServer(BASE_CONFIG);
     const tools = (server as unknown as { _registeredTools: Record<string, unknown> })
       ._registeredTools;
     expect(tools? Object.keys(tools).length : 0).toBe(12);
   });
 
-  it('each tool has a valid name matching nexus_ prefix', () => {
-    const server = createNexusServer(BASE_CONFIG);
+  it('each tool has a valid name matching decigraph_ prefix', () => {
+    const server = createDeciGraphServer(BASE_CONFIG);
     const tools = (server as unknown as { _registeredTools: Record<string, unknown> })
       ._registeredTools;
     for (const name of Object.keys(tools)) {
-      expect(name).toMatch(/^nexus_/);
+      expect(name).toMatch(/^decigraph_/);
     }
   });
 
   it('each tool has an input schema defined', () => {
-    const server = createNexusServer(BASE_CONFIG);
+    const server = createDeciGraphServer(BASE_CONFIG);
     const tools = (
       server as unknown as { _registeredTools: Record<string, { inputSchema?: unknown }> }
     )._registeredTools;
@@ -121,9 +121,9 @@ describe('createNexusServer — tool registration', () => {
   });
 });
 
-describe('createNexusServer — resource registration', () => {
+describe('createDeciGraphServer — resource registration', () => {
   it('registers all 7 resources', () => {
-    const server = createNexusServer(BASE_CONFIG);
+    const server = createDeciGraphServer(BASE_CONFIG);
     const resources = (server as unknown as { _registeredResources: Record<string, unknown> })
       ._registeredResources;
     const templates = (
@@ -135,23 +135,23 @@ describe('createNexusServer — resource registration', () => {
     expect(total).toBe(7);
   });
 
-  it('each static resource has a valid nexus:// URI', () => {
-    const server = createNexusServer(BASE_CONFIG);
+  it('each static resource has a valid decigraph:// URI', () => {
+    const server = createDeciGraphServer(BASE_CONFIG);
     const resources = (server as unknown as { _registeredResources: Record<string, unknown> })
       ._registeredResources;
     for (const uri of Object.keys(resources)) {
-      expect(uri).toMatch(/^nexus:\/\//);
+      expect(uri).toMatch(/^decigraph:\/\//);
     }
   });
 });
 
-describe('nexus_auto_capture tool', () => {
-  let client: NexusClient;
-  let server: ReturnType<typeof createNexusServer>;
+describe('decigraph_auto_capture tool', () => {
+  let client: DeciGraphClient;
+  let server: ReturnType<typeof createDeciGraphServer>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    server = createNexusServer(BASE_CONFIG);
+    server = createDeciGraphServer(BASE_CONFIG);
     client = getClient(server);
   });
 
@@ -159,7 +159,7 @@ describe('nexus_auto_capture tool', () => {
     const mockResult = makeDistillResult();
     (client.distill as MockedFunction<typeof client.distill>).mockResolvedValue(mockResult);
 
-    const handler = getToolHandler(server, 'nexus_auto_capture');
+    const handler = getToolHandler(server, 'decigraph_auto_capture');
     await handler({
       conversation_text: 'We decided to use React for the frontend because of team familiarity.',
       agent_name: 'dev-agent',
@@ -176,7 +176,7 @@ describe('nexus_auto_capture tool', () => {
     const mockResult = makeDistillResult({ decisions_extracted: 3, contradictions_found: 1 });
     (client.distill as MockedFunction<typeof client.distill>).mockResolvedValue(mockResult);
 
-    const handler = getToolHandler(server, 'nexus_auto_capture');
+    const handler = getToolHandler(server, 'decigraph_auto_capture');
     const result = await handler({
       conversation_text: 'Long conversation with several decisions embedded in it.',
     });
@@ -188,20 +188,20 @@ describe('nexus_auto_capture tool', () => {
   });
 
   it('calls distill even with empty text and returns result', async () => {
-    const handler = getToolHandler(server, 'nexus_auto_capture');
+    const handler = getToolHandler(server, 'decigraph_auto_capture');
     const result = await handler({ conversation_text: '' });
     expect(result.content).toBeDefined();
     expect(result.content[0].type).toBe('text');
   });
 });
 
-describe('nexus_compile_context tool', () => {
-  let client: NexusClient;
-  let server: ReturnType<typeof createNexusServer>;
+describe('decigraph_compile_context tool', () => {
+  let client: DeciGraphClient;
+  let server: ReturnType<typeof createDeciGraphServer>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    server = createNexusServer(BASE_CONFIG);
+    server = createDeciGraphServer(BASE_CONFIG);
     client = getClient(server);
   });
 
@@ -218,7 +218,7 @@ describe('nexus_compile_context tool', () => {
       mockPackage as ContextPackage,
     );
 
-    const handler = getToolHandler(server, 'nexus_compile_context');
+    const handler = getToolHandler(server, 'decigraph_compile_context');
     await handler({
       agent_name: 'backend-agent',
       task_description: 'Implement the user authentication module',
@@ -246,7 +246,7 @@ describe('nexus_compile_context tool', () => {
       mockPackage as ContextPackage,
     );
 
-    const handler = getToolHandler(server, 'nexus_compile_context');
+    const handler = getToolHandler(server, 'decigraph_compile_context');
     const result = await handler({
       agent_name: 'frontend-agent',
       task_description: 'Build the dashboard UI',
@@ -263,20 +263,20 @@ describe('nexus_compile_context tool', () => {
       new Error('Agent not found'),
     );
 
-    const handler = getToolHandler(server, 'nexus_compile_context');
+    const handler = getToolHandler(server, 'decigraph_compile_context');
     await expect(
       handler({ agent_name: 'nonexistent-agent', task_description: 'Some task' }),
     ).rejects.toThrow('Agent not found');
   });
 });
 
-describe('nexus_record_decision tool', () => {
-  let client: NexusClient;
-  let server: ReturnType<typeof createNexusServer>;
+describe('decigraph_record_decision tool', () => {
+  let client: DeciGraphClient;
+  let server: ReturnType<typeof createDeciGraphServer>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    server = createNexusServer(BASE_CONFIG);
+    server = createDeciGraphServer(BASE_CONFIG);
     client = getClient(server);
   });
 
@@ -294,7 +294,7 @@ describe('nexus_record_decision tool', () => {
       supersession_chain: [],
     } as ImpactAnalysis);
 
-    const handler = getToolHandler(server, 'nexus_record_decision');
+    const handler = getToolHandler(server, 'decigraph_record_decision');
     await handler({
       title: 'Use TypeScript across all packages',
       description: 'All server and client code will be written in TypeScript.',
@@ -333,7 +333,7 @@ describe('nexus_record_decision tool', () => {
       supersession_chain: [],
     } as ImpactAnalysis);
 
-    const handler = getToolHandler(server, 'nexus_record_decision');
+    const handler = getToolHandler(server, 'decigraph_record_decision');
     const result = await handler({
       title: 'Deploy to AWS ECS',
       description: 'Use AWS ECS for container orchestration.',
@@ -349,13 +349,13 @@ describe('nexus_record_decision tool', () => {
   });
 });
 
-describe('nexus_supersede_decision tool', () => {
-  let client: NexusClient;
-  let server: ReturnType<typeof createNexusServer>;
+describe('decigraph_supersede_decision tool', () => {
+  let client: DeciGraphClient;
+  let server: ReturnType<typeof createDeciGraphServer>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    server = createNexusServer(BASE_CONFIG);
+    server = createDeciGraphServer(BASE_CONFIG);
     client = getClient(server);
   });
 
@@ -374,7 +374,7 @@ describe('nexus_supersede_decision tool', () => {
       supersession_chain: [],
     } as ImpactAnalysis);
 
-    const handler = getToolHandler(server, 'nexus_supersede_decision');
+    const handler = getToolHandler(server, 'decigraph_supersede_decision');
     await handler({
       old_decision_id: 'dec-old',
       title: 'Use Kubernetes instead of ECS',
@@ -409,7 +409,7 @@ describe('nexus_supersede_decision tool', () => {
       supersession_chain: [],
     } as ImpactAnalysis);
 
-    const handler = getToolHandler(server, 'nexus_supersede_decision');
+    const handler = getToolHandler(server, 'decigraph_supersede_decision');
     const result = await handler({
       old_decision_id: 'dec-old',
       title: 'Switch to Vite',
@@ -425,12 +425,12 @@ describe('nexus_supersede_decision tool', () => {
 });
 
 describe('tool error handling', () => {
-  let client: NexusClient;
-  let server: ReturnType<typeof createNexusServer>;
+  let client: DeciGraphClient;
+  let server: ReturnType<typeof createDeciGraphServer>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    server = createNexusServer(BASE_CONFIG);
+    server = createDeciGraphServer(BASE_CONFIG);
     client = getClient(server);
   });
 
@@ -438,7 +438,7 @@ describe('tool error handling', () => {
     const serverError = Object.assign(new Error('Internal server error'), { statusCode: 500 });
     (client.distill as MockedFunction<typeof client.distill>).mockRejectedValue(serverError);
 
-    const handler = getToolHandler(server, 'nexus_auto_capture');
+    const handler = getToolHandler(server, 'decigraph_auto_capture');
     await expect(
       handler({ conversation_text: 'We decided on a caching strategy using Redis.' }),
     ).rejects.toThrow('Internal server error');
@@ -450,7 +450,7 @@ describe('tool error handling', () => {
       notFoundError,
     );
 
-    const handler = getToolHandler(server, 'nexus_list_decisions');
+    const handler = getToolHandler(server, 'decigraph_list_decisions');
     await expect(handler({ status: 'active' })).rejects.toThrow('Decision not found');
   });
 
@@ -460,18 +460,18 @@ describe('tool error handling', () => {
       networkError,
     );
 
-    const handler = getToolHandler(server, 'nexus_compile_context');
+    const handler = getToolHandler(server, 'decigraph_compile_context');
     await expect(
       handler({ agent_name: 'dev', task_description: 'Fix the login bug' }),
     ).rejects.toThrow('ECONNREFUSED');
   });
 });
 
-describe('nexus_get_notifications — no agent ID configured', () => {
+describe('decigraph_get_notifications — no agent ID configured', () => {
   it('returns error message when agentId is not set', async () => {
     vi.clearAllMocks();
-    const serverNoAgent = createNexusServer({ ...BASE_CONFIG, agentId: undefined });
-    const handler = getToolHandler(serverNoAgent, 'nexus_get_notifications');
+    const serverNoAgent = createDeciGraphServer({ ...BASE_CONFIG, agentId: undefined });
+    const handler = getToolHandler(serverNoAgent, 'decigraph_get_notifications');
     const result = await handler({ unread_only: true });
 
     const parsed = JSON.parse(result.content[0].text);
@@ -479,11 +479,11 @@ describe('nexus_get_notifications — no agent ID configured', () => {
   });
 });
 
-describe('nexus_feedback — no agent ID configured', () => {
+describe('decigraph_feedback — no agent ID configured', () => {
   it('returns error message when agentId is not set', async () => {
     vi.clearAllMocks();
-    const serverNoAgent = createNexusServer({ ...BASE_CONFIG, agentId: undefined });
-    const handler = getToolHandler(serverNoAgent, 'nexus_feedback');
+    const serverNoAgent = createDeciGraphServer({ ...BASE_CONFIG, agentId: undefined });
+    const handler = getToolHandler(serverNoAgent, 'decigraph_feedback');
     const result = await handler({
       decision_id: 'dec-001',
       was_useful: true,
@@ -495,13 +495,13 @@ describe('nexus_feedback — no agent ID configured', () => {
   });
 });
 
-describe('nexus_search_decisions — client-side filtering', () => {
-  let client: NexusClient;
-  let server: ReturnType<typeof createNexusServer>;
+describe('decigraph_search_decisions — client-side filtering', () => {
+  let client: DeciGraphClient;
+  let server: ReturnType<typeof createDeciGraphServer>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    server = createNexusServer(BASE_CONFIG);
+    server = createDeciGraphServer(BASE_CONFIG);
     client = getClient(server);
   });
 
@@ -515,7 +515,7 @@ describe('nexus_search_decisions — client-side filtering', () => {
       decisions,
     );
 
-    const handler = getToolHandler(server, 'nexus_search_decisions');
+    const handler = getToolHandler(server, 'decigraph_search_decisions');
     const result = await handler({ query: 'API design', status: 'active' });
     const parsed = JSON.parse(result.content[0].text);
 
@@ -533,7 +533,7 @@ describe('nexus_search_decisions — client-side filtering', () => {
       decisions,
     );
 
-    const handler = getToolHandler(server, 'nexus_search_decisions');
+    const handler = getToolHandler(server, 'decigraph_search_decisions');
     const result = await handler({ query: 'storage strategy', tags: ['database'] });
     const parsed = JSON.parse(result.content[0].text);
 
@@ -542,11 +542,11 @@ describe('nexus_search_decisions — client-side filtering', () => {
 });
 
 describe('AutoCapture class', () => {
-  let mockClient: NexusClient;
+  let mockClient: DeciGraphClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockClient = new NexusClient({ baseUrl: 'http://localhost:3100' });
+    mockClient = new DeciGraphClient({ baseUrl: 'http://localhost:3100' });
   });
 
   it('buffers messages and does not extract until threshold is met', async () => {
