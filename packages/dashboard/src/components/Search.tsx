@@ -73,7 +73,7 @@ export function Search() {
   function scoreColor(score: number): string {
     if (score >= 0.7) return 'text-status-active';
     if (score >= 0.5) return 'text-status-superseded';
-    return 'text-nexus-text-muted-dark dark:text-nexus-text-muted-dark';
+    return 'text-[var(--text-secondary)]';
   }
 
   return (
@@ -82,7 +82,7 @@ export function Search() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-semibold mb-1">Search</h1>
-          <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <p className="text-sm text-[var(--text-secondary)]">
             Semantic search across all decisions
           </p>
         </div>
@@ -92,7 +92,7 @@ export function Search() {
           <div className="relative">
             <SearchIcon
               size={18}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-nexus-text-muted-dark dark:text-nexus-text-muted-dark pointer-events-none"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none"
             />
             <input
               ref={inputRef}
@@ -121,7 +121,7 @@ export function Search() {
         {/* Results */}
         {results.length > 0 && (
           <div className="space-y-3 animate-fade-in">
-            <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-2">
+            <p className="text-xs text-[var(--text-secondary)] mb-2">
               {results.length} result{results.length !== 1 ? 's' : ''} found
             </p>
 
@@ -143,24 +143,24 @@ export function Search() {
                         {isExpanded ? (
                           <ChevronUp
                             size={14}
-                            className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark"
+                            className="text-[var(--text-secondary)]"
                           />
                         ) : (
                           <ChevronDown
                             size={14}
-                            className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark"
+                            className="text-[var(--text-secondary)]"
                           />
                         )}
                       </div>
                     </div>
 
                     {/* Snippet */}
-                    <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark leading-relaxed line-clamp-2 mb-2">
+                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-2 mb-2">
                       {result.snippet || d.description}
                     </p>
 
                     {/* Meta row */}
-                    <div className="flex items-center gap-4 text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                    <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
                       <span className={`font-medium ${scoreColor(result.score)}`}>
                         {scoreLabel(result.score)} · {(result.score * 100).toFixed(0)}%
                       </span>
@@ -177,10 +177,10 @@ export function Search() {
 
                   {/* Expanded detail */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 pt-2 border-t border-nexus-border-dark dark:border-nexus-border-dark animate-fade-in">
+                    <div className="px-4 pb-4 pt-2 border-t border-[var(--border-light)] animate-fade-in">
                       <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                         <div>
-                          <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                          <label className="text-xs text-[var(--text-secondary)] block mb-1">
                             Made by
                           </label>
                           <p className="flex items-center gap-1.5">
@@ -189,7 +189,7 @@ export function Search() {
                           </p>
                         </div>
                         <div>
-                          <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                          <label className="text-xs text-[var(--text-secondary)] block mb-1">
                             Date
                           </label>
                           <p className="flex items-center gap-1.5">
@@ -200,7 +200,7 @@ export function Search() {
                       </div>
 
                       <div className="mb-3">
-                        <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                        <label className="text-xs text-[var(--text-secondary)] block mb-1">
                           Description
                         </label>
                         <p className="text-sm leading-relaxed">{d.description}</p>
@@ -208,7 +208,7 @@ export function Search() {
 
                       {d.reasoning && (
                         <div className="mb-3">
-                          <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                          <label className="text-xs text-[var(--text-secondary)] block mb-1">
                             Reasoning
                           </label>
                           <p className="text-sm leading-relaxed">{d.reasoning}</p>
@@ -240,9 +240,9 @@ export function Search() {
           <div className="text-center py-12">
             <SearchIcon
               size={28}
-              className="mx-auto mb-2 text-nexus-text-faint-dark dark:text-nexus-text-faint-dark"
+              className="mx-auto mb-2 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               No decisions found for "{query}"
             </p>
           </div>
@@ -253,9 +253,9 @@ export function Search() {
           <div className="text-center py-16">
             <SearchIcon
               size={32}
-              className="mx-auto mb-3 text-nexus-text-faint-dark dark:text-nexus-text-faint-dark"
+              className="mx-auto mb-3 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               Type a query and press Enter to search
             </p>
           </div>

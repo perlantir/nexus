@@ -35,9 +35,9 @@ const URGENCY_COLORS: Record<string, { bg: string; text: string; dot: string }> 
     dot: 'bg-primary',
   },
   low: {
-    bg: 'bg-nexus-text-muted-dark/10',
-    text: 'text-nexus-text-muted-dark',
-    dot: 'bg-nexus-text-muted-dark',
+    bg: 'bg-gray-200',
+    text: 'text-[var(--text-secondary)]',
+    dot: 'bg-gray-400',
   },
 };
 
@@ -139,7 +139,7 @@ export function NotificationFeed() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={24} className="animate-spin text-primary" />
-          <span className="text-sm text-nexus-text-muted-dark">Loading notifications…</span>
+          <span className="text-sm text-[var(--text-secondary)]">Loading notifications…</span>
         </div>
       </div>
     );
@@ -169,7 +169,7 @@ export function NotificationFeed() {
                 </span>
               )}
             </h1>
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               Stay informed about decision changes
             </p>
           </div>
@@ -182,13 +182,13 @@ export function NotificationFeed() {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex items-center gap-1 mb-6 border-b border-nexus-border-dark dark:border-nexus-border-dark">
+        <div className="flex items-center gap-1 mb-6 border-b border-[var(--border-light)]">
           <button
             onClick={() => setFilter('all')}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               filter === 'all'
                 ? 'border-primary text-primary'
-                : 'border-transparent text-nexus-text-muted-dark dark:text-nexus-text-muted-dark hover:text-nexus-text-dark dark:hover:text-nexus-text-dark'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             All
@@ -199,7 +199,7 @@ export function NotificationFeed() {
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               filter === 'unread'
                 ? 'border-primary text-primary'
-                : 'border-transparent text-nexus-text-muted-dark dark:text-nexus-text-muted-dark hover:text-nexus-text-dark dark:hover:text-nexus-text-dark'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             Unread
@@ -212,9 +212,9 @@ export function NotificationFeed() {
           <div className="text-center py-12">
             <Bell
               size={28}
-              className="mx-auto mb-2 text-nexus-text-faint-dark dark:text-nexus-text-faint-dark"
+              className="mx-auto mb-2 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
             </p>
           </div>
@@ -259,21 +259,21 @@ export function NotificationFeed() {
                             <p
                               className={`text-sm leading-relaxed ${
                                 notification.read
-                                  ? 'text-nexus-text-muted-dark dark:text-nexus-text-muted-dark'
+                                  ? 'text-[var(--text-secondary)]'
                                   : ''
                               }`}
                             >
                               {notification.message}
                             </p>
                             {notification.role_context && (
-                              <p className="text-xs text-nexus-text-faint-dark dark:text-nexus-text-faint-dark mt-0.5">
+                              <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
                                 {notification.role_context}
                               </p>
                             )}
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-2xs text-nexus-text-faint-dark dark:text-nexus-text-faint-dark whitespace-nowrap">
+                            <span className="text-2xs text-[var(--text-tertiary)] whitespace-nowrap">
                               {formatTime(notification.created_at)}
                             </span>
                           </div>
@@ -290,7 +290,7 @@ export function NotificationFeed() {
                           </span>
 
                           {/* Type */}
-                          <span className="text-2xs text-nexus-text-faint-dark dark:text-nexus-text-faint-dark capitalize">
+                          <span className="text-2xs text-[var(--text-tertiary)] capitalize">
                             {notification.type.replace(/_/g, ' ')}
                           </span>
 

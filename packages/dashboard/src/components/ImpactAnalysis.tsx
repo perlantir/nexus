@@ -115,12 +115,12 @@ export function ImpactAnalysis() {
             isExpanded ? (
               <ChevronDown
                 size={14}
-                className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark shrink-0"
+                className="text-[var(--text-secondary)] shrink-0"
               />
             ) : (
               <ChevronRight
                 size={14}
-                className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark shrink-0"
+                className="text-[var(--text-secondary)] shrink-0"
               />
             )
           ) : (
@@ -166,20 +166,20 @@ export function ImpactAnalysis() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-semibold mb-1">Impact Analysis</h1>
-          <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <p className="text-sm text-[var(--text-secondary)]">
             Understand the downstream effects of a decision
           </p>
         </div>
 
         {/* Decision picker */}
         <div className="card p-5 mb-6">
-          <label className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1.5 block">
+          <label className="text-xs font-medium text-[var(--text-secondary)] mb-1.5 block">
             Select a decision
           </label>
           <div className="relative">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-nexus-text-muted-dark dark:text-nexus-text-muted-dark pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none"
             />
             <input
               type="text"
@@ -240,7 +240,7 @@ export function ImpactAnalysis() {
                     {impact.decision.status}
                   </span>
                   <h3 className="text-sm font-semibold">{impact.decision.title}</h3>
-                  <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mt-1">
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">
                     by {impact.decision.made_by} ·{' '}
                     {new Date(impact.decision.made_at).toLocaleDateString()}
                   </p>
@@ -254,12 +254,12 @@ export function ImpactAnalysis() {
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <GitBranch size={16} className="text-primary" />
                   Downstream Decisions
-                  <span className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark font-normal">
+                  <span className="text-xs text-[var(--text-secondary)] font-normal">
                     ({impact.downstream.length})
                   </span>
                 </h3>
                 {impact.downstream.length === 0 ? (
-                  <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     No downstream dependencies
                   </p>
                 ) : (
@@ -276,12 +276,12 @@ export function ImpactAnalysis() {
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Users size={16} className="text-primary" />
                   Affected Agents
-                  <span className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark font-normal">
+                  <span className="text-xs text-[var(--text-secondary)] font-normal">
                     ({impact.affected_agents.length})
                   </span>
                 </h3>
                 {impact.affected_agents.length === 0 ? (
-                  <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     No agents affected
                   </p>
                 ) : (
@@ -292,7 +292,7 @@ export function ImpactAnalysis() {
                           {agent.name.charAt(0).toUpperCase()}
                         </span>
                         <span className="font-medium">{agent.name}</span>
-                        <span className="badge text-2xs bg-nexus-border-dark dark:bg-nexus-border-dark">
+                        <span className="badge text-2xs bg-[var(--border-light)]">
                           {agent.role}
                         </span>
                       </div>
@@ -306,12 +306,12 @@ export function ImpactAnalysis() {
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Ban size={16} className="text-status-reverted" />
                   Blocking Relationships
-                  <span className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark font-normal">
+                  <span className="text-xs text-[var(--text-secondary)] font-normal">
                     ({impact.blocking.length})
                   </span>
                 </h3>
                 {impact.blocking.length === 0 ? (
-                  <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     No blocking relationships
                   </p>
                 ) : (
@@ -334,12 +334,12 @@ export function ImpactAnalysis() {
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Zap size={16} className="text-status-superseded" />
                   Supersession Chain
-                  <span className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark font-normal">
+                  <span className="text-xs text-[var(--text-secondary)] font-normal">
                     ({impact.supersession_chain.length})
                   </span>
                 </h3>
                 {impact.supersession_chain.length === 0 ? (
-                  <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     No supersession chain
                   </p>
                 ) : (
@@ -357,7 +357,7 @@ export function ImpactAnalysis() {
                           />
                           <div className="text-sm">
                             <span className="font-medium">{d.title}</span>
-                            <div className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mt-0.5">
+                            <div className="text-xs text-[var(--text-secondary)] mt-0.5">
                               {new Date(d.made_at).toLocaleDateString()} ·{' '}
                               <span className={`badge-${d.status} capitalize`}>{d.status}</span>
                             </div>
@@ -376,25 +376,25 @@ export function ImpactAnalysis() {
                 <AlertTriangle size={16} className="text-status-superseded" />
                 What if I supersede this?
               </h3>
-              <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-3">
+              <p className="text-xs text-[var(--text-secondary)] mb-3">
                 Superseding "{impact.decision.title}" would affect:
               </p>
               <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-3 rounded-md bg-nexus-surface-alt-dark dark:bg-nexus-surface-alt-dark">
+                <div className="text-center p-3 rounded-md bg-[var(--bg-secondary)]">
                   <p className="text-xl font-bold tabular-nums">{impact.downstream.length}</p>
-                  <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     Downstream decisions
                   </p>
                 </div>
-                <div className="text-center p-3 rounded-md bg-nexus-surface-alt-dark dark:bg-nexus-surface-alt-dark">
+                <div className="text-center p-3 rounded-md bg-[var(--bg-secondary)]">
                   <p className="text-xl font-bold tabular-nums">{impact.affected_agents.length}</p>
-                  <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     Agents affected
                   </p>
                 </div>
-                <div className="text-center p-3 rounded-md bg-nexus-surface-alt-dark dark:bg-nexus-surface-alt-dark">
+                <div className="text-center p-3 rounded-md bg-[var(--bg-secondary)]">
                   <p className="text-xl font-bold tabular-nums">{impact.blocking.length}</p>
-                  <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     Blocking items
                   </p>
                 </div>
@@ -408,9 +408,9 @@ export function ImpactAnalysis() {
           <div className="text-center py-16">
             <Zap
               size={32}
-              className="mx-auto mb-3 text-nexus-text-faint-dark dark:text-nexus-text-faint-dark"
+              className="mx-auto mb-3 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               Select a decision to analyze its impact
             </p>
           </div>

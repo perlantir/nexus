@@ -126,7 +126,7 @@ function StatCard({
         <span className={warn ? 'text-status-reverted' : 'text-primary'}>{icon}</span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-2xs text-nexus-text-muted-dark uppercase tracking-wide mb-0.5">
+        <p className="text-2xs text-[var(--text-secondary)] uppercase tracking-wide mb-0.5">
           {label}
         </p>
         <p
@@ -136,7 +136,7 @@ function StatCard({
         >
           {value}
         </p>
-        {sub && <p className="text-2xs text-nexus-text-faint-dark mt-0.5">{sub}</p>}
+        {sub && <p className="text-2xs text-[var(--text-tertiary)] mt-0.5">{sub}</p>}
       </div>
     </div>
   );
@@ -184,7 +184,7 @@ export function ProjectStats() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={24} className="animate-spin text-primary" />
-          <span className="text-sm text-nexus-text-muted-dark">Loading stats…</span>
+          <span className="text-sm text-[var(--text-secondary)]">Loading stats…</span>
         </div>
       </div>
     );
@@ -207,8 +207,8 @@ export function ProjectStats() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center py-12">
-          <BarChart3 size={28} className="mx-auto mb-2 text-nexus-text-faint-dark" />
-          <p className="text-sm text-nexus-text-muted-dark">No stats available</p>
+          <BarChart3 size={28} className="mx-auto mb-2 text-[var(--text-tertiary)]" />
+          <p className="text-sm text-[var(--text-secondary)]">No stats available</p>
         </div>
       </div>
     );
@@ -229,7 +229,7 @@ export function ProjectStats() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-lg font-semibold mb-1">Project Stats</h1>
-            <p className="text-sm text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               Overview of decisions, agents, and activity
             </p>
           </div>
@@ -288,7 +288,7 @@ export function ProjectStats() {
                 <div key={status} className={`rounded-lg p-3 ${colors.bg}`}>
                   <p className={`text-xs font-medium capitalize mb-1 ${colors.text}`}>{status}</p>
                   <p className="text-2xl font-semibold tabular-nums">{count}</p>
-                  <p className="text-2xs text-nexus-text-faint-dark">{pct}% of total</p>
+                  <p className="text-2xs text-[var(--text-tertiary)]">{pct}% of total</p>
                 </div>
               );
             })}
@@ -304,7 +304,7 @@ export function ProjectStats() {
               Decisions per Agent
             </h2>
             {stats.decisions_per_agent.length === 0 ? (
-              <p className="text-sm text-nexus-text-muted-dark py-4 text-center">No agent data</p>
+              <p className="text-sm text-[var(--text-secondary)] py-4 text-center">No agent data</p>
             ) : (
               <div className="space-y-3">
                 {stats.decisions_per_agent
@@ -318,11 +318,11 @@ export function ProjectStats() {
                           <span className="text-xs font-medium truncate max-w-[70%]">
                             {row.agent}
                           </span>
-                          <span className="text-xs text-nexus-text-muted-dark tabular-nums">
+                          <span className="text-xs text-[var(--text-secondary)] tabular-nums">
                             {row.count}
                           </span>
                         </div>
-                        <div className="h-2 rounded-full bg-nexus-border-dark overflow-hidden">
+                        <div className="h-2 rounded-full bg-[var(--border-light)] overflow-hidden">
                           <div
                             className="h-full rounded-full bg-primary transition-all duration-500"
                             style={{ width: `${pct}%` }}
@@ -342,7 +342,7 @@ export function ProjectStats() {
                 <FileText size={18} className="text-primary" />
               </div>
               <div>
-                <p className="text-2xs text-nexus-text-muted-dark uppercase tracking-wide mb-0.5">
+                <p className="text-2xs text-[var(--text-secondary)] uppercase tracking-wide mb-0.5">
                   Artifacts
                 </p>
                 <p className="text-xl font-semibold tabular-nums">{stats.total_artifacts}</p>
@@ -360,7 +360,7 @@ export function ProjectStats() {
                     {stats.unresolved_contradictions} Unresolved Contradiction
                     {stats.unresolved_contradictions !== 1 ? 's' : ''}
                   </p>
-                  <p className="text-2xs text-nexus-text-muted-dark">
+                  <p className="text-2xs text-[var(--text-secondary)]">
                     Review contradictions to maintain decision consistency
                   </p>
                 </div>
@@ -396,15 +396,15 @@ export function ProjectStats() {
             {/* X-axis labels — show first, middle, last */}
             {stats.decision_trend.length >= 2 && (
               <div className="flex justify-between mt-2">
-                <span className="text-2xs text-nexus-text-faint-dark">
+                <span className="text-2xs text-[var(--text-tertiary)]">
                   {formatDate(stats.decision_trend[0].date)}
                 </span>
-                <span className="text-2xs text-nexus-text-faint-dark">
+                <span className="text-2xs text-[var(--text-tertiary)]">
                   {formatDate(
                     stats.decision_trend[Math.floor(stats.decision_trend.length / 2)].date,
                   )}
                 </span>
-                <span className="text-2xs text-nexus-text-faint-dark">
+                <span className="text-2xs text-[var(--text-tertiary)]">
                   {formatDate(stats.decision_trend[stats.decision_trend.length - 1].date)}
                 </span>
               </div>
@@ -423,21 +423,21 @@ export function ProjectStats() {
               {stats.recent_activity.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-start gap-3 py-2 border-b border-nexus-border-dark last:border-0"
+                  className="flex items-start gap-3 py-2 border-b border-[var(--border-light)] last:border-0"
                 >
                   <div className="w-2 h-2 rounded-full bg-primary/60 mt-1.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm leading-snug">{item.description}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       {item.agent && (
-                        <span className="text-2xs text-nexus-text-muted-dark">{item.agent}</span>
+                        <span className="text-2xs text-[var(--text-secondary)]">{item.agent}</span>
                       )}
-                      <span className="text-2xs text-nexus-text-faint-dark">
+                      <span className="text-2xs text-[var(--text-tertiary)]">
                         {formatTime(item.timestamp)}
                       </span>
                     </div>
                   </div>
-                  <span className="text-2xs text-nexus-text-faint-dark capitalize whitespace-nowrap">
+                  <span className="text-2xs text-[var(--text-tertiary)] capitalize whitespace-nowrap">
                     {item.type.replace(/_/g, ' ')}
                   </span>
                 </div>

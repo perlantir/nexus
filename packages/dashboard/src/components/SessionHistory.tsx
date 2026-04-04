@@ -89,7 +89,7 @@ export function SessionHistory() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={24} className="animate-spin text-primary" />
-          <span className="text-sm text-nexus-text-muted-dark">Loading sessions…</span>
+          <span className="text-sm text-[var(--text-secondary)]">Loading sessions…</span>
         </div>
       </div>
     );
@@ -111,7 +111,7 @@ export function SessionHistory() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-semibold mb-1">Sessions</h1>
-          <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <p className="text-sm text-[var(--text-secondary)]">
             History of agent sessions and extracted decisions
           </p>
         </div>
@@ -121,9 +121,9 @@ export function SessionHistory() {
           <div className="text-center py-12">
             <History
               size={28}
-              className="mx-auto mb-2 text-nexus-text-faint-dark dark:text-nexus-text-faint-dark"
+              className="mx-auto mb-2 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               No sessions recorded yet
             </p>
           </div>
@@ -147,7 +147,7 @@ export function SessionHistory() {
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-semibold truncate">{session.topic}</h3>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mt-1">
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-secondary)] mt-1">
                             <span className="flex items-center gap-1">
                               <User size={12} />
                               {session.agent_name}
@@ -172,12 +172,12 @@ export function SessionHistory() {
                           {isExpanded ? (
                             <ChevronUp
                               size={14}
-                              className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark"
+                              className="text-[var(--text-secondary)]"
                             />
                           ) : (
                             <ChevronDown
                               size={14}
-                              className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark"
+                              className="text-[var(--text-secondary)]"
                             />
                           )}
                         </div>
@@ -186,7 +186,7 @@ export function SessionHistory() {
                       {/* Confidence indicator */}
                       {session.extraction_confidence !== undefined && (
                         <div className="mt-2">
-                          <div className="w-full h-1 rounded-full bg-nexus-border-dark dark:bg-nexus-border-dark overflow-hidden">
+                          <div className="w-full h-1 rounded-full bg-[var(--border-light)] overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-500"
                               style={{
@@ -200,7 +200,7 @@ export function SessionHistory() {
                               }}
                             />
                           </div>
-                          <span className="text-2xs text-nexus-text-faint-dark dark:text-nexus-text-faint-dark mt-0.5 block">
+                          <span className="text-2xs text-[var(--text-tertiary)] mt-0.5 block">
                             Extraction confidence:{' '}
                             {(session.extraction_confidence * 100).toFixed(0)}%
                           </span>
@@ -210,12 +210,12 @@ export function SessionHistory() {
 
                     {/* Expanded detail */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 pt-2 border-t border-nexus-border-dark dark:border-nexus-border-dark animate-fade-in">
+                      <div className="px-4 pb-4 pt-2 border-t border-[var(--border-light)] animate-fade-in">
                         <div className="space-y-4 text-sm">
                           {/* Summary */}
                           {session.summary && (
                             <div>
-                              <label className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1 block flex items-center gap-1.5">
+                              <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block flex items-center gap-1.5">
                                 <FileText size={12} />
                                 Summary
                               </label>
@@ -226,7 +226,7 @@ export function SessionHistory() {
                           {/* Decision IDs */}
                           {session.decision_ids && session.decision_ids.length > 0 && (
                             <div>
-                              <label className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1 block flex items-center gap-1.5">
+                              <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block flex items-center gap-1.5">
                                 <CheckCircle2 size={12} />
                                 Extracted Decisions
                               </label>
@@ -246,7 +246,7 @@ export function SessionHistory() {
                           {/* Assumptions */}
                           {session.assumptions && session.assumptions.length > 0 && (
                             <div>
-                              <label className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1 block flex items-center gap-1.5">
+                              <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block flex items-center gap-1.5">
                                 <AlertCircle size={12} />
                                 Assumptions
                               </label>
@@ -261,7 +261,7 @@ export function SessionHistory() {
                           {/* Open questions */}
                           {session.open_questions && session.open_questions.length > 0 && (
                             <div>
-                              <label className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1 block flex items-center gap-1.5">
+                              <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block flex items-center gap-1.5">
                                 <HelpCircle size={12} />
                                 Open Questions
                               </label>
@@ -276,7 +276,7 @@ export function SessionHistory() {
                           {/* Lessons learned */}
                           {session.lessons_learned && session.lessons_learned.length > 0 && (
                             <div>
-                              <label className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1 block flex items-center gap-1.5">
+                              <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block flex items-center gap-1.5">
                                 <Lightbulb size={12} />
                                 Lessons Learned
                               </label>

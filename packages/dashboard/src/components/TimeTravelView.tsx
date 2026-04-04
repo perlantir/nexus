@@ -96,17 +96,17 @@ export function TimeTravelView() {
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-1">Time Travel</h1>
-      <p className="text-sm text-nexus-text-muted-dark mb-6">
+      <p className="text-sm text-[var(--text-secondary)] mb-6">
         Replay, reconstruct, and diff agent context at any point in time
       </p>
 
       {/* Agent selector */}
       <div className="mb-6">
-        <label className="block text-xs font-medium mb-1 text-nexus-text-muted-dark">Select Agent</label>
+        <label className="block text-xs font-medium mb-1 text-[var(--text-secondary)]">Select Agent</label>
         <select
           value={selectedAgent}
           onChange={(e) => { setSelectedAgent(e.target.value); setSelectedEntry(null); setDiffResult(null); }}
-          className="px-3 py-2 rounded-md bg-black/20 border border-nexus-border-dark text-sm w-64"
+          className="px-3 py-2 rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] text-sm w-64"
         >
           <option value="">Choose an agent...</option>
           {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -114,16 +114,16 @@ export function TimeTravelView() {
       </div>
 
       {/* Reconstruct section */}
-      <div className="mb-6 p-4 rounded-lg border border-nexus-border-dark bg-white/5">
+      <div className="mb-6 p-4 rounded-lg border border-[var(--border-light)] bg-[var(--bg-hover)]">
         <h2 className="text-sm font-semibold mb-3 flex items-center gap-2"><RotateCcw size={14} /> Reconstruct Context</h2>
         <div className="flex items-end gap-3">
           <div>
-            <label className="block text-xs text-nexus-text-muted-dark mb-1">As of date</label>
+            <label className="block text-xs text-[var(--text-secondary)] mb-1">As of date</label>
             <input
               type="datetime-local"
               value={asOfDate}
               onChange={(e) => setAsOfDate(e.target.value)}
-              className="px-3 py-2 rounded-md bg-black/20 border border-nexus-border-dark text-sm"
+              className="px-3 py-2 rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] text-sm"
             />
           </div>
           <button
@@ -135,14 +135,14 @@ export function TimeTravelView() {
           </button>
         </div>
         {reconstructResult && (
-          <div className="mt-3 p-3 rounded bg-black/20 text-xs">
+          <div className="mt-3 p-3 rounded bg-[var(--bg-secondary)] text-xs">
             <p className="font-medium mb-1">As of: {(reconstructResult as Record<string, unknown>).as_of as string}</p>
             <p>{(reconstructResult as Record<string, unknown>).decisions_available as number} decisions available at that time</p>
           </div>
         )}
       </div>
 
-      {loading && <div className="flex items-center gap-2 text-sm text-nexus-text-muted-dark"><Loader2 size={14} className="animate-spin" /> Loading history...</div>}
+      {loading && <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]"><Loader2 size={14} className="animate-spin" /> Loading history...</div>}
 
       {/* Compilation timeline */}
       {history.length > 0 && (
@@ -153,29 +153,29 @@ export function TimeTravelView() {
               <div
                 key={entry.id}
                 className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                  selectedEntry?.id === entry.id ? 'border-primary bg-primary/5' : 'border-nexus-border-dark bg-white/5 hover:bg-white/10'
+                  selectedEntry?.id === entry.id ? 'border-primary bg-primary/5' : 'border-[var(--border-light)] bg-[var(--bg-hover)] hover:bg-[var(--bg-active)]'
                 }`}
                 onClick={() => handleViewEntry(entry.id)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium">{entry.task_description?.slice(0, 60)}</span>
-                    <ChevronRight size={12} className="text-nexus-text-muted-dark" />
+                    <ChevronRight size={12} className="text-[var(--text-secondary)]" />
                   </div>
-                  <span className="text-2xs text-nexus-text-muted-dark">{formatDate(entry.compiled_at)}</span>
+                  <span className="text-2xs text-[var(--text-secondary)]">{formatDate(entry.compiled_at)}</span>
                 </div>
-                <div className="text-2xs text-nexus-text-muted-dark mt-1">
+                <div className="text-2xs text-[var(--text-secondary)] mt-1">
                   {entry.total_decisions} decisions | {entry.token_budget_used ?? 0} tokens
                 </div>
                 {/* Diff selection */}
                 <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => setDiffA(entry.id)}
-                    className={`px-2 py-0.5 rounded text-2xs ${diffA === entry.id ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 hover:bg-white/10'}`}
+                    className={`px-2 py-0.5 rounded text-2xs ${diffA === entry.id ? 'bg-blue-500/20 text-blue-400' : 'bg-[var(--bg-hover)] hover:bg-[var(--bg-active)]'}`}
                   >A</button>
                   <button
                     onClick={() => setDiffB(entry.id)}
-                    className={`px-2 py-0.5 rounded text-2xs ${diffB === entry.id ? 'bg-green-500/20 text-green-400' : 'bg-white/5 hover:bg-white/10'}`}
+                    className={`px-2 py-0.5 rounded text-2xs ${diffB === entry.id ? 'bg-green-500/20 text-green-400' : 'bg-[var(--bg-hover)] hover:bg-[var(--bg-active)]'}`}
                   >B</button>
                 </div>
               </div>
@@ -196,16 +196,16 @@ export function TimeTravelView() {
 
       {/* Selected entry detail */}
       {selectedEntry && (
-        <div className="mb-6 p-4 rounded-lg border border-nexus-border-dark bg-white/5">
+        <div className="mb-6 p-4 rounded-lg border border-[var(--border-light)] bg-[var(--bg-hover)]">
           <h2 className="text-sm font-semibold mb-2">Compilation Detail</h2>
-          <p className="text-xs text-nexus-text-muted-dark mb-2">{selectedEntry.task_description}</p>
-          <p className="text-2xs text-nexus-text-muted-dark">{formatDate(selectedEntry.compiled_at)} | Hash: {selectedEntry.context_hash?.slice(0, 12)}...</p>
+          <p className="text-xs text-[var(--text-secondary)] mb-2">{selectedEntry.task_description}</p>
+          <p className="text-2xs text-[var(--text-secondary)]">{formatDate(selectedEntry.compiled_at)} | Hash: {selectedEntry.context_hash?.slice(0, 12)}...</p>
           {selectedEntry.decision_scores && (
             <div className="mt-3 space-y-1">
               {(selectedEntry.decision_scores as Array<{ title: string; combined_score: number }>).map((d, i) => (
-                <div key={i} className="flex items-center justify-between text-xs p-2 rounded bg-black/20">
+                <div key={i} className="flex items-center justify-between text-xs p-2 rounded bg-[var(--bg-secondary)]">
                   <span>{d.title}</span>
-                  <span className="text-nexus-text-muted-dark">score: {d.combined_score}</span>
+                  <span className="text-[var(--text-secondary)]">score: {d.combined_score}</span>
                 </div>
               ))}
             </div>
@@ -215,9 +215,9 @@ export function TimeTravelView() {
 
       {/* Diff result */}
       {diffResult && (
-        <div className="p-4 rounded-lg border border-nexus-border-dark bg-white/5">
+        <div className="p-4 rounded-lg border border-[var(--border-light)] bg-[var(--bg-hover)]">
           <h2 className="text-sm font-semibold mb-3 flex items-center gap-2"><Diff size={14} /> Diff Result</h2>
-          <div className="text-2xs text-nexus-text-muted-dark mb-3">
+          <div className="text-2xs text-[var(--text-secondary)] mb-3">
             {formatDate(diffResult.compiled_at_a)} vs {formatDate(diffResult.compiled_at_b)}
           </div>
           {diffResult.added_decisions.length > 0 && (
@@ -246,7 +246,7 @@ export function TimeTravelView() {
               ))}
             </div>
           )}
-          <p className="text-xs text-nexus-text-muted-dark">{diffResult.unchanged_count} unchanged</p>
+          <p className="text-xs text-[var(--text-secondary)]">{diffResult.unchanged_count} unchanged</p>
         </div>
       )}
     </div>

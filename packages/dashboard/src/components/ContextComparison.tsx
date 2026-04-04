@@ -11,13 +11,13 @@ import type { ContextResult, Decision } from '../types';
 function scoreColor(score: number): string {
   if (score >= 0.8) return 'text-status-active';
   if (score >= 0.5) return 'text-status-superseded';
-  return 'text-nexus-text-muted-dark dark:text-nexus-text-muted-dark';
+  return 'text-[var(--text-secondary)]';
 }
 
 function ScoreBar({ score }: { score: number }) {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1 rounded-full bg-nexus-border-dark dark:bg-nexus-border-dark overflow-hidden">
+      <div className="flex-1 h-1 rounded-full bg-[var(--border-light)] overflow-hidden">
         <div
           className="h-full rounded-full bg-primary transition-all duration-500"
           style={{ width: `${score * 100}%` }}
@@ -121,7 +121,7 @@ export function ContextComparison() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-semibold mb-1">Context Comparison</h1>
-          <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <p className="text-sm text-[var(--text-secondary)]">
             Compare what two agents would see for a given task
           </p>
         </div>
@@ -130,7 +130,7 @@ export function ContextComparison() {
         <div className="card p-5 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1.5 block">
+              <label className="text-xs font-medium text-[var(--text-secondary)] mb-1.5 block">
                 Agent A
               </label>
               <input
@@ -143,7 +143,7 @@ export function ContextComparison() {
             </div>
 
             <div>
-              <label className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1.5 block">
+              <label className="text-xs font-medium text-[var(--text-secondary)] mb-1.5 block">
                 Agent B
               </label>
               <input
@@ -156,7 +156,7 @@ export function ContextComparison() {
             </div>
 
             <div>
-              <label className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1.5 block">
+              <label className="text-xs font-medium text-[var(--text-secondary)] mb-1.5 block">
                 Task
               </label>
               <input
@@ -193,13 +193,13 @@ export function ContextComparison() {
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="card p-4 text-center">
                 <p className="text-2xl font-bold text-primary tabular-nums">{uniqueA.length}</p>
-                <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mt-1">
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
                   Unique to {agentA}
                 </p>
               </div>
               <div className="card p-4 text-center">
                 <p className="text-2xl font-bold tabular-nums">{shared.length}</p>
-                <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mt-1">
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
                   Shared
                 </p>
               </div>
@@ -207,7 +207,7 @@ export function ContextComparison() {
                 <p className="text-2xl font-bold text-status-superseded tabular-nums">
                   {uniqueB.length}
                 </p>
-                <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mt-1">
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
                   Unique to {agentB}
                 </p>
               </div>
@@ -226,7 +226,7 @@ export function ContextComparison() {
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary" />
                   {agentA}
-                  <span className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark font-normal">
+                  <span className="text-xs text-[var(--text-secondary)] font-normal">
                     ({resultA.decisions.length} decisions)
                   </span>
                 </h3>
@@ -256,7 +256,7 @@ export function ContextComparison() {
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-status-superseded" />
                   {agentB}
-                  <span className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark font-normal">
+                  <span className="text-xs text-[var(--text-secondary)] font-normal">
                     ({resultB.decisions.length} decisions)
                   </span>
                 </h3>
@@ -294,9 +294,9 @@ export function ContextComparison() {
           <div className="text-center py-16">
             <Columns2
               size={32}
-              className="mx-auto mb-3 text-nexus-text-faint-dark dark:text-nexus-text-faint-dark"
+              className="mx-auto mb-3 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               Enter two agent names and a task to compare their contexts
             </p>
           </div>

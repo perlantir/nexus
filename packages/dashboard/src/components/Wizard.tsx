@@ -83,13 +83,13 @@ function StepDots({ current }: { current: number }) {
                 ? 'bg-primary'
                 : i === current
                   ? 'bg-primary ring-2 ring-primary/30 scale-125'
-                  : 'bg-nexus-border-dark dark:bg-nexus-border-dark'
+                  : 'bg-[var(--border-light)]'
             }`}
           />
           {i < STEPS.length - 1 && (
             <div
               className={`w-6 h-px transition-all ${
-                i < current ? 'bg-primary' : 'bg-nexus-border-dark dark:bg-nexus-border-dark'
+                i < current ? 'bg-primary' : 'bg-[var(--border-light)]'
               }`}
             />
           )}
@@ -320,7 +320,7 @@ export function Wizard({ onComplete }: WizardProps) {
   /* ---------------------------------------------------------------- */
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-nexus-bg-dark dark:bg-nexus-bg-dark px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] px-4 py-12">
       <div className="w-full max-w-2xl">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-10">
@@ -342,10 +342,10 @@ export function Wizard({ onComplete }: WizardProps) {
               <h1 className="text-2xl font-semibold mb-3">
                 Welcome to Nexus
               </h1>
-              <p className="text-base text-nexus-text-muted-dark dark:text-nexus-text-muted-dark leading-relaxed mb-2 max-w-md mx-auto">
+              <p className="text-base text-[var(--text-secondary)] leading-relaxed mb-2 max-w-md mx-auto">
                 Your team's shared decision memory.
               </p>
-              <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark leading-relaxed mb-8 max-w-md mx-auto">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-8 max-w-md mx-auto">
                 Nexus captures every architectural choice, product decision, and trade-off your
                 team makes — then surfaces the right context to each AI agent at the right time.
                 No more repeated debates. No more lost rationale.
@@ -369,7 +369,7 @@ export function Wizard({ onComplete }: WizardProps) {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold">Create your project</h2>
-                  <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     Give your decision graph a home.
                   </p>
                 </div>
@@ -379,7 +379,7 @@ export function Wizard({ onComplete }: WizardProps) {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                     Project name <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -394,7 +394,7 @@ export function Wizard({ onComplete }: WizardProps) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                     Description <span className="opacity-50">(optional)</span>
                   </label>
                   <textarea
@@ -445,7 +445,7 @@ export function Wizard({ onComplete }: WizardProps) {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold">Add your agents</h2>
-                  <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     Each agent gets a tailored context window. Minimum 2 required.
                   </p>
                 </div>
@@ -459,7 +459,7 @@ export function Wizard({ onComplete }: WizardProps) {
                     <div className="flex-1 flex gap-3">
                       <div className="flex-1">
                         {i === 0 && (
-                          <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                          <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                             Name
                           </label>
                         )}
@@ -473,7 +473,7 @@ export function Wizard({ onComplete }: WizardProps) {
                       </div>
                       <div className="w-44">
                         {i === 0 && (
-                          <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                          <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                             Role
                           </label>
                         )}
@@ -508,7 +508,7 @@ export function Wizard({ onComplete }: WizardProps) {
                   (r) => r.value === agents[agents.length - 1]?.role,
                 );
                 return currentRole ? (
-                  <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-4 italic">
+                  <p className="text-xs text-[var(--text-secondary)] mb-4 italic">
                     <span className="font-medium not-italic">{currentRole.label}:</span>{' '}
                     {currentRole.description}
                   </p>
@@ -562,7 +562,7 @@ export function Wizard({ onComplete }: WizardProps) {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold">Seed decisions</h2>
-                  <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     Optional — add initial decisions to your graph.
                   </p>
                 </div>
@@ -598,14 +598,14 @@ export function Wizard({ onComplete }: WizardProps) {
                     <button
                       key={opt.id}
                       onClick={() => setSeedOption(opt.id)}
-                      className="flex items-start gap-4 p-4 rounded-lg border border-nexus-border-dark dark:border-nexus-border-dark hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
+                      className="flex items-start gap-4 p-4 rounded-lg border border-[var(--border-light)] hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
                     >
                       <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
                         {opt.icon}
                       </div>
                       <div>
                         <p className="text-sm font-medium mb-0.5">{opt.title}</p>
-                        <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark leading-relaxed">
+                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                           {opt.description}
                         </p>
                       </div>
@@ -620,7 +620,7 @@ export function Wizard({ onComplete }: WizardProps) {
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
                     <Check size={22} className="text-primary" />
                   </div>
-                  <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-4">
+                  <p className="text-sm text-[var(--text-secondary)] mb-4">
                     You'll add decisions from the Decision Graph after setup.
                   </p>
                   <button
@@ -660,7 +660,7 @@ export function Wizard({ onComplete }: WizardProps) {
 
                   {extractedDecisions.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark uppercase tracking-wider mb-2">
+                      <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-2">
                         Extracted decisions ({extractedDecisions.length})
                       </p>
                       {extractedDecisions.map((d, i) => (
@@ -697,7 +697,7 @@ export function Wizard({ onComplete }: WizardProps) {
                     <ArrowLeft size={12} />
                     Change option
                   </button>
-                  <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                     OpenClaw path or directory
                   </label>
                   <input
@@ -754,7 +754,7 @@ export function Wizard({ onComplete }: WizardProps) {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold">See it work</h2>
-                  <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     Compile a context window for your first two agents.
                   </p>
                 </div>
@@ -786,7 +786,7 @@ export function Wizard({ onComplete }: WizardProps) {
                       <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">
                         {result.agent}
                       </p>
-                      <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-3 leading-relaxed">
+                      <p className="text-xs text-[var(--text-secondary)] mb-3 leading-relaxed">
                         {result.task}
                       </p>
                       <div className="space-y-2">
@@ -802,7 +802,7 @@ export function Wizard({ onComplete }: WizardProps) {
                                   ? 'text-green-400 bg-green-500/10'
                                   : d.score >= 0.5
                                     ? 'text-yellow-400 bg-yellow-500/10'
-                                    : 'text-nexus-text-muted-dark'
+                                    : 'text-[var(--text-secondary)]'
                               }`}
                             >
                               {Math.round(d.score * 100)}
@@ -810,7 +810,7 @@ export function Wizard({ onComplete }: WizardProps) {
                           </div>
                         ))}
                         {(result.decisions || []).length === 0 && (
-                          <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark italic">
+                          <p className="text-xs text-[var(--text-secondary)] italic">
                             No decisions ranked yet — add some in the dashboard.
                           </p>
                         )}
@@ -821,7 +821,7 @@ export function Wizard({ onComplete }: WizardProps) {
               )}
 
               {compiled && compileResults.length === 0 && (
-                <p className="text-sm text-center text-nexus-text-muted-dark dark:text-nexus-text-muted-dark py-4">
+                <p className="text-sm text-center text-[var(--text-secondary)] py-4">
                   No agents available to compile. Continue to the dashboard to add more.
                 </p>
               )}
@@ -849,7 +849,7 @@ export function Wizard({ onComplete }: WizardProps) {
                 <Check size={28} className="text-primary" />
               </div>
               <h2 className="text-2xl font-semibold mb-3">You're all set!</h2>
-              <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark leading-relaxed mb-8 max-w-md mx-auto">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-8 max-w-md mx-auto">
                 Your project <span className="text-primary font-medium">{projectName}</span> is
                 ready. Explore your decision graph, compare agent contexts, and manage
                 contradictions.
@@ -875,11 +875,11 @@ export function Wizard({ onComplete }: WizardProps) {
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="p-3 rounded-lg border border-nexus-border-dark dark:border-nexus-border-dark"
+                    className="p-3 rounded-lg border border-[var(--border-light)]"
                   >
                     <div className="mb-2">{item.icon}</div>
                     <p className="text-xs font-semibold mb-0.5">{item.label}</p>
-                    <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                    <p className="text-xs text-[var(--text-secondary)]">
                       {item.hint}
                     </p>
                   </div>
@@ -898,7 +898,7 @@ export function Wizard({ onComplete }: WizardProps) {
         </div>
 
         {/* Step label */}
-        <p className="text-center text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mt-4">
+        <p className="text-center text-xs text-[var(--text-secondary)] mt-4">
           Step {step + 1} of {STEPS.length} — {STEPS[step]}
         </p>
       </div>

@@ -181,7 +181,7 @@ export function Contradictions() {
     if (!decision) {
       return (
         <div className="card p-4 flex-1">
-          <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <p className="text-xs text-[var(--text-secondary)]">
             {label} — decision data unavailable
           </p>
         </div>
@@ -195,16 +195,16 @@ export function Contradictions() {
         } ${selected ? 'ring-2 ring-primary' : ''}`}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-2xs font-medium uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <span className="text-2xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
             {label}
           </span>
           <span className={`badge badge-${decision.status}`}>{decision.status}</span>
         </div>
         <h4 className="text-sm font-semibold mb-1">{decision.title}</h4>
-        <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark leading-relaxed line-clamp-3">
+        <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-3">
           {decision.description}
         </p>
-        <p className="text-2xs text-nexus-text-faint-dark dark:text-nexus-text-faint-dark mt-2">
+        <p className="text-2xs text-[var(--text-tertiary)] mt-2">
           by {decision.made_by} · {new Date(decision.made_at).toLocaleDateString()}
         </p>
       </div>
@@ -218,7 +218,7 @@ export function Contradictions() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={24} className="animate-spin text-primary" />
-          <span className="text-sm text-nexus-text-muted-dark">Loading contradictions…</span>
+          <span className="text-sm text-[var(--text-secondary)]">Loading contradictions…</span>
         </div>
       </div>
     );
@@ -248,7 +248,7 @@ export function Contradictions() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-semibold mb-1">Contradictions</h1>
-          <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <p className="text-sm text-[var(--text-secondary)]">
             Conflicting decisions that need resolution
           </p>
         </div>
@@ -275,7 +275,7 @@ export function Contradictions() {
                 {counts.unresolved} unresolved contradiction
                 {counts.unresolved !== 1 ? 's' : ''} require attention
               </p>
-              <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+              <p className="text-xs text-[var(--text-secondary)]">
                 {unresolvedCritical > 0 && (
                   <span className="text-red-400 font-medium">
                     {unresolvedCritical} critical
@@ -294,7 +294,7 @@ export function Contradictions() {
         )}
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 mb-6 border-b border-nexus-border-dark dark:border-nexus-border-dark">
+        <div className="flex items-center gap-1 mb-6 border-b border-[var(--border-light)]">
           {(['unresolved', 'resolved', 'dismissed'] as TabFilter[]).map((t) => (
             <button
               key={t}
@@ -302,7 +302,7 @@ export function Contradictions() {
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors capitalize ${
                 tab === t
                   ? 'border-primary text-primary'
-                  : 'border-transparent text-nexus-text-muted-dark dark:text-nexus-text-muted-dark hover:text-nexus-text-dark dark:hover:text-nexus-text-dark'
+                  : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               {t}
@@ -316,9 +316,9 @@ export function Contradictions() {
           <div className="text-center py-12">
             <AlertTriangle
               size={28}
-              className="mx-auto mb-2 text-nexus-text-faint-dark dark:text-nexus-text-faint-dark"
+              className="mx-auto mb-2 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               No {tab} contradictions
             </p>
           </div>
@@ -346,7 +346,7 @@ export function Contradictions() {
                     <div className="flex items-center shrink-0">
                       <ArrowRight
                         size={16}
-                        className="text-nexus-text-faint-dark dark:text-nexus-text-faint-dark rotate-90 sm:rotate-0"
+                        className="text-[var(--text-tertiary)] rotate-90 sm:rotate-0"
                       />
                     </div>
                     <DecisionCard decision={contradiction.decision_b} label="Decision B" />
@@ -355,14 +355,14 @@ export function Contradictions() {
                   {/* Similarity score */}
                   <div className="mb-3">
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                      <span className="text-[var(--text-secondary)]">
                         Similarity Score
                       </span>
                       <span className="font-medium">
                         {(contradiction.similarity_score * 100).toFixed(0)}%
                       </span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-nexus-border-dark dark:bg-nexus-border-dark overflow-hidden">
+                    <div className="w-full h-1.5 rounded-full bg-[var(--border-light)] overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           severity === 'critical' ? 'bg-red-400' : 'bg-yellow-400'
@@ -376,7 +376,7 @@ export function Contradictions() {
                   <div className="flex items-start gap-2 mb-3">
                     <MessageSquare
                       size={14}
-                      className="shrink-0 mt-0.5 text-nexus-text-muted-dark dark:text-nexus-text-muted-dark"
+                      className="shrink-0 mt-0.5 text-[var(--text-secondary)]"
                     />
                     <p className="text-sm leading-relaxed">{contradiction.conflict_description}</p>
                   </div>
@@ -386,13 +386,13 @@ export function Contradictions() {
                     explanation?: string;
                     resolution_suggestion?: string;
                   }).explanation && (
-                    <div className="flex items-start gap-2 p-3 rounded-md bg-nexus-border-dark/20 mb-3">
+                    <div className="flex items-start gap-2 p-3 rounded-md bg-[var(--border-light)]/20 mb-3">
                       <Info
                         size={13}
-                        className="shrink-0 mt-0.5 text-nexus-text-muted-dark dark:text-nexus-text-muted-dark"
+                        className="shrink-0 mt-0.5 text-[var(--text-secondary)]"
                       />
                       <div>
-                        <p className="text-xs font-medium text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-0.5">
+                        <p className="text-xs font-medium text-[var(--text-secondary)] mb-0.5">
                           AI Analysis
                         </p>
                         <p className="text-xs leading-relaxed">
@@ -473,7 +473,7 @@ export function Contradictions() {
                 className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all border ${
                   resolveMode === 'win'
                     ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-nexus-border-dark dark:border-nexus-border-dark text-nexus-text-muted-dark dark:text-nexus-text-muted-dark hover:border-primary/40'
+                    : 'border-[var(--border-light)] text-[var(--text-secondary)] hover:border-primary/40'
                 }`}
               >
                 One decision wins
@@ -483,7 +483,7 @@ export function Contradictions() {
                 className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all border ${
                   resolveMode === 'not_conflict'
                     ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-nexus-border-dark dark:border-nexus-border-dark text-nexus-text-muted-dark dark:text-nexus-text-muted-dark hover:border-primary/40'
+                    : 'border-[var(--border-light)] text-[var(--text-secondary)] hover:border-primary/40'
                 }`}
               >
                 Not a conflict
@@ -505,7 +505,7 @@ export function Contradictions() {
 
             {resolveMode === 'win' ? (
               <>
-                <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-4">
+                <p className="text-sm text-[var(--text-secondary)] mb-4">
                   Select which decision supersedes the other.
                 </p>
 
@@ -526,7 +526,7 @@ export function Contradictions() {
                 </div>
 
                 {/* Resolution rationale */}
-                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                   Resolution rationale <span className="text-red-400">*</span>
                 </label>
                 <textarea
@@ -538,7 +538,7 @@ export function Contradictions() {
                 />
 
                 {/* Optional notes */}
-                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                   Additional notes <span className="opacity-50">(optional)</span>
                 </label>
                 <textarea
@@ -569,11 +569,11 @@ export function Contradictions() {
               </>
             ) : (
               <>
-                <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-4">
+                <p className="text-sm text-[var(--text-secondary)] mb-4">
                   Explain why these decisions don't actually conflict.
                 </p>
 
-                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                   Explanation <span className="text-red-400">*</span>
                 </label>
                 <textarea

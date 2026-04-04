@@ -161,7 +161,7 @@ export function Webhooks() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <span className="text-nexus-text-muted-dark">Loading webhooks…</span>
+        <span className="text-[var(--text-secondary)]">Loading webhooks…</span>
       </div>
     );
   }
@@ -171,7 +171,7 @@ export function Webhooks() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Webhooks</h1>
-          <p className="text-sm text-nexus-text-muted-dark mt-1">
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
             Get notified in Slack, Discord, or Telegram when decisions change
           </p>
         </div>
@@ -184,8 +184,8 @@ export function Webhooks() {
       </div>
 
       {/* Setup instructions */}
-      <div className="mb-6 p-4 rounded-lg bg-white/5 border border-nexus-border-dark text-sm text-nexus-text-muted-dark">
-        <p className="font-medium text-nexus-text-dark mb-2">Platform Setup</p>
+      <div className="mb-6 p-4 rounded-lg bg-[var(--bg-hover)] border border-[var(--border-light)] text-sm text-[var(--text-secondary)]">
+        <p className="font-medium text-[var(--text-primary)] mb-2">Platform Setup</p>
         <ul className="list-disc pl-5 space-y-1">
           <li><strong>Slack:</strong> Create an Incoming Webhook at <em>api.slack.com/messaging/webhooks</em></li>
           <li><strong>Discord:</strong> Channel Settings → Integrations → Webhooks → New Webhook</li>
@@ -195,27 +195,27 @@ export function Webhooks() {
 
       {/* Add form */}
       {showForm && (
-        <div className="mb-6 p-5 rounded-lg border border-nexus-border-dark bg-white/5">
+        <div className="mb-6 p-5 rounded-lg border border-[var(--border-light)] bg-[var(--bg-hover)]">
           <h2 className="text-lg font-semibold mb-4">New Webhook</h2>
           {formError && (
             <div className="mb-3 p-2 rounded bg-red-500/10 text-red-400 text-sm">{formError}</div>
           )}
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-xs font-medium mb-1 text-nexus-text-muted-dark">Name</label>
+              <label className="block text-xs font-medium mb-1 text-[var(--text-secondary)]">Name</label>
               <input
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 placeholder="e.g. team-slack"
-                className="w-full px-3 py-2 rounded-md bg-black/20 border border-nexus-border-dark text-sm"
+                className="w-full px-3 py-2 rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1 text-nexus-text-muted-dark">Platform</label>
+              <label className="block text-xs font-medium mb-1 text-[var(--text-secondary)]">Platform</label>
               <select
                 value={formPlatform}
                 onChange={(e) => setFormPlatform(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-black/20 border border-nexus-border-dark text-sm"
+                className="w-full px-3 py-2 rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] text-sm"
               >
                 {PLATFORMS.map((p) => (
                   <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
@@ -224,16 +224,16 @@ export function Webhooks() {
             </div>
           </div>
           <div className="mb-4">
-            <label className="block text-xs font-medium mb-1 text-nexus-text-muted-dark">Webhook URL</label>
+            <label className="block text-xs font-medium mb-1 text-[var(--text-secondary)]">Webhook URL</label>
             <input
               value={formUrl}
               onChange={(e) => setFormUrl(e.target.value)}
               placeholder="https://hooks.slack.com/services/..."
-              className="w-full px-3 py-2 rounded-md bg-black/20 border border-nexus-border-dark text-sm"
+              className="w-full px-3 py-2 rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] text-sm"
             />
           </div>
           <div className="mb-4">
-            <label className="block text-xs font-medium mb-1 text-nexus-text-muted-dark">Events</label>
+            <label className="block text-xs font-medium mb-1 text-[var(--text-secondary)]">Events</label>
             <div className="flex flex-wrap gap-2">
               {ALL_EVENTS.map((event) => (
                 <button
@@ -242,7 +242,7 @@ export function Webhooks() {
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                     formEvents.includes(event)
                       ? 'bg-primary/20 text-primary border border-primary/40'
-                      : 'bg-white/5 text-nexus-text-muted-dark border border-nexus-border-dark hover:bg-white/10'
+                      : 'bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-light)] hover:bg-[var(--bg-active)]'
                   }`}
                 >
                   {event.replace(/_/g, ' ')}
@@ -251,7 +251,7 @@ export function Webhooks() {
             </div>
           </div>
           <div className="mb-4">
-            <label className="block text-xs font-medium mb-1 text-nexus-text-muted-dark">
+            <label className="block text-xs font-medium mb-1 text-[var(--text-secondary)]">
               Secret (optional — used for HMAC-SHA256 signature)
             </label>
             <input
@@ -259,7 +259,7 @@ export function Webhooks() {
               value={formSecret}
               onChange={(e) => setFormSecret(e.target.value)}
               placeholder="Optional signing secret"
-              className="w-full px-3 py-2 rounded-md bg-black/20 border border-nexus-border-dark text-sm"
+              className="w-full px-3 py-2 rounded-md bg-[var(--bg-secondary)] border border-[var(--border-light)] text-sm"
             />
           </div>
           <div className="flex gap-3">
@@ -271,7 +271,7 @@ export function Webhooks() {
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="px-4 py-2 rounded-md bg-white/5 text-sm hover:bg-white/10"
+              className="px-4 py-2 rounded-md bg-[var(--bg-hover)] text-sm hover:bg-[var(--bg-active)]"
             >
               Cancel
             </button>
@@ -281,7 +281,7 @@ export function Webhooks() {
 
       {/* Webhook list */}
       {webhooks.length === 0 && !showForm ? (
-        <div className="text-center py-16 text-nexus-text-muted-dark">
+        <div className="text-center py-16 text-[var(--text-secondary)]">
           <Zap size={40} className="mx-auto mb-3 opacity-30" />
           <p className="text-lg font-medium mb-1">No webhooks configured</p>
           <p className="text-sm">Add a webhook to receive notifications in your team channels</p>
@@ -298,18 +298,18 @@ export function Webhooks() {
                 key={wh.id}
                 className={`p-4 rounded-lg border transition-colors ${
                   isEnabled
-                    ? 'border-nexus-border-dark bg-white/5'
-                    : 'border-nexus-border-dark/50 bg-white/2 opacity-60'
+                    ? 'border-[var(--border-light)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-light)] bg-[var(--bg-secondary)] opacity-60'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center">
+                    <span className="w-8 h-8 rounded-md bg-[var(--bg-active)] flex items-center justify-center">
                       {PLATFORM_ICONS[wh.platform] ?? <Zap size={16} />}
                     </span>
                     <div>
                       <span className="font-semibold text-sm">{wh.name}</span>
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded bg-white/10 text-nexus-text-muted-dark">
+                      <span className="ml-2 text-xs px-2 py-0.5 rounded bg-[var(--bg-active)] text-[var(--text-secondary)]">
                         {wh.platform}
                       </span>
                     </div>
@@ -318,19 +318,19 @@ export function Webhooks() {
                     <button
                       onClick={() => handleTest(wh.id)}
                       title="Send test payload"
-                      className="p-1.5 rounded hover:bg-white/10 text-nexus-text-muted-dark hover:text-nexus-text-dark transition-colors"
+                      className="p-1.5 rounded hover:bg-[var(--bg-active)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                     >
                       <Zap size={14} />
                     </button>
                     <button
                       onClick={() => handleToggle(wh)}
                       title={isEnabled ? 'Disable' : 'Enable'}
-                      className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                      className="p-1.5 rounded hover:bg-[var(--bg-active)] transition-colors"
                     >
                       {isEnabled ? (
                         <ToggleRight size={18} className="text-green-400" />
                       ) : (
-                        <ToggleLeft size={18} className="text-nexus-text-muted-dark" />
+                        <ToggleLeft size={18} className="text-[var(--text-secondary)]" />
                       )}
                     </button>
                     {deleteConfirm === wh.id ? (
@@ -343,7 +343,7 @@ export function Webhooks() {
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(null)}
-                          className="p-1.5 rounded hover:bg-white/10 text-nexus-text-muted-dark"
+                          className="p-1.5 rounded hover:bg-[var(--bg-active)] text-[var(--text-secondary)]"
                         >
                           <X size={14} />
                         </button>
@@ -352,7 +352,7 @@ export function Webhooks() {
                       <button
                         onClick={() => setDeleteConfirm(wh.id)}
                         title="Delete"
-                        className="p-1.5 rounded hover:bg-white/10 text-nexus-text-muted-dark hover:text-red-400 transition-colors"
+                        className="p-1.5 rounded hover:bg-[var(--bg-active)] text-[var(--text-secondary)] hover:text-red-400 transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -360,7 +360,7 @@ export function Webhooks() {
                   </div>
                 </div>
 
-                <div className="text-xs text-nexus-text-muted-dark mb-2 font-mono">
+                <div className="text-xs text-[var(--text-secondary)] mb-2 font-mono">
                   {maskUrl(wh.url)}
                 </div>
 
@@ -368,13 +368,13 @@ export function Webhooks() {
                   {events.map((event) => (
                     <span
                       key={event}
-                      className="px-2 py-0.5 rounded-full text-xs bg-white/5 text-nexus-text-muted-dark border border-nexus-border-dark"
+                      className="px-2 py-0.5 rounded-full text-xs bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-light)]"
                     >
                       {event.replace(/_/g, ' ')}
                     </span>
                   ))}
                   {events.length === 0 && (
-                    <span className="text-xs text-nexus-text-muted-dark italic">No events selected</span>
+                    <span className="text-xs text-[var(--text-secondary)] italic">No events selected</span>
                   )}
                 </div>
 

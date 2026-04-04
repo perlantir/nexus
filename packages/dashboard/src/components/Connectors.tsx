@@ -129,7 +129,7 @@ function ConnectorCard({ connector, onToggle, onDelete }: ConnectorCardProps) {
             {statusDot(connector.status)}
             <span className="text-sm font-semibold">{connectorLabel(connector.name)}</span>
           </div>
-          <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark truncate">
+          <p className="text-xs text-[var(--text-secondary)] truncate">
             {connector.config.path || connector.config.url || '—'}
           </p>
         </div>
@@ -137,13 +137,13 @@ function ConnectorCard({ connector, onToggle, onDelete }: ConnectorCardProps) {
         {/* Stats */}
         <div className="hidden sm:flex items-center gap-4 mr-4">
           <div className="text-right">
-            <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-xs text-[var(--text-secondary)]">
               Last poll
             </p>
             <p className="text-xs font-medium">{relativeTime(connector.last_poll_at)}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-xs text-[var(--text-secondary)]">
               Sources
             </p>
             <p className="text-xs font-medium">{connector.sources_processed}</p>
@@ -159,7 +159,7 @@ function ConnectorCard({ connector, onToggle, onDelete }: ConnectorCardProps) {
           {connector.enabled ? (
             <ToggleRight size={24} className="text-primary" />
           ) : (
-            <ToggleLeft size={24} className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark" />
+            <ToggleLeft size={24} className="text-[var(--text-secondary)]" />
           )}
         </button>
 
@@ -184,15 +184,15 @@ function ConnectorCard({ connector, onToggle, onDelete }: ConnectorCardProps) {
 
       {/* Expanded details */}
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-nexus-border-dark dark:border-nexus-border-dark space-y-3">
+        <div className="mt-4 pt-4 border-t border-[var(--border-light)] space-y-3">
           {/* Mobile stats */}
           <div className="flex items-center gap-6 sm:hidden">
             <div>
-              <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">Last poll</p>
+              <p className="text-xs text-[var(--text-secondary)]">Last poll</p>
               <p className="text-xs font-medium">{relativeTime(connector.last_poll_at)}</p>
             </div>
             <div>
-              <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">Sources processed</p>
+              <p className="text-xs text-[var(--text-secondary)]">Sources processed</p>
               <p className="text-xs font-medium">{connector.sources_processed}</p>
             </div>
           </div>
@@ -200,23 +200,23 @@ function ConnectorCard({ connector, onToggle, onDelete }: ConnectorCardProps) {
           {/* Config details */}
           {connector.config.path && (
             <div>
-              <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-0.5">Path</p>
-              <code className="text-xs font-mono bg-nexus-border-dark/30 px-2 py-1 rounded">
+              <p className="text-xs text-[var(--text-secondary)] mb-0.5">Path</p>
+              <code className="text-xs font-mono bg-[var(--border-light)]/30 px-2 py-1 rounded">
                 {connector.config.path}
               </code>
             </div>
           )}
           {connector.config.url && (
             <div>
-              <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-0.5">URL</p>
-              <code className="text-xs font-mono bg-nexus-border-dark/30 px-2 py-1 rounded break-all">
+              <p className="text-xs text-[var(--text-secondary)] mb-0.5">URL</p>
+              <code className="text-xs font-mono bg-[var(--border-light)]/30 px-2 py-1 rounded break-all">
                 {connector.config.url}
               </code>
             </div>
           )}
           {connector.config.interval_minutes && (
             <div>
-              <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-0.5">
+              <p className="text-xs text-[var(--text-secondary)] mb-0.5">
                 Poll interval
               </p>
               <p className="text-xs font-medium">{connector.config.interval_minutes} minutes</p>
@@ -304,7 +304,7 @@ function AddConnectorForm({ onAdd, onCancel }: AddConnectorFormProps) {
       <div className="space-y-4">
         {/* Type */}
         <div>
-          <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
             Connector type
           </label>
           <select
@@ -323,7 +323,7 @@ function AddConnectorForm({ onAdd, onCancel }: AddConnectorFormProps) {
         {/* Path */}
         {(type === 'openclaw' || type === 'directory') && (
           <div>
-            <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
               {type === 'openclaw' ? 'OpenClaw path' : 'Directory path'} <span className="text-red-400">*</span>
             </label>
             <input
@@ -341,7 +341,7 @@ function AddConnectorForm({ onAdd, onCancel }: AddConnectorFormProps) {
         {type === 'webhook' && (
           <>
             <div>
-              <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+              <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                 Webhook URL <span className="text-red-400">*</span>
               </label>
               <input
@@ -354,7 +354,7 @@ function AddConnectorForm({ onAdd, onCancel }: AddConnectorFormProps) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+              <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
                 Secret <span className="opacity-50">(optional)</span>
               </label>
               <input
@@ -371,7 +371,7 @@ function AddConnectorForm({ onAdd, onCancel }: AddConnectorFormProps) {
         {/* Poll interval */}
         {type !== 'webhook' && (
           <div>
-            <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
               Poll interval (minutes)
             </label>
             <input
@@ -482,7 +482,7 @@ export function Connectors() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={24} className="animate-spin text-primary" />
-          <span className="text-sm text-nexus-text-muted-dark">Loading connectors…</span>
+          <span className="text-sm text-[var(--text-secondary)]">Loading connectors…</span>
         </div>
       </div>
     );
@@ -495,7 +495,7 @@ export function Connectors() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-lg font-semibold mb-1">Connectors</h1>
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               Manage auto-discovery sources for this project.
             </p>
           </div>
@@ -542,7 +542,7 @@ export function Connectors() {
                   Running
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-nexus-border-dark/40 text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-[var(--border-light)]/40 text-[var(--text-secondary)]">
                   Idle
                 </span>
               )}
@@ -571,7 +571,7 @@ export function Connectors() {
                 },
               ].map((item, i) => (
                 <div key={i}>
-                  <div className="flex items-center gap-1.5 text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1">
+                  <div className="flex items-center gap-1.5 text-[var(--text-secondary)] mb-1">
                     {item.icon}
                     <span className="text-xs">{item.label}</span>
                   </div>
@@ -592,11 +592,11 @@ export function Connectors() {
         {/* Connector list */}
         {connectors.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-14 h-14 rounded-xl bg-nexus-border-dark/30 flex items-center justify-center mx-auto mb-4">
-              <Database size={22} className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark" />
+            <div className="w-14 h-14 rounded-xl bg-[var(--border-light)]/30 flex items-center justify-center mx-auto mb-4">
+              <Database size={22} className="text-[var(--text-secondary)]" />
             </div>
             <p className="text-sm font-medium mb-1">No connectors configured</p>
-            <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-4">
+            <p className="text-xs text-[var(--text-secondary)] mb-4">
               Add a connector to start auto-discovering decisions.
             </p>
             <button
@@ -627,7 +627,7 @@ export function Connectors() {
                 <div key={status} className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
                     {iconMap[status]}
-                    <h2 className="text-xs font-medium uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                    <h2 className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       {labelMap[status]} ({group.length})
                     </h2>
                   </div>
@@ -652,8 +652,8 @@ export function Connectors() {
               return (
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <ToggleLeft size={14} className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark" />
-                    <h2 className="text-xs font-medium uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                    <ToggleLeft size={14} className="text-[var(--text-secondary)]" />
+                    <h2 className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                       Disabled ({disabled.length})
                     </h2>
                   </div>

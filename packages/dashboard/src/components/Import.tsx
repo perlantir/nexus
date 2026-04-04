@@ -188,7 +188,7 @@ export function Import() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-semibold mb-1">Import Decisions</h1>
-          <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <p className="text-sm text-[var(--text-secondary)]">
             Upload conversation files or paste text to extract decisions automatically.
           </p>
         </div>
@@ -204,7 +204,7 @@ export function Import() {
               className={`relative flex flex-col items-center justify-center gap-3 p-10 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-150 mb-6 ${
                 dragOver
                   ? 'border-primary bg-primary/10 scale-[1.01]'
-                  : 'border-nexus-border-dark dark:border-nexus-border-dark hover:border-primary/50 hover:bg-primary/5'
+                  : 'border-[var(--border-light)] hover:border-primary/50 hover:bg-primary/5'
               }`}
             >
               <input
@@ -217,16 +217,16 @@ export function Import() {
               />
               <div
                 className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                  dragOver ? 'bg-primary/20' : 'bg-nexus-border-dark/30'
+                  dragOver ? 'bg-primary/20' : 'bg-[var(--border-light)]/30'
                 }`}
               >
-                <Upload size={22} className={dragOver ? 'text-primary' : 'text-nexus-text-muted-dark'} />
+                <Upload size={22} className={dragOver ? 'text-primary' : 'text-[var(--text-secondary)]'} />
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium mb-0.5">
                   {dragOver ? 'Release to upload' : 'Drop files here or click to browse'}
                 </p>
-                <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                <p className="text-xs text-[var(--text-secondary)]">
                   Supports .txt and .md files
                 </p>
               </div>
@@ -238,15 +238,15 @@ export function Import() {
                 {files.map((file) => (
                   <div
                     key={file.name}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-nexus-border-dark dark:border-nexus-border-dark"
+                    className="flex items-center gap-3 p-3 rounded-lg border border-[var(--border-light)]"
                   >
                     <FileText
                       size={16}
-                      className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark shrink-0"
+                      className="text-[var(--text-secondary)] shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm truncate">{file.name}</p>
-                      <p className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                      <p className="text-xs text-[var(--text-secondary)]">
                         {(file.size / 1024).toFixed(1)} KB
                       </p>
                     </div>
@@ -266,11 +266,11 @@ export function Import() {
 
             {/* Divider */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="flex-1 h-px bg-nexus-border-dark dark:bg-nexus-border-dark" />
-              <span className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark uppercase tracking-wider">
+              <div className="flex-1 h-px bg-[var(--border-light)]" />
+              <span className="text-xs text-[var(--text-secondary)] uppercase tracking-wider">
                 or paste text
               </span>
-              <div className="flex-1 h-px bg-nexus-border-dark dark:bg-nexus-border-dark" />
+              <div className="flex-1 h-px bg-[var(--border-light)]" />
             </div>
 
             {/* Text area */}
@@ -294,13 +294,13 @@ export function Import() {
             {importing && (
               <div className="mb-4">
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark flex items-center gap-1.5">
+                  <span className="text-[var(--text-secondary)] flex items-center gap-1.5">
                     <Loader2 size={12} className="animate-spin" />
                     Processing…
                   </span>
                   <span className="font-medium">{progress}%</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-nexus-border-dark dark:bg-nexus-border-dark overflow-hidden">
+                <div className="h-1.5 rounded-full bg-[var(--border-light)] overflow-hidden">
                   <div
                     className="h-full rounded-full bg-primary transition-all duration-300"
                     style={{ width: `${progress}%` }}
@@ -340,7 +340,7 @@ export function Import() {
 
             {results.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                <p className="text-sm text-[var(--text-secondary)]">
                   No decisions were found in the provided content.
                 </p>
                 <button onClick={reset} className="btn-secondary text-sm mt-4">
@@ -350,24 +350,24 @@ export function Import() {
             ) : (
               <div className="card overflow-hidden">
                 {/* Table header */}
-                <div className="grid grid-cols-[1fr_120px_auto] gap-4 px-4 py-2.5 border-b border-nexus-border-dark dark:border-nexus-border-dark">
-                  <span className="text-xs font-medium uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                <div className="grid grid-cols-[1fr_120px_auto] gap-4 px-4 py-2.5 border-b border-[var(--border-light)]">
+                  <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                     Decision
                   </span>
-                  <span className="text-xs font-medium uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                     Confidence
                   </span>
-                  <span className="text-xs font-medium uppercase tracking-wider text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                  <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                     View
                   </span>
                 </div>
 
                 {/* Rows */}
-                <div className="divide-y divide-nexus-border-dark dark:divide-nexus-border-dark">
+                <div className="divide-y divide-[var(--border-light)]">
                   {results.map((decision) => (
                     <div
                       key={decision.id}
-                      className="grid grid-cols-[1fr_120px_auto] gap-4 px-4 py-3 items-start hover:bg-white/2 transition-colors"
+                      className="grid grid-cols-[1fr_120px_auto] gap-4 px-4 py-3 items-start hover:bg-[var(--bg-secondary)] transition-colors"
                     >
                       {/* Title + tags */}
                       <div>
@@ -377,14 +377,14 @@ export function Import() {
                             {decision.tags.slice(0, 4).map((tag) => (
                               <span
                                 key={tag}
-                                className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-nexus-border-dark/40 text-nexus-text-muted-dark dark:text-nexus-text-muted-dark"
+                                className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-[var(--border-light)]/40 text-[var(--text-secondary)]"
                               >
                                 <Tag size={9} />
                                 {tag}
                               </span>
                             ))}
                             {decision.tags.length > 4 && (
-                              <span className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+                              <span className="text-xs text-[var(--text-secondary)]">
                                 +{decision.tags.length - 4}
                               </span>
                             )}

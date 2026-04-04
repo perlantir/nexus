@@ -349,7 +349,7 @@ export function DecisionGraph() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={24} className="animate-spin text-primary" />
-          <span className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <span className="text-sm text-[var(--text-secondary)]">
             Loading decision graph…
           </span>
         </div>
@@ -363,7 +363,7 @@ export function DecisionGraph() {
         <div className="card p-6 max-w-md text-center">
           <AlertTriangleIcon />
           <h3 className="font-semibold mt-3 mb-1">Failed to load decisions</h3>
-          <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <p className="text-sm text-[var(--text-secondary)]">
             {error}
           </p>
         </div>
@@ -412,7 +412,7 @@ export function DecisionGraph() {
 
             {/* Status toggles */}
             <div className="mb-3">
-              <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1.5 block">
+              <label className="text-xs text-[var(--text-secondary)] mb-1.5 block">
                 Status
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -434,7 +434,7 @@ export function DecisionGraph() {
 
             {/* Tag filter */}
             <div>
-              <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-1.5 block">
+              <label className="text-xs text-[var(--text-secondary)] mb-1.5 block">
                 Tag
               </label>
               <select
@@ -454,7 +454,7 @@ export function DecisionGraph() {
         )}
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-4 text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-4 text-xs text-[var(--text-secondary)]">
           {Object.entries(STATUS_COLORS).map(([status, color]) => (
             <div key={status} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
@@ -472,9 +472,9 @@ export function DecisionGraph() {
             <div className="text-center">
               <GitBranch
                 size={32}
-                className="mx-auto mb-2 text-nexus-text-faint-dark dark:text-nexus-text-faint-dark"
+                className="mx-auto mb-2 text-[var(--text-tertiary)]"
               />
-              <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+              <p className="text-sm text-[var(--text-secondary)]">
                 No decisions match current filters
               </p>
             </div>
@@ -484,7 +484,7 @@ export function DecisionGraph() {
 
       {/* Detail panel */}
       {selectedNode && (
-        <aside className="w-96 shrink-0 border-l border-nexus-border-dark dark:border-nexus-border-dark overflow-y-auto animate-slide-in">
+        <aside className="w-96 shrink-0 border-l border-[var(--border-light)] overflow-y-auto animate-slide-in">
           <div className="p-5">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 min-w-0 pr-3">
@@ -501,7 +501,7 @@ export function DecisionGraph() {
             <div className="space-y-4 text-sm">
               {/* Made by */}
               <div>
-                <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                <label className="text-xs text-[var(--text-secondary)] block mb-1">
                   Made by
                 </label>
                 <p className="font-medium">{selectedNode.made_by}</p>
@@ -509,7 +509,7 @@ export function DecisionGraph() {
 
               {/* Date */}
               <div>
-                <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                <label className="text-xs text-[var(--text-secondary)] block mb-1">
                   Date
                 </label>
                 <p>{new Date(selectedNode.made_at).toLocaleDateString()}</p>
@@ -517,7 +517,7 @@ export function DecisionGraph() {
 
               {/* Description */}
               <div>
-                <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                <label className="text-xs text-[var(--text-secondary)] block mb-1">
                   Description
                 </label>
                 <p className="leading-relaxed">{selectedNode.description}</p>
@@ -526,7 +526,7 @@ export function DecisionGraph() {
               {/* Reasoning */}
               {selectedNode.reasoning && (
                 <div>
-                  <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                  <label className="text-xs text-[var(--text-secondary)] block mb-1">
                     Reasoning
                   </label>
                   <p className="leading-relaxed">{selectedNode.reasoning}</p>
@@ -536,7 +536,7 @@ export function DecisionGraph() {
               {/* Tags */}
               {selectedNode.tags.length > 0 && (
                 <div>
-                  <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                  <label className="text-xs text-[var(--text-secondary)] block mb-1">
                     Tags
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -555,7 +555,7 @@ export function DecisionGraph() {
               {/* Alternatives */}
               {selectedNode.alternatives && selectedNode.alternatives.length > 0 && (
                 <div>
-                  <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                  <label className="text-xs text-[var(--text-secondary)] block mb-1">
                     Alternatives Considered
                   </label>
                   <ul className="list-disc pl-4 space-y-1">
@@ -569,7 +569,7 @@ export function DecisionGraph() {
               {/* Assumptions */}
               {selectedNode.assumptions && selectedNode.assumptions.length > 0 && (
                 <div>
-                  <label className="text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark block mb-1">
+                  <label className="text-xs text-[var(--text-secondary)] block mb-1">
                     Assumptions
                   </label>
                   <ul className="list-disc pl-4 space-y-1">

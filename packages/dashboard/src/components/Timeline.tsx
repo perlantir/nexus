@@ -48,7 +48,7 @@ function ValidationControls({
   };
 
   return (
-    <div className="mt-2 pt-2 border-t border-nexus-border-dark">
+    <div className="mt-2 pt-2 border-t border-[var(--border-light)]">
       {/* Status display */}
       <div className="flex items-center gap-2 mb-2 text-xs">
         {isValidated ? (
@@ -56,13 +56,13 @@ function ValidationControls({
             <span>\u2705</span>
             Validated via {decision.validation_source?.replace(/_/g, ' ')}
             {decision.validated_at && (
-              <span className="text-nexus-text-muted-dark ml-1">
+              <span className="text-[var(--text-secondary)] ml-1">
                 on {new Date(decision.validated_at).toLocaleDateString()}
               </span>
             )}
           </span>
         ) : (
-          <span className="flex items-center gap-1 text-nexus-text-muted-dark">
+          <span className="flex items-center gap-1 text-[var(--text-secondary)]">
             <span>\u23F3</span> Not yet validated
           </span>
         )}
@@ -95,14 +95,14 @@ function ValidationControls({
               <select
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
-                className="px-2 py-1 rounded text-2xs bg-black/20 border border-nexus-border-dark"
+                className="px-2 py-1 rounded text-2xs bg-[var(--bg-secondary)] border border-[var(--border-light)]"
               >
                 {VALIDATION_SOURCES.map((s) => (
                   <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
                 ))}
               </select>
               <button onClick={handleValidate} className="px-2 py-1 rounded text-2xs bg-green-500/20 text-green-400">Confirm</button>
-              <button onClick={() => setShowValidate(false)} className="px-2 py-1 rounded text-2xs bg-white/5">Cancel</button>
+              <button onClick={() => setShowValidate(false)} className="px-2 py-1 rounded text-2xs bg-[var(--bg-hover)]">Cancel</button>
             </div>
           )}
 
@@ -112,10 +112,10 @@ function ValidationControls({
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Reason (optional)"
-                className="px-2 py-1 rounded text-2xs bg-black/20 border border-nexus-border-dark w-48"
+                className="px-2 py-1 rounded text-2xs bg-[var(--bg-secondary)] border border-[var(--border-light)] w-48"
               />
               <button onClick={handleInvalidate} className="px-2 py-1 rounded text-2xs bg-red-500/20 text-red-400">Confirm</button>
-              <button onClick={() => setShowInvalidate(false)} className="px-2 py-1 rounded text-2xs bg-white/5">Cancel</button>
+              <button onClick={() => setShowInvalidate(false)} className="px-2 py-1 rounded text-2xs bg-[var(--bg-hover)]">Cancel</button>
             </div>
           )}
         </div>
@@ -240,7 +240,7 @@ export function Timeline() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={24} className="animate-spin text-primary" />
-          <span className="text-sm text-nexus-text-muted-dark">Loading timeline…</span>
+          <span className="text-sm text-[var(--text-secondary)]">Loading timeline…</span>
         </div>
       </div>
     );
@@ -262,7 +262,7 @@ export function Timeline() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-lg font-semibold mb-1">Timeline</h1>
-          <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+          <p className="text-sm text-[var(--text-secondary)]">
             Chronological view of all decisions
           </p>
         </div>
@@ -298,7 +298,7 @@ export function Timeline() {
           <div className="flex items-center gap-2 text-xs">
             <Calendar
               size={14}
-              className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark"
+              className="text-[var(--text-secondary)]"
             />
             <input
               type="date"
@@ -307,7 +307,7 @@ export function Timeline() {
               className="input w-auto text-xs"
               placeholder="From"
             />
-            <span className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">to</span>
+            <span className="text-[var(--text-secondary)]">to</span>
             <input
               type="date"
               value={dateTo}
@@ -323,16 +323,16 @@ export function Timeline() {
           <div className="text-center py-12">
             <Clock
               size={28}
-              className="mx-auto mb-2 text-nexus-text-faint-dark dark:text-nexus-text-faint-dark"
+              className="mx-auto mb-2 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-nexus-text-muted-dark dark:text-nexus-text-muted-dark">
+            <p className="text-sm text-[var(--text-secondary)]">
               No decisions match the current filters
             </p>
           </div>
         ) : (
           <div className="relative">
             {/* Vertical line */}
-            <div className="absolute left-5 top-0 bottom-0 w-px bg-nexus-border-dark dark:bg-nexus-border-dark" />
+            <div className="absolute left-5 top-0 bottom-0 w-px bg-[var(--border-light)]" />
 
             <div className="space-y-4">
               {filtered.map((decision) => {
@@ -344,7 +344,7 @@ export function Timeline() {
                   <div key={decision.id} className="relative pl-12">
                     {/* Dot on timeline */}
                     <div
-                      className="absolute left-[14px] top-5 w-3 h-3 rounded-full border-2 border-nexus-bg-dark dark:border-nexus-bg-dark"
+                      className="absolute left-[14px] top-5 w-3 h-3 rounded-full border-2 border-[var(--border-light)]"
                       style={{
                         backgroundColor:
                           decision.status === 'active'
@@ -373,7 +373,7 @@ export function Timeline() {
                         <span className={statusBadgeClass(decision.status)}>{decision.status}</span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mb-2">
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-secondary)] mb-2">
                         <span className="flex items-center gap-1">
                           <User size={12} />
                           {decision.made_by}
@@ -408,7 +408,7 @@ export function Timeline() {
 
                       {/* Supersession chain */}
                       {chain.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-nexus-border-dark dark:border-nexus-border-dark">
+                        <div className="mt-3 pt-3 border-t border-[var(--border-light)]">
                           <button
                             onClick={() => toggleChain(decision.id)}
                             className="flex items-center gap-1.5 text-xs text-primary hover:text-primary-hover transition-colors"
@@ -423,7 +423,7 @@ export function Timeline() {
                               {chain.map((prev) => (
                                 <div
                                   key={prev.id}
-                                  className="p-3 rounded-md bg-nexus-surface-alt-dark dark:bg-nexus-surface-alt-dark text-xs"
+                                  className="p-3 rounded-md bg-[var(--bg-secondary)] text-xs"
                                 >
                                   <div className="flex items-center justify-between gap-2">
                                     <span className="font-medium">{prev.title}</span>
@@ -431,7 +431,7 @@ export function Timeline() {
                                       {prev.status}
                                     </span>
                                   </div>
-                                  <span className="text-nexus-text-muted-dark dark:text-nexus-text-muted-dark mt-1 block">
+                                  <span className="text-[var(--text-secondary)] mt-1 block">
                                     {formatDate(prev.made_at)}
                                   </span>
                                 </div>
