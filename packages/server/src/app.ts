@@ -23,6 +23,7 @@ import { registerArtifactRoutes } from './routes/artifacts.js';
 import { registerDiscoveryRoutes } from './routes/discovery.js';
 import { registerWebhookRoutes } from './routes/webhooks.js';
 import { registerExportImportRoutes } from './routes/export-import.js';
+import { registerDocsRoutes } from './routes/docs.js';
 
 export function createApp() {
   const app = new Hono();
@@ -44,9 +45,9 @@ export function createApp() {
   );
   app.onError(errorHandler);
 
-  // Auth on all /api/* except /api/health
+  // Auth on all /api/* except /api/health, /api/docs, /api/openapi.json
   app.use('/api/*', async (c, next) => {
-    if (c.req.path === '/api/health') {
+    if (c.req.path === '/api/health' || c.req.path === '/api/docs' || c.req.path === '/api/openapi.json') {
       await next();
       return;
     }
@@ -73,6 +74,7 @@ export function createApp() {
   registerDiscoveryRoutes(app);
   registerWebhookRoutes(app);
   registerExportImportRoutes(app);
+  registerDocsRoutes(app);
 
   return app;
 }
