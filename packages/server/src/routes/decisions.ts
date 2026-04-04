@@ -170,6 +170,13 @@ export function registerDecisionRoutes(app: Hono): void {
     params.push(limit);
     params.push(offset);
 
+    // Total count for pagination
+    const countResult = await db.query(
+      `SELECT COUNT(*) as total FROM decisions d WHERE ${conditions.join(' AND ')}`,
+      params.slice(0, -2), // exclude limit and offset
+    );
+    const total = parseInt((countResult.rows[0] as Record<string, unknown>).total as string ?? '0', 10);
+
     const result = await db.query(
       `SELECT * FROM decisions d
        WHERE ${conditions.join(' AND ')}
@@ -178,6 +185,7 @@ export function registerDecisionRoutes(app: Hono): void {
       params,
     );
 
+    c.header('X-Total-Count', String(total));
     return c.json(result.rows.map((r) => parseDecision(r as Record<string, unknown>)));
   });
 

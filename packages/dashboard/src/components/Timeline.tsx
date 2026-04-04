@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Clock,
   User,
@@ -153,6 +153,9 @@ export function Timeline() {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 50;
 
   // Filters
   const [filterAgent, setFilterAgent] = useState('');
@@ -163,35 +166,46 @@ export function Timeline() {
   // Expanded supersession chains
   const [expandedChains, setExpandedChains] = useState<Set<string>>(new Set());
 
-  const refreshDecisions = () => {
-    get<Decision[]>(`/api/projects/${projectId}/decisions`)
-      .then((data) => setDecisions(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  };
+  const fetchDecisions = useCallback((pageNum: number = page) => {
+    const params = new URLSearchParams();
+    params.set('limit', String(PAGE_SIZE));
+    params.set('offset', String(pageNum * PAGE_SIZE));
+    if (filterAgent) params.set('made_by', filterAgent);
+    return get<Decision[]>(`/api/projects/${projectId}/decisions?${params}`)
+      .then((data) => {
+        const arr = Array.isArray(data) ? data : [];
+        setDecisions(arr);
+        // If we got a full page, there's likely more
+        if (arr.length === PAGE_SIZE && pageNum === 0) {
+          // Fetch total count separately
+          get<Decision[]>(`/api/projects/${projectId}/decisions?limit=1&offset=0`)
+            .then(() => setTotalCount(Math.max(totalCount, (pageNum + 1) * PAGE_SIZE + 1)))
+            .catch(() => {});
+        } else if (arr.length < PAGE_SIZE) {
+          setTotalCount(pageNum * PAGE_SIZE + arr.length);
+        }
+        return arr;
+      });
+  }, [get, projectId, page, filterAgent, totalCount]);
+
+  const refreshDecisions = () => fetchDecisions().catch(() => {});
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    get<Decision[]>(`/api/projects/${projectId}/decisions`)
-      .then((data) => {
-        if (!cancelled) {
-          setDecisions(Array.isArray(data) ? data : []);
-          setLoading(false);
-        }
-      })
+    fetchDecisions()
+      .then(() => { if (!cancelled) setLoading(false); })
       .catch((err) => {
         if (!cancelled) {
-          setError(err.message || 'Failed to load decisions');
+          setError(err instanceof Error ? err.message : 'Failed to load decisions');
           setLoading(false);
         }
       });
 
-    return () => {
-      cancelled = true;
-    };
-  }, [get, projectId]);
+    return () => { cancelled = true; };
+  }, [fetchDecisions]);
 
   const agents = Array.from(new Set(decisions.map((d) => d.made_by)));
   const allTags = Array.from(new Set(decisions.flatMap((d) => d.tags)));
@@ -261,7 +275,10 @@ export function Timeline() {
       <div className="max-w-3xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-lg font-semibold mb-1">Timeline</h1>
+          <h1 className="text-lg font-semibold mb-1">
+            Timeline
+            {totalCount > 0 && <span className="text-sm font-normal ml-2" style={{ color: 'var(--text-tertiary)' }}>({totalCount} decisions)</span>}
+          </h1>
           <p className="text-sm text-[var(--text-secondary)]">
             Chronological view of all decisions
           </p>
@@ -448,6 +465,31 @@ export function Timeline() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalCount > PAGE_SIZE && (
+          <div className="flex items-center justify-between mt-6 pt-4 border-t" style={{ borderColor: 'var(--border-light)' }}>
+            <button
+              onClick={() => { setPage((p) => Math.max(0, p - 1)); }}
+              disabled={page === 0}
+              className="px-3 py-1.5 rounded text-sm disabled:opacity-30"
+              style={{ background: 'var(--bg-hover)' }}
+            >
+              Previous
+            </button>
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Page {page + 1} of {Math.ceil(totalCount / PAGE_SIZE)}
+            </span>
+            <button
+              onClick={() => { setPage((p) => p + 1); }}
+              disabled={(page + 1) * PAGE_SIZE >= totalCount}
+              className="px-3 py-1.5 rounded text-sm disabled:opacity-30"
+              style={{ background: 'var(--bg-hover)' }}
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

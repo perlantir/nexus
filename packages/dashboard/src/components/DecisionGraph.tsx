@@ -513,21 +513,37 @@ export function DecisionGraph() {
             </div>
 
             <div className="space-y-4 text-sm">
-              {/* Made by */}
-              <div>
-                <label className="text-xs text-[var(--text-secondary)] block mb-1">
-                  Made by
-                </label>
-                <p className="font-medium">{selectedNode.made_by}</p>
+              {/* Made by + Confidence */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-[var(--text-secondary)] block mb-1">Made by</label>
+                  <p className="font-medium">{selectedNode.made_by}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-[var(--text-secondary)] block mb-1">Confidence</label>
+                  <p className="font-medium">{(selectedNode as any).confidence ?? 'medium'}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-[var(--text-secondary)] block mb-1">Date</label>
+                  <p>{new Date(selectedNode.created_at).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-[var(--text-secondary)] block mb-1">Validation</label>
+                  <p>{(selectedNode as any).validated_at ? '✅ Validated' : '⏳ Unvalidated'}</p>
+                </div>
               </div>
 
-              {/* Date */}
-              <div>
-                <label className="text-xs text-[var(--text-secondary)] block mb-1">
-                  Date
-                </label>
-                <p>{new Date(selectedNode.created_at).toLocaleDateString()}</p>
-              </div>
+              {/* Affects */}
+              {((selectedNode as any).affects ?? []).length > 0 && (
+                <div>
+                  <label className="text-xs text-[var(--text-secondary)] block mb-1">Affects</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {((selectedNode as any).affects ?? []).map((a: string) => (
+                      <span key={a} className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800">{a}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Description */}
               <div>
