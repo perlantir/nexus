@@ -144,6 +144,15 @@ export function TimeTravelView() {
 
       {loading && <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]"><Loader2 size={14} className="animate-spin" /> Loading history...</div>}
 
+      {/* Empty state */}
+      {!loading && selectedAgent && history.length === 0 && (
+        <div className="text-center py-12">
+          <Clock size={28} className="mx-auto mb-2 opacity-30" style={{ color: 'var(--text-tertiary)' }} />
+          <p className="text-lg font-medium" style={{ color: 'var(--text-secondary)' }}>No compile history yet</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>Compilations will appear here after running POST /api/compile</p>
+        </div>
+      )}
+
       {/* Compilation timeline */}
       {history.length > 0 && (
         <div className="mb-6">

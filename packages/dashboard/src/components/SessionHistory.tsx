@@ -123,8 +123,11 @@ export function SessionHistory() {
               size={28}
               className="mx-auto mb-2 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-[var(--text-secondary)]">
-              No sessions recorded yet
+            <p className="text-lg font-medium text-[var(--text-secondary)]">
+              No sessions yet
+            </p>
+            <p className="text-sm text-[var(--text-tertiary)] mt-1">
+              Sessions appear when agents report summaries via the distillery API
             </p>
           </div>
         ) : (

@@ -419,15 +419,18 @@ export function Connectors() {
     setLoading(true);
     setError(null);
     try {
-      const [connectorsRes, discoveryRes] = await Promise.all([
+      const [connectorsRes, statusRes] = await Promise.allSettled([
         get<Connector[]>(`/api/projects/${projectId}/connectors`),
         get<DiscoveryStatus>(`/api/projects/${projectId}/discovery/status`),
       ]);
-      setConnectors(Array.isArray(connectorsRes) ? connectorsRes : []);
-      setDiscovery(discoveryRes);
+      if (connectorsRes.status === 'fulfilled') setConnectors(Array.isArray(connectorsRes.value) ? connectorsRes.value : []);
+      if (statusRes.status === 'fulfilled') setDiscovery(statusRes.value);
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Failed to load connectors.');
+      const msg = err instanceof Error ? err.message :
+        (typeof err === 'object' && err !== null && 'message' in err)
+          ? String((err as {message: unknown}).message)
+          : 'Failed to load connectors.';
+      setError(msg);
     } finally {
       setLoading(false);
     }

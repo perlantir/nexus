@@ -5,6 +5,37 @@ import { NotFoundError } from '@decigraph/core/types.js';
 import { requireUUID, requireString, optionalString, mapDbError } from './validation.js';
 
 export function registerNotificationRoutes(app: Hono): void {
+  // Project-level notifications (all agents in project)
+  app.get('/api/projects/:id/notifications', async (c) => {
+    const db = getDb();
+    const projectId = requireUUID(c.req.param('id'), 'projectId');
+
+    const result = await db.query(
+      `SELECT n.* FROM notifications n
+       JOIN agents a ON n.agent_id = a.id
+       WHERE a.project_id = ?
+       ORDER BY n.created_at DESC
+       LIMIT 50`,
+      [projectId],
+    );
+
+    return c.json(result.rows.map((r) => parseNotification(r as Record<string, unknown>)));
+  });
+
+  // Mark notification as read (project-level path)
+  app.patch('/api/projects/:pid/notifications/:id', async (c) => {
+    const db = getDb();
+    const id = requireUUID(c.req.param('id'), 'id');
+
+    const result = await db.query(
+      `UPDATE notifications SET read_at = ${db.dialect === 'sqlite' ? "datetime('now')" : 'NOW()'} WHERE id = ? RETURNING *`,
+      [id],
+    );
+    if (result.rows.length === 0) throw new NotFoundError('Notification', id);
+    return c.json(parseNotification(result.rows[0] as Record<string, unknown>));
+  });
+
+  // Agent-level notifications
   app.get('/api/agents/:id/notifications', async (c) => {
     const db = getDb();
     const agentId = requireUUID(c.req.param('id'), 'agentId');

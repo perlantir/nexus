@@ -42,6 +42,8 @@ export function DecisionGraph() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<Decision | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   // Filters
   const [filterTag, setFilterTag] = useState<string>('');
@@ -172,7 +174,7 @@ export function DecisionGraph() {
     svg.call(zoom);
 
     // Store zoom reference for button controls
-    (svgRef.current as any).__zoom = zoom;
+    zoomRef.current = zoom;
     (svgRef.current as any).__g = g;
 
     /* Force simulation */
@@ -308,18 +310,16 @@ export function DecisionGraph() {
   /* ---- Zoom controls --------------------------------------------- */
   function handleZoom(factor: number) {
     const svg = svgRef.current;
-    if (!svg) return;
-    const zoom = (svg as any).__zoom;
-    if (!zoom) return;
+    const zoom = zoomRef.current;
+    if (!svg || !zoom) return;
     const selection = d3.select(svg);
     selection.transition().duration(300).call(zoom.scaleBy, factor);
   }
 
   function handleFitView() {
     const svg = svgRef.current;
-    if (!svg) return;
-    const zoom = (svg as any).__zoom;
-    if (!zoom) return;
+    const zoom = zoomRef.current;
+    if (!svg || !zoom) return;
     const selection = d3.select(svg);
     const { width, height } = svg.getBoundingClientRect();
     selection
@@ -332,6 +332,17 @@ export function DecisionGraph() {
           .scale(0.8)
           .translate(-width / 2, -height / 2),
       );
+  }
+
+  function handleExpand() {
+    setIsExpanded((prev) => !prev);
+    setTimeout(() => {
+      if (svgRef.current && containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        d3.select(svgRef.current).attr('width', width).attr('height', height);
+        handleFitView();
+      }
+    }, 100);
   }
 
   function toggleStatus(status: DecisionStatus) {
@@ -372,9 +383,9 @@ export function DecisionGraph() {
   }
 
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-full">
       {/* Graph area */}
-      <div className="flex-1 relative min-h-[400px]" ref={containerRef}>
+      <div className={`flex-1 relative min-h-[400px] ${isExpanded ? 'fixed inset-0 z-50 bg-[var(--bg-primary)]' : ''}`} ref={containerRef}>
         {/* Toolbar */}
         <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
           <h1 className="text-lg font-semibold mr-2">Decision Graph</h1>
@@ -397,6 +408,9 @@ export function DecisionGraph() {
           </button>
           <button onClick={handleFitView} className="btn-ghost p-2" title="Fit view">
             <Maximize2 size={16} />
+          </button>
+          <button onClick={handleExpand} className="btn-ghost p-2" title={isExpanded ? 'Exit fullscreen' : 'Fullscreen'}>
+            {isExpanded ? <X size={16} /> : <Maximize2 size={16} />}
           </button>
         </div>
 
@@ -484,7 +498,7 @@ export function DecisionGraph() {
 
       {/* Detail panel */}
       {selectedNode && (
-        <aside className="w-96 shrink-0 border-l border-[var(--border-light)] overflow-y-auto animate-slide-in">
+        <aside className="w-full md:w-96 shrink-0 border-t md:border-t-0 md:border-l border-[var(--border-light)] overflow-y-auto bg-[var(--bg-primary)] max-h-[50vh] md:max-h-none animate-slide-in">
           <div className="p-5">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 min-w-0 pr-3">

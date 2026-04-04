@@ -16,6 +16,7 @@ export function registerStatsRoutes(app: Hono): void {
       contradictionsResult,
       edgesResult,
       auditResult,
+      agentDecisionResult,
     ] = await Promise.all([
       db.query(
         `SELECT
@@ -41,6 +42,17 @@ export function registerStatsRoutes(app: Hono): void {
       db.query('SELECT * FROM audit_log WHERE project_id = ? ORDER BY created_at DESC LIMIT 10', [
         projectId,
       ]),
+      // Decisions per agent — count decisions where agent name appears in affects
+      db.query(
+        `SELECT a.name AS agent_name, a.role, COUNT(d.id) AS count
+         FROM agents a
+         LEFT JOIN decisions d ON d.project_id = a.project_id
+           AND d.affects LIKE '%' || a.name || '%'
+         WHERE a.project_id = ?
+         GROUP BY a.id, a.name, a.role
+         ORDER BY count DESC`,
+        [projectId],
+      ).catch(() => ({ rows: [] })),
     ]);
 
     const d = decisionsResult.rows[0] as Record<string, unknown>;
@@ -130,6 +142,14 @@ export function registerStatsRoutes(app: Hono): void {
         edges: parseInt((edgesResult.rows[0] as Record<string, unknown>).count as string, 10),
         agents: parseInt((agentsResult.rows[0] as Record<string, unknown>).count as string, 10),
       },
+      decisions_per_agent: agentDecisionResult.rows.map((r) => {
+        const row = r as Record<string, unknown>;
+        return {
+          agent_name: row.agent_name as string,
+          role: row.role as string,
+          count: parseInt(row.count as string ?? '0', 10),
+        };
+      }),
     });
   });
 
