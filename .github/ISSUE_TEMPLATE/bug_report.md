@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug to help us improve Nexus
+about: Report a bug to help us improve DeciGraph
 title: "[Bug] "
 labels: bug
 assignees: ""
@@ -30,7 +30,7 @@ What actually happened. Include error messages or logs if available.
 - **Node.js version**: (run `node --version`)
 - **pnpm version**: (run `pnpm --version`)
 - **Docker version**: (run `docker --version`)
-- **Nexus version**: (check package.json or git commit)
+- **DeciGraph version**: (check package.json or git commit)
 - **Database**: (PostgreSQL version, local or Docker)
 
 ## Logs

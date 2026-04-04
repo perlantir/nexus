@@ -15,7 +15,7 @@ Thank you for your interest in contributing to DeciGraph. This guide will help y
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/nexus.git
+git clone https://github.com/YOUR_USERNAME/DeciGraph.git
 cd decigraph
 
 # Install dependencies

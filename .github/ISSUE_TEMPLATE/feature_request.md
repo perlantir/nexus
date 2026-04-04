@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature for Nexus
+about: Suggest a new feature for DeciGraph
 title: "[Feature] "
 labels: enhancement
 assignees: ""
