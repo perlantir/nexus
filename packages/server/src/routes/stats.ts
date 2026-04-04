@@ -116,7 +116,27 @@ export function registerStatsRoutes(app: Hono): void {
         10,
       ),
       total_edges: parseInt((edgesResult.rows[0] as Record<string, unknown>).count as string, 10),
-      recent_activity: auditResult.rows.map((r) => parseAuditEntry(r as Record<string, unknown>)),
+      by_status: {
+        active: parseInt(d.active as string, 10),
+        superseded: parseInt(d.superseded as string, 10),
+        reverted: 0,
+        pending: parseInt(d.pending as string, 10),
+      },
+      decision_trend: [],
+      recent_activity: auditResult.rows.map((r) => {
+        const entry = parseAuditEntry(r as Record<string, unknown>);
+        const e = entry as unknown as Record<string, unknown>;
+        const details = e.details as Record<string, unknown> | undefined;
+        return {
+          id: e.id,
+          type: e.event_type,
+          description: details?.title
+            ?? details?.agent_name
+            ?? String(e.event_type ?? '').replace(/_/g, ' '),
+          timestamp: e.created_at,
+          agent: details?.agent_name ?? undefined,
+        };
+      }),
       // Monitoring metrics
       extraction_quality: {
         total_extracted: totalReviewed + parseInt(rv.pending_review as string ?? '0', 10),
@@ -145,8 +165,7 @@ export function registerStatsRoutes(app: Hono): void {
       decisions_per_agent: agentDecisionResult.rows.map((r) => {
         const row = r as Record<string, unknown>;
         return {
-          agent_name: row.agent_name as string,
-          role: row.role as string,
+          agent: row.agent_name as string,
           count: parseInt(row.count as string ?? '0', 10),
         };
       }),

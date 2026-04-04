@@ -19,7 +19,19 @@ export function registerNotificationRoutes(app: Hono): void {
       [projectId],
     );
 
-    return c.json(result.rows.map((r) => parseNotification(r as Record<string, unknown>)));
+    return c.json(result.rows.map((r) => {
+      const n = parseNotification(r as Record<string, unknown>);
+      return {
+        id: n.id,
+        type: mapNotificationType(n.notification_type),
+        urgency: n.urgency,
+        message: n.message,
+        role_context: n.role_context,
+        read: !!n.read_at,
+        created_at: n.created_at,
+        decision_id: n.decision_id,
+      };
+    }));
   });
 
   // Mark notification as read (project-level path)
@@ -108,4 +120,18 @@ export function registerNotificationRoutes(app: Hono): void {
     if (result.rows.length === 0) throw new NotFoundError('Subscription', id);
     return c.json({ deleted: true, id });
   });
+}
+
+function mapNotificationType(t: string): string {
+  const map: Record<string, string> = {
+    decision_created: 'new_decision',
+    decision_updated: 'status_change',
+    decision_superseded: 'supersession',
+    contradiction_detected: 'contradiction',
+    session_completed: 'session_complete',
+    dependency_changed: 'dependency_changed',
+    decision_validated: 'validation',
+    decision_invalidated: 'invalidation',
+  };
+  return map[t] ?? t;
 }

@@ -72,11 +72,13 @@ export interface Notification {
 }
 
 export interface ContextResult {
-  agent: string;
+  agent: { name: string; role: string };
   task: string;
   decisions: Array<{
-    decision: Decision;
-    score: number;
+    id: string;
+    title: string;
+    combined_score: number;
+    [key: string]: unknown;
   }>;
 }
 

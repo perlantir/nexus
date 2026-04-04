@@ -58,11 +58,11 @@ export function ContextComparison() {
 
     try {
       const [resA, resB] = await Promise.all([
-        post<ContextResult>(`/api/projects/${projectId}/context`, {
+        post<ContextResult>('/api/compile', {
           agent: agentA,
           task,
         }),
-        post<ContextResult>(`/api/projects/${projectId}/context`, {
+        post<ContextResult>('/api/compile', {
           agent: agentB,
           task,
         }),
@@ -78,13 +78,13 @@ export function ContextComparison() {
 
   /* ---- Compute shared / unique ----------------------------------- */
 
-  const idsA = new Set(resultA?.decisions.map((d) => d.decision.id) ?? []);
-  const idsB = new Set(resultB?.decisions.map((d) => d.decision.id) ?? []);
+  const idsA = new Set(resultA?.decisions.map((d) => d.id) ?? []);
+  const idsB = new Set(resultB?.decisions.map((d) => d.id) ?? []);
 
   const sharedIds = new Set([...idsA].filter((id) => idsB.has(id)));
-  const uniqueA = resultA?.decisions.filter((d) => !idsB.has(d.decision.id)) ?? [];
-  const uniqueB = resultB?.decisions.filter((d) => !idsA.has(d.decision.id)) ?? [];
-  const shared = resultA?.decisions.filter((d) => sharedIds.has(d.decision.id)) ?? [];
+  const uniqueA = resultA?.decisions.filter((d) => !idsB.has(d.id)) ?? [];
+  const uniqueB = resultB?.decisions.filter((d) => !idsA.has(d.id)) ?? [];
+  const shared = resultA?.decisions.filter((d) => sharedIds.has(d.id)) ?? [];
 
   /* ---- Decision row ---------------------------------------------- */
 
@@ -93,7 +93,7 @@ export function ContextComparison() {
     score,
     highlight,
   }: {
-    decision: Decision;
+    decision: { title?: string; status?: string; [key: string]: unknown };
     score: number;
     highlight?: 'a' | 'b' | 'shared';
   }) {
@@ -233,18 +233,18 @@ export function ContextComparison() {
                 <div className="space-y-2">
                   {uniqueA.map((d) => (
                     <DecisionRow
-                      key={d.decision.id}
-                      decision={d.decision}
-                      score={d.score}
+                      key={d.id}
+                      decision={d as any}
+                      score={d.combined_score}
                       highlight="a"
                     />
                   ))}
                   {showShared &&
                     shared.map((d) => (
                       <DecisionRow
-                        key={d.decision.id}
-                        decision={d.decision}
-                        score={d.score}
+                        key={d.id}
+                        decision={d as any}
+                        score={d.combined_score}
                         highlight="shared"
                       />
                     ))}
@@ -263,22 +263,22 @@ export function ContextComparison() {
                 <div className="space-y-2">
                   {uniqueB.map((d) => (
                     <DecisionRow
-                      key={d.decision.id}
-                      decision={d.decision}
-                      score={d.score}
+                      key={d.id}
+                      decision={d as any}
+                      score={d.combined_score}
                       highlight="b"
                     />
                   ))}
                   {showShared &&
                     shared.map((d) => {
                       const bEntry = resultB.decisions.find(
-                        (bd) => bd.decision.id === d.decision.id,
+                        (bd) => bd.id === d.id,
                       );
                       return (
                         <DecisionRow
-                          key={d.decision.id}
-                          decision={d.decision}
-                          score={bEntry?.score ?? d.score}
+                          key={d.id}
+                          decision={d as any}
+                          score={bEntry?.combined_score ?? d.combined_score}
                           highlight="shared"
                         />
                       );
