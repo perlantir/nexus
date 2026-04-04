@@ -1,6 +1,6 @@
-# Contributing to Nexus
+# Contributing to DeciGraph
 
-Thank you for your interest in contributing to Nexus. This guide will help you get started.
+Thank you for your interest in contributing to DeciGraph. This guide will help you get started.
 
 ## Development Setup
 
@@ -16,7 +16,7 @@ Thank you for your interest in contributing to Nexus. This guide will help you g
 ```bash
 # Clone the repository
 git clone https://github.com/YOUR_USERNAME/nexus.git
-cd nexus
+cd decigraph
 
 # Install dependencies
 pnpm install
@@ -31,7 +31,7 @@ pnpm build
 pnpm test
 
 # Start the development server
-pnpm --filter @nexus/server dev
+pnpm --filter @decigraph/server dev
 ```
 
 ## Project Structure
@@ -97,7 +97,7 @@ chore: update dependencies
 - Test files go in `tests/` directories adjacent to source
 - Name test files `*.test.ts`
 - Run all tests: `pnpm test`
-- Run specific package tests: `pnpm --filter @nexus/core test`
+- Run specific package tests: `pnpm --filter @decigraph/core test`
 
 ## Reporting Issues
 

@@ -2,19 +2,19 @@
 nexus-langchain — LangGraph Checkpointer
 =========================================
 A LangGraph ``BaseCheckpointSaver`` implementation that stores checkpoints as
-Nexus session summaries and rehydrates state by compiling context from Nexus.
+DeciGraph session summaries and rehydrates state by compiling context from DeciGraph.
 
 This lets LangGraph persist agent state across runs without any external
-key-value store — Nexus itself acts as the durable state layer.
+key-value store — DeciGraph itself acts as the durable state layer.
 
 Usage::
 
-    from nexus_sdk import NexusClient
-    from nexus_langchain import NexusCheckpointer
+    from decigraph_sdk import DeciGraphClient
+    from decigraph_langchain import DeciGraphCheckpointer
     from langgraph.graph import StateGraph
 
-    client = NexusClient()
-    checkpointer = NexusCheckpointer(
+    client = DeciGraphClient()
+    checkpointer = DeciGraphCheckpointer(
         client=client,
         project_id="proj-123",
         agent_name="orchestrator",
@@ -32,8 +32,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Iterator, Sequence
 
-from nexus_sdk import NexusClient
-from nexus_sdk.exceptions import NexusError
+from decigraph_sdk import DeciGraphClient
+from decigraph_sdk.exceptions import DeciGraphError
 
 try:
     from langchain_core.runnables import RunnableConfig
@@ -72,12 +72,12 @@ logger = logging.getLogger(__name__)
 _DECIGRAPH_CHECKPOINT_TAG = "langgraph-checkpoint"
 
 
-class NexusCheckpointer(BaseCheckpointSaver):
+class DeciGraphCheckpointer(BaseCheckpointSaver):
     """
-    LangGraph checkpoint saver backed by Nexus session summaries.
+    LangGraph checkpoint saver backed by DeciGraph session summaries.
 
     Each ``put`` operation serialises the full LangGraph checkpoint to JSON
-    and saves it as a Nexus ``SessionSummary``.  Each ``get`` operation
+    and saves it as a DeciGraph ``SessionSummary``.  Each ``get`` operation
     queries the most recent session summary for the thread and deserialises it.
 
     The ``compile_context`` endpoint is also called during ``get`` so that
@@ -86,9 +86,9 @@ class NexusCheckpointer(BaseCheckpointSaver):
     Parameters
     ----------
     client:
-        An initialised ``NexusClient`` instance.
+        An initialised ``DeciGraphClient`` instance.
     project_id:
-        The Nexus project to store checkpoints under.
+        The DeciGraph project to store checkpoints under.
     agent_name:
         Agent name used for context compilation.
     task_description:
@@ -99,7 +99,7 @@ class NexusCheckpointer(BaseCheckpointSaver):
 
     def __init__(
         self,
-        client: NexusClient,
+        client: DeciGraphClient,
         project_id: str,
         agent_name: str,
         task_description: str = "Continue the current task.",
@@ -120,7 +120,7 @@ class NexusCheckpointer(BaseCheckpointSaver):
         """
         Retrieve the most recent checkpoint for the given thread config.
 
-        Nexus session summaries are queried by agent name; the latest one
+        DeciGraph session summaries are queried by agent name; the latest one
         whose metadata contains a ``checkpoint_id`` matching the config is
         returned.
 
@@ -135,8 +135,8 @@ class NexusCheckpointer(BaseCheckpointSaver):
                 agent_name=self.agent_name,
                 limit=50,
             )
-        except NexusError as exc:
-            logger.warning("NexusCheckpointer.get_tuple: %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphCheckpointer.get_tuple: %s", exc)
             return None
 
         # Filter to sessions that look like checkpoints for this thread
@@ -177,8 +177,8 @@ class NexusCheckpointer(BaseCheckpointSaver):
                 agent_name=self.agent_name,
                 limit=limit or 100,
             )
-        except NexusError as exc:
-            logger.warning("NexusCheckpointer.list: %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphCheckpointer.list: %s", exc)
             return
 
         for session in reversed(sessions):
@@ -199,7 +199,7 @@ class NexusCheckpointer(BaseCheckpointSaver):
         new_versions: dict[str, Any],
     ) -> RunnableConfig:
         """
-        Persist a LangGraph checkpoint as a Nexus session summary.
+        Persist a LangGraph checkpoint as a DeciGraph session summary.
 
         The checkpoint payload is JSON-serialised and stored in the session
         summary's ``metadata`` field.  Decision IDs referenced in
@@ -248,12 +248,12 @@ class NexusCheckpointer(BaseCheckpointSaver):
                 metadata=session_metadata,
             )
             logger.debug(
-                "NexusCheckpointer.put: saved checkpoint %s as session %s",
+                "DeciGraphCheckpointer.put: saved checkpoint %s as session %s",
                 checkpoint_id,
                 session.get("id"),
             )
-        except NexusError as exc:
-            logger.warning("NexusCheckpointer.put: %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphCheckpointer.put: %s", exc)
 
         return {
             **config,
@@ -273,7 +273,7 @@ class NexusCheckpointer(BaseCheckpointSaver):
         session: dict[str, Any],
         config: RunnableConfig,
     ) -> CheckpointTuple | None:
-        """Deserialise a Nexus session summary back into a CheckpointTuple."""
+        """Deserialise a DeciGraph session summary back into a CheckpointTuple."""
         meta = session.get("metadata", {})
         payload_json: str = meta.get("checkpoint_payload", "")
         if not payload_json:
@@ -282,7 +282,7 @@ class NexusCheckpointer(BaseCheckpointSaver):
         try:
             checkpoint: Checkpoint = json.loads(payload_json)
         except json.JSONDecodeError as exc:
-            logger.warning("NexusCheckpointer: failed to parse checkpoint payload — %s", exc)
+            logger.warning("DeciGraphCheckpointer: failed to parse checkpoint payload — %s", exc)
             return None
 
         checkpoint_meta: CheckpointMetadata = meta.get("langgraph_metadata", {})

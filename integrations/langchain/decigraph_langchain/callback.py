@@ -2,15 +2,15 @@
 nexus-langchain — Callback Handler
 ===================================
 LangChain ``BaseCallbackHandler`` that automatically captures LLM and chain
-outputs and forwards them to the Nexus distillery for decision extraction.
+outputs and forwards them to the DeciGraph distillery for decision extraction.
 
 Usage::
 
-    from nexus_sdk import NexusClient
-    from nexus_langchain import NexusCallbackHandler
+    from decigraph_sdk import DeciGraphClient
+    from decigraph_langchain import DeciGraphCallbackHandler
 
-    client = NexusClient()
-    handler = NexusCallbackHandler(
+    client = DeciGraphClient()
+    handler = DeciGraphCallbackHandler(
         client=client,
         project_id="proj-123",
         agent_name="coder-agent",
@@ -25,7 +25,7 @@ import logging
 from typing import Any
 from uuid import UUID
 
-from nexus_sdk import NexusClient
+from decigraph_sdk import DeciGraphClient
 
 try:
     from langchain_core.callbacks import BaseCallbackHandler
@@ -39,9 +39,9 @@ except ImportError as exc:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 
-class NexusCallbackHandler(BaseCallbackHandler):
+class DeciGraphCallbackHandler(BaseCallbackHandler):
     """
-    Callback handler that ships conversation data to the Nexus distillery.
+    Callback handler that ships conversation data to the DeciGraph distillery.
 
     The handler buffers LLM outputs across the run.  When the top-level chain
     ends (``on_chain_end``), the accumulated text is flushed to the distillery
@@ -50,9 +50,9 @@ class NexusCallbackHandler(BaseCallbackHandler):
     Parameters
     ----------
     client:
-        An initialised ``NexusClient`` instance.
+        An initialised ``DeciGraphClient`` instance.
     project_id:
-        The Nexus project to associate all captured data with.
+        The DeciGraph project to associate all captured data with.
     agent_name:
         Agent name used to attribute extracted decisions.
     capture_tool_outputs:
@@ -68,7 +68,7 @@ class NexusCallbackHandler(BaseCallbackHandler):
 
     def __init__(
         self,
-        client: NexusClient,
+        client: DeciGraphClient,
         project_id: str,
         agent_name: str,
         capture_tool_outputs: bool = True,
@@ -173,7 +173,7 @@ class NexusCallbackHandler(BaseCallbackHandler):
 
     def flush(self) -> None:
         """
-        Send the accumulated buffer to the Nexus distillery and clear it.
+        Send the accumulated buffer to the DeciGraph distillery and clear it.
         Call this manually if ``distill_on_chain_end=False``.
         """
         if not self._buffer:
@@ -187,9 +187,9 @@ class NexusCallbackHandler(BaseCallbackHandler):
                 agent_name=self.agent_name,
             )
             n = len(result.get("decisions_created", []))
-            logger.debug("NexusCallbackHandler: distilled → %d decisions extracted", n)
+            logger.debug("DeciGraphCallbackHandler: distilled → %d decisions extracted", n)
         except Exception as exc:
-            logger.warning("NexusCallbackHandler: distillery flush failed — %s", exc)
+            logger.warning("DeciGraphCallbackHandler: distillery flush failed — %s", exc)
 
     def clear(self) -> None:
         """Discard the in-process buffer without sending to the distillery."""

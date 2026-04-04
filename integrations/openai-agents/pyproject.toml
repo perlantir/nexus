@@ -3,14 +3,14 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.backends.legacy:build"
 
 [project]
-name = "nexus-openai-agents"
+name = "decigraph-openai-agents"
 version = "0.1.0"
-description = "OpenAI Agents SDK integration for the Nexus multi-agent memory platform."
+description = "OpenAI Agents SDK integration for the DeciGraph multi-agent memory platform."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 authors = [{ name = "Perlantir" }]
-keywords = ["nexus", "openai", "agents", "memory", "multi-agent"]
+keywords = ["decigraph", "openai", "agents", "memory", "multi-agent"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -21,7 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "nexus-sdk>=0.1.0",
+    "decigraph-sdk>=0.1.0",
     "openai-agents>=0.1.0",
 ]
 
@@ -37,11 +37,11 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/nexus-platform/nexus"
-Documentation = "https://docs.nexus.dev"
+Documentation = "https://github.com/perlantir/DeciGraph"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["nexus_openai_agents*"]
+include = ["decigraph_openai_agents*"]
 
 [tool.mypy]
 python_version = "3.10"

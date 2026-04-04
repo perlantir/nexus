@@ -1,19 +1,19 @@
 """
 nexus-crewai — Memory Backend
 ==============================
-A CrewAI memory backend that delegates storage and retrieval to Nexus.
+A CrewAI memory backend that delegates storage and retrieval to DeciGraph.
 
 CrewAI calls ``save()`` after each task completes and ``search()`` whenever
 an agent needs to recall information.  This implementation maps those
-operations onto the Nexus distillery and context compiler respectively.
+operations onto the DeciGraph distillery and context compiler respectively.
 
 Usage::
 
-    from nexus_sdk import NexusClient
-    from nexus_crewai import NexusCrewMemory
+    from decigraph_sdk import DeciGraphClient
+    from decigraph_crewai import DeciGraphCrewMemory
 
-    client = NexusClient()
-    memory = NexusCrewMemory(
+    client = DeciGraphClient()
+    memory = DeciGraphCrewMemory(
         client=client,
         project_id="proj-123",
         agent_name="researcher",
@@ -35,22 +35,22 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from nexus_sdk import NexusClient
-from nexus_sdk.exceptions import NexusError
+from decigraph_sdk import DeciGraphClient
+from decigraph_sdk.exceptions import DeciGraphError
 
 logger = logging.getLogger(__name__)
 
 
-class NexusCrewMemory:
+class DeciGraphCrewMemory:
     """
-    CrewAI memory backend backed by Nexus.
+    CrewAI memory backend backed by DeciGraph.
 
     Parameters
     ----------
     client:
-        An initialised ``NexusClient`` instance.
+        An initialised ``DeciGraphClient`` instance.
     project_id:
-        The Nexus project that owns this agent's memory.
+        The DeciGraph project that owns this agent's memory.
     agent_name:
         The CrewAI agent's name, used for attribution and context filtering.
     default_task_description:
@@ -60,12 +60,12 @@ class NexusCrewMemory:
         Optional token budget for context compilation.
     distill_on_save:
         When ``True`` (default), every ``save()`` call immediately sends
-        content to the Nexus distillery.  Set to ``False`` to batch manually.
+        content to the DeciGraph distillery.  Set to ``False`` to batch manually.
     """
 
     def __init__(
         self,
-        client: NexusClient,
+        client: DeciGraphClient,
         project_id: str,
         agent_name: str,
         default_task_description: str = "Perform the current crew task.",
@@ -96,7 +96,7 @@ class NexusCrewMemory:
         Persist a piece of information from a completed task.
 
         When ``distill_on_save`` is ``True``, the text is immediately shipped
-        to the Nexus distillery.  Otherwise it is buffered and can be flushed
+        to the DeciGraph distillery.  Otherwise it is buffered and can be flushed
         with ``flush()``.
 
         Parameters
@@ -123,7 +123,7 @@ class NexusCrewMemory:
         limit: int | None = None,
     ) -> list[dict[str, Any]]:
         """
-        Retrieve information relevant to *query* from Nexus.
+        Retrieve information relevant to *query* from DeciGraph.
 
         Calls ``compile_context`` and returns the list of relevant decisions
         together with the compiled text as the first element.
@@ -133,9 +133,9 @@ class NexusCrewMemory:
         query:
             The search query or current task context.
         task_description:
-            Optional override for the task description passed to Nexus.
+            Optional override for the task description passed to DeciGraph.
         limit:
-            Not used directly (Nexus controls result count via token budget),
+            Not used directly (DeciGraph controls result count via token budget),
             but stored in the metadata for future API extensions.
 
         Returns
@@ -154,8 +154,8 @@ class NexusCrewMemory:
                 task_description=task,
                 max_tokens=self.max_tokens,
             )
-        except NexusError as exc:
-            logger.warning("NexusCrewMemory.search: context compilation failed — %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphCrewMemory.search: context compilation failed — %s", exc)
             return []
 
         results: list[dict[str, Any]] = []
@@ -182,15 +182,15 @@ class NexusCrewMemory:
         """
         Clear the in-process pending buffer.
 
-        Note: this does *not* delete persisted data from Nexus.  It only
+        Note: this does *not* delete persisted data from DeciGraph.  It only
         discards buffered items that have not yet been distilled.
         """
         self._pending.clear()
-        logger.debug("NexusCrewMemory.reset: pending buffer cleared for agent '%s'", self.agent_name)
+        logger.debug("DeciGraphCrewMemory.reset: pending buffer cleared for agent '%s'", self.agent_name)
 
     def flush(self) -> None:
         """
-        Flush all buffered items to the Nexus distillery.
+        Flush all buffered items to the DeciGraph distillery.
 
         Call this when ``distill_on_save=False`` and you want to batch-submit
         accumulated task outputs.
@@ -212,7 +212,7 @@ class NexusCrewMemory:
         agent_name: str | None = None,
         extra_meta: dict[str, Any] | None = None,
     ) -> None:
-        """Send *text* to the Nexus distillery."""
+        """Send *text* to the DeciGraph distillery."""
         if not text.strip():
             return
         try:
@@ -222,6 +222,6 @@ class NexusCrewMemory:
                 agent_name=agent_name or self.agent_name,
             )
             n = len(result.get("decisions_created", []))
-            logger.debug("NexusCrewMemory: distilled → %d decisions extracted", n)
-        except NexusError as exc:
-            logger.warning("NexusCrewMemory._distill_text: %s", exc)
+            logger.debug("DeciGraphCrewMemory: distilled → %d decisions extracted", n)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphCrewMemory._distill_text: %s", exc)

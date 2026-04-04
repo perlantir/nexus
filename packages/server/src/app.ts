@@ -1,9 +1,12 @@
 import { Hono } from 'hono';
+// Auditing strategy: route-level logAudit() calls are used for targeted
+// logging of important operations (decision CRUD, compile, validate, etc.).
+// Per-request auditMiddleware is intentionally not mounted — it would log
+// every GET request which is noisy and provides little value.
 import {
   errorHandler,
   authMiddleware,
   corsMiddleware,
-  auditMiddleware,
   requestTimer,
   securityHeaders,
   rateLimiter,

@@ -2,7 +2,7 @@
 set -e
 
 # ============================================================
-# Nexus Smoke Test
+# DeciGraph Smoke Test
 # Run after setup to verify everything works
 # Usage: bash scripts/smoke-test.sh
 # ============================================================
@@ -18,7 +18,7 @@ warn() { echo "   ⚠️  $1"; WARN=$((WARN + 1)); }
 
 echo ""
 echo "  ╔══════════════════════════════════╗"
-echo "  ║     NEXUS SMOKE TEST             ║"
+echo "  ║     DECIGRAPH SMOKE TEST             ║"
 echo "  ╚══════════════════════════════════╝"
 echo ""
 echo "  API: $API_URL"
@@ -32,7 +32,7 @@ if echo "$HEALTH" | grep -q '"ok"'; then
 else
   fail "API health check failed. Is the server running on $API_URL?"
   echo ""
-  echo "  Start the server with: pnpm --filter @nexus/server dev"
+  echo "  Start the server with: pnpm --filter @decigraph/server dev"
   exit 1
 fi
 
@@ -141,7 +141,7 @@ if [ $FAIL -gt 0 ]; then
   echo "  Some tests failed. Check the output above for details."
   exit 1
 else
-  echo "  Nexus is ready. Next steps:"
+  echo "  DeciGraph is ready. Next steps:"
   echo ""
   echo "    Set OPENAI_API_KEY in .env      → enables semantic search + embeddings"
   echo "    Set ANTHROPIC_API_KEY in .env    → enables auto-extraction from conversations"

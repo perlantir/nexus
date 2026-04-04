@@ -1,14 +1,14 @@
 """
 nexus-openai-agents — Lifecycle Hooks
 ======================================
-Hooks for the OpenAI Agents SDK that integrate Nexus memory into every agent
+Hooks for the OpenAI Agents SDK that integrate DeciGraph memory into every agent
 run automatically.
 
 The OpenAI Agents SDK (``openai-agents``) exposes an ``AgentHooks`` protocol
 with ``on_start``, ``on_end``, ``on_tool_call``, and ``on_tool_output`` async
-callbacks.  ``NexusAgentHooks`` implements this protocol and:
+callbacks.  ``DeciGraphAgentHooks`` implements this protocol and:
 
-* **on_start**: compiles context from Nexus and injects it into the agent's
+* **on_start**: compiles context from DeciGraph and injects it into the agent's
   system message as an additional instruction.
 * **on_end**: extracts decisions from the completed conversation and sends
   them to the distillery.
@@ -18,11 +18,11 @@ Usage::
 
     import asyncio
     from agents import Agent, Runner
-    from nexus_sdk import NexusClient
-    from nexus_openai_agents import NexusAgentHooks
+    from decigraph_sdk import DeciGraphClient
+    from decigraph_openai_agents import DeciGraphAgentHooks
 
-    client = NexusClient()
-    hooks = NexusAgentHooks(
+    client = DeciGraphClient()
+    hooks = DeciGraphAgentHooks(
         client=client,
         project_id="proj-123",
         agent_name="assistant",
@@ -44,8 +44,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from nexus_sdk import NexusClient
-from nexus_sdk.exceptions import NexusError
+from decigraph_sdk import DeciGraphClient
+from decigraph_sdk.exceptions import DeciGraphError
 
 logger = logging.getLogger(__name__)
 
@@ -71,16 +71,16 @@ except ImportError:
         """Stub when openai-agents is not installed."""
 
 
-class NexusAgentHooks(AgentHooks):
+class DeciGraphAgentHooks(AgentHooks):
     """
-    OpenAI Agents SDK lifecycle hooks backed by Nexus.
+    OpenAI Agents SDK lifecycle hooks backed by DeciGraph.
 
     Parameters
     ----------
     client:
-        An initialised ``NexusClient`` instance.
+        An initialised ``DeciGraphClient`` instance.
     project_id:
-        The Nexus project to scope all reads and writes to.
+        The DeciGraph project to scope all reads and writes to.
     agent_name:
         The name of the agent these hooks are attached to.
     task_description:
@@ -89,7 +89,7 @@ class NexusAgentHooks(AgentHooks):
     max_tokens:
         Optional token budget for context compilation.
     inject_context_into_instructions:
-        When ``True`` (default), ``on_start`` prepends compiled Nexus context
+        When ``True`` (default), ``on_start`` prepends compiled DeciGraph context
         to the agent's dynamic instructions via
         ``context.run_context.run_instructions``.  Set to ``False`` if you
         prefer to handle injection yourself.
@@ -97,12 +97,12 @@ class NexusAgentHooks(AgentHooks):
         When ``True`` (default), ``on_tool_output`` appends tool results to
         the run buffer for distillation.
     create_session_on_end:
-        When ``True`` (default), ``on_end`` creates a Nexus ``SessionSummary``.
+        When ``True`` (default), ``on_end`` creates a DeciGraph ``SessionSummary``.
     """
 
     def __init__(
         self,
-        client: NexusClient,
+        client: DeciGraphClient,
         project_id: str,
         agent_name: str,
         task_description: str = "Perform the current task.",
@@ -136,7 +136,7 @@ class NexusAgentHooks(AgentHooks):
         """
         Called by the OpenAI Agents SDK when a new agent run begins.
 
-        Compiles Nexus context and optionally injects it into the agent's
+        Compiles DeciGraph context and optionally injects it into the agent's
         runtime instructions.
 
         Parameters
@@ -167,8 +167,8 @@ class NexusAgentHooks(AgentHooks):
                 max_tokens=self.max_tokens,
             )
             compiled_text: str = pkg.get("compiled_text", "")
-        except NexusError as exc:
-            logger.warning("NexusAgentHooks.on_start: context compilation failed — %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphAgentHooks.on_start: context compilation failed — %s", exc)
             compiled_text = ""
 
         if compiled_text:
@@ -176,14 +176,14 @@ class NexusAgentHooks(AgentHooks):
             # exposes a mutable ``run_instructions`` attribute; otherwise log.
             run_ctx = getattr(context, "run_context", None) or context
             existing: str = getattr(run_ctx, "run_instructions", None) or ""
-            nexus_block = f"[Nexus Context]\n{compiled_text}\n\n"
+            nexus_block = f"[DeciGraph Context]\n{compiled_text}\n\n"
             if nexus_block not in existing:
                 try:
                     object.__setattr__(run_ctx, "run_instructions", nexus_block + existing)
                 except AttributeError:
                     pass  # Read-only; SDK version may differ
             logger.debug(
-                "NexusAgentHooks.on_start: injected %d chars of context",
+                "DeciGraphAgentHooks.on_start: injected %d chars of context",
                 len(compiled_text),
             )
 
@@ -197,7 +197,7 @@ class NexusAgentHooks(AgentHooks):
         Called by the OpenAI Agents SDK when an agent run finishes.
 
         Captures the final output, sends the accumulated conversation buffer
-        to the Nexus distillery, and creates a session summary.
+        to the DeciGraph distillery, and creates a session summary.
 
         Parameters
         ----------
@@ -279,7 +279,7 @@ class NexusAgentHooks(AgentHooks):
         """
         Called when control is handed off to this agent from another.
 
-        Refreshes Nexus context for the new agent task.
+        Refreshes DeciGraph context for the new agent task.
 
         Parameters
         ----------
@@ -292,7 +292,7 @@ class NexusAgentHooks(AgentHooks):
         """
         source_name = _extract_agent_name(source)
         logger.debug(
-            "NexusAgentHooks.on_handoff: agent '%s' received handoff from '%s'",
+            "DeciGraphAgentHooks.on_handoff: agent '%s' received handoff from '%s'",
             self.agent_name,
             source_name,
         )
@@ -303,7 +303,7 @@ class NexusAgentHooks(AgentHooks):
 
     async def flush(self) -> None:
         """
-        Manually flush the current run buffer to the Nexus distillery.
+        Manually flush the current run buffer to the DeciGraph distillery.
 
         Useful in long-running agent loops where you want intermediate
         checkpoint saves rather than waiting for ``on_end``.
@@ -331,14 +331,14 @@ class NexusAgentHooks(AgentHooks):
             new_ids = [d.get("id") for d in result.get("decisions_created", []) if d.get("id")]
             self._decision_ids.extend(new_ids)
             logger.debug(
-                "NexusAgentHooks._flush_buffer: %d decisions extracted",
+                "DeciGraphAgentHooks._flush_buffer: %d decisions extracted",
                 len(new_ids),
             )
-        except NexusError as exc:
-            logger.warning("NexusAgentHooks._flush_buffer: distillery call failed — %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphAgentHooks._flush_buffer: distillery call failed — %s", exc)
 
     async def _create_session_summary(self, agent: Any = None) -> None:
-        """Create a Nexus session summary for the completed run."""
+        """Create a DeciGraph session summary for the completed run."""
         agent_label = _extract_agent_name(agent) or self.agent_name
         summary = (
             f"OpenAI Agents SDK run completed for '{agent_label}': "
@@ -355,12 +355,12 @@ class NexusAgentHooks(AgentHooks):
                 metadata={"framework": "openai-agents"},
             )
             logger.debug(
-                "NexusAgentHooks._create_session_summary: created session — %s",
+                "DeciGraphAgentHooks._create_session_summary: created session — %s",
                 session.get("id"),
             )
-        except NexusError as exc:
+        except DeciGraphError as exc:
             logger.warning(
-                "NexusAgentHooks._create_session_summary: %s", exc
+                "DeciGraphAgentHooks._create_session_summary: %s", exc
             )
         finally:
             self._decision_ids.clear()

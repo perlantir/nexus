@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 // Phase A Validation — Full Pipeline Test
-// Tests the complete Nexus pipeline end-to-end against a real DB.
+// Tests the complete DeciGraph pipeline end-to-end against a real DB.
 // Run: pnpm validate  (or tsx scripts/phase-a-validation.ts)
 //
 // Required env vars:
@@ -74,7 +74,7 @@ async function qOne<T = Record<string, unknown>>(sql: string, params?: unknown[]
 
 /**
  * Clean up all test data inserted during this run.
- * Relies on a test project named exactly "nexus-phase-a-test".
+ * Relies on a test project named exactly "decigraph-phase-a-test".
  */
 async function cleanup(projectId: string | null) {
   if (!projectId) return;
@@ -103,7 +103,7 @@ async function cleanup(projectId: string | null) {
 // ── Main Validation ───────────────────────────────────────────────────────────
 
 async function validate() {
-  console.log(`\n${BOLD}${CYAN}🔍 Nexus Phase A Validation${RESET}\n`);
+  console.log(`\n${BOLD}${CYAN}🔍 DeciGraph Phase A Validation${RESET}\n`);
   console.log(`Timestamp: ${new Date().toISOString()}`);
   console.log(`DATABASE_URL: ${process.env.DATABASE_URL ? process.env.DATABASE_URL.replace(/:\/\/([^:]+):[^@]+@/, '://$1:***@') : '(not set)'}`);
 
@@ -219,12 +219,12 @@ async function validate() {
     section('2. Project Creation');
 
     // Remove any leftover test project from a previous run
-    await query(`DELETE FROM projects WHERE name = 'nexus-phase-a-test'`);
+    await query(`DELETE FROM projects WHERE name = 'decigraph-phase-a-test'`);
 
     const projectRow = await qOne(
       `INSERT INTO projects (name, description, metadata)
        VALUES ($1, $2, $3) RETURNING *`,
-      ['nexus-phase-a-test', 'Phase A validation project', '{}'],
+      ['decigraph-phase-a-test', 'Phase A validation project', '{}'],
     );
 
     if (projectRow && projectRow['id']) {

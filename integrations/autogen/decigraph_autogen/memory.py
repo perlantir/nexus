@@ -1,25 +1,25 @@
 """
-nexus-autogen — Memory
+decigraph-autogen — Memory
 =======================
-Nexus memory implementation for Microsoft AutoGen agents.
+DeciGraph memory implementation for Microsoft AutoGen agents.
 
 AutoGen agents (``ConversableAgent`` and its subclasses) support custom memory
 backends via the ``transform_messages`` hook or by subclassing.  This module
-provides a self-contained ``NexusAutoGenMemory`` class that:
+provides a self-contained ``DeciGraphAutoGenMemory`` class that:
 
-* Injects relevant Nexus context into the system message at conversation start.
+* Injects relevant DeciGraph context into the system message at conversation start.
 * Buffers incoming messages and periodically extracts decisions via the
-  Nexus distillery.
+  DeciGraph distillery.
 * Creates a ``SessionSummary`` when the session ends.
 
 Usage with AutoGen v0.4+::
 
-    from nexus_sdk import NexusClient
-    from nexus_autogen import NexusAutoGenMemory
+    from decigraph_sdk import DeciGraphClient
+    from decigraph_autogen import DeciGraphAutoGenMemory
     import autogen
 
-    client = NexusClient()
-    nexus_mem = NexusAutoGenMemory(
+    client = DeciGraphClient()
+    decigraph_mem = DeciGraphAutoGenMemory(
         client=client,
         project_id="proj-123",
         agent_name="assistant",
@@ -27,7 +27,7 @@ Usage with AutoGen v0.4+::
     )
 
     # Get context to prepend to the system message
-    system_ctx = nexus_mem.get_context()
+    system_ctx = decigraph_mem.get_context()
 
     assistant = autogen.AssistantAgent(
         name="assistant",
@@ -36,11 +36,11 @@ Usage with AutoGen v0.4+::
     )
 
     # After each message exchange, store it
-    nexus_mem.store_message(role="user", content="...")
-    nexus_mem.store_message(role="assistant", content="...")
+    decigraph_mem.store_message(role="user", content="...")
+    decigraph_mem.store_message(role="assistant", content="...")
 
     # When done
-    nexus_mem.on_session_end()
+    decigraph_mem.on_session_end()
 """
 
 from __future__ import annotations
@@ -49,8 +49,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from nexus_sdk import NexusClient
-from nexus_sdk.exceptions import NexusError
+from decigraph_sdk import DeciGraphClient
+from decigraph_sdk.exceptions import DeciGraphError
 
 logger = logging.getLogger(__name__)
 
@@ -60,14 +60,14 @@ MessageRole = Literal["user", "assistant", "system", "tool", "function"]
 _DEFAULT_DISTILL_EVERY = 10
 
 
-class NexusAutoGenMemory:
+class DeciGraphAutoGenMemory:
     """
-    Nexus memory for AutoGen agents.
+    DeciGraph memory for AutoGen agents.
 
     Parameters
     ----------
     client:
-        An initialised ``NexusClient`` instance.
+        An initialised ``DeciGraphClient`` instance.
     project_id:
         The Nexus project to scope reads and writes to.
     agent_name:
@@ -87,7 +87,7 @@ class NexusAutoGenMemory:
 
     def __init__(
         self,
-        client: NexusClient,
+        client: DeciGraphClient,
         project_id: str,
         agent_name: str,
         task_description: str = "Perform the current task.",
@@ -113,7 +113,7 @@ class NexusAutoGenMemory:
 
     def get_context(self, task_description: str | None = None) -> str:
         """
-        Compile and return context from Nexus as a plain string.
+        Compile and return context from DeciGraph as a plain string.
 
         Typically called once at the start of a session to populate the
         agent's system message.
@@ -137,8 +137,8 @@ class NexusAutoGenMemory:
                 max_tokens=self.max_tokens,
             )
             return pkg.get("compiled_text", "")
-        except NexusError as exc:
-            logger.warning("NexusAutoGenMemory.get_context: %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphAutoGenMemory.get_context: %s", exc)
             return ""
 
     def get_relevant_decisions(self, query: str | None = None) -> list[dict[str, Any]]:
@@ -164,8 +164,8 @@ class NexusAutoGenMemory:
                 max_tokens=self.max_tokens,
             )
             return pkg.get("relevant_decisions", [])
-        except NexusError as exc:
-            logger.warning("NexusAutoGenMemory.get_relevant_decisions: %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphAutoGenMemory.get_relevant_decisions: %s", exc)
             return []
 
     def store_message(
@@ -215,7 +215,7 @@ class NexusAutoGenMemory:
 
     def flush_to_distillery(self) -> None:
         """
-        Send all buffered messages to the Nexus distillery and clear the buffer.
+        Send all buffered messages to the DeciGraph distillery and clear the buffer.
 
         Decision IDs extracted during this flush are accumulated for the
         final session summary.
@@ -235,11 +235,11 @@ class NexusAutoGenMemory:
             new_ids = [d.get("id") for d in result.get("decisions_created", []) if d.get("id")]
             self._decision_ids.extend(new_ids)
             logger.debug(
-                "NexusAutoGenMemory.flush_to_distillery: %d decisions extracted",
+                "DeciGraphAutoGenMemory.flush_to_distillery: %d decisions extracted",
                 len(new_ids),
             )
-        except NexusError as exc:
-            logger.warning("NexusAutoGenMemory.flush_to_distillery: %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphAutoGenMemory.flush_to_distillery: %s", exc)
 
     def on_session_end(
         self,
@@ -287,15 +287,15 @@ class NexusAutoGenMemory:
                 metadata={"framework": "autogen"},
             )
             logger.debug(
-                "NexusAutoGenMemory.on_session_end: session summary created — %s",
+                "DeciGraphAutoGenMemory.on_session_end: session summary created — %s",
                 session.get("id"),
             )
             # Reset for next session
             self._decision_ids.clear()
             self._session_started_at = datetime.now(tz=timezone.utc).isoformat()
             return session
-        except NexusError as exc:
-            logger.warning("NexusAutoGenMemory.on_session_end: %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphAutoGenMemory.on_session_end: %s", exc)
             return None
 
     # ------------------------------------------------------------------
@@ -308,9 +308,9 @@ class NexusAutoGenMemory:
 
         Pass this method (or an instance bound to it) to
         ``TransformMessages(transforms=[self.transform_messages_hook])`` to
-        automatically inject Nexus context into each LLM call.
+        automatically inject DeciGraph context into each LLM call.
 
-        The hook prepends a system message containing compiled Nexus context
+        The hook prepends a system message containing compiled DeciGraph context
         if one is not already present at position 0.
 
         Parameters
@@ -345,7 +345,7 @@ class NexusAutoGenMemory:
 
     def __repr__(self) -> str:
         return (
-            f"NexusAutoGenMemory("
+            f"DeciGraphAutoGenMemory("
             f"project_id={self.project_id!r}, "
             f"agent_name={self.agent_name!r}, "
             f"buffered={len(self._messages)})"

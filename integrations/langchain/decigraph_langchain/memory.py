@@ -1,21 +1,21 @@
 """
 nexus-langchain — Memory
 ========================
-LangChain ``BaseMemory`` implementation backed by Nexus.
+LangChain ``BaseMemory`` implementation backed by DeciGraph.
 
-When an LLM chain loads memory variables, Nexus compiles the most relevant
+When an LLM chain loads memory variables, DeciGraph compiles the most relevant
 decisions, session summaries, and notifications for the current agent and task.
 When the chain saves context after each run, the conversation is sent to the
-Nexus distillery for automatic decision extraction.
+DeciGraph distillery for automatic decision extraction.
 
 Usage::
 
-    from nexus_sdk import NexusClient
-    from nexus_langchain import NexusMemory
+    from decigraph_sdk import DeciGraphClient
+    from decigraph_langchain import DeciGraphMemory
     from langchain.chains import LLMChain
 
-    client = NexusClient(base_url="http://localhost:3100")
-    memory = NexusMemory(
+    client = DeciGraphClient(base_url="http://localhost:3100")
+    memory = DeciGraphMemory(
         client=client,
         project_id="proj-123",
         agent_name="coder-agent",
@@ -29,7 +29,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from nexus_sdk import NexusClient
+from decigraph_sdk import DeciGraphClient
 
 try:
     from langchain_core.memory import BaseMemory
@@ -47,9 +47,9 @@ _DEFAULT_INPUT_KEY = "input"
 _DEFAULT_OUTPUT_KEY = "output"
 
 
-class NexusMemory(BaseMemory):
+class DeciGraphMemory(BaseMemory):
     """
-    LangChain memory backed by Nexus.
+    LangChain memory backed by DeciGraph.
 
     On every ``load_memory_variables`` call the relevant project decisions,
     session summaries and unread notifications are compiled into a single
@@ -57,14 +57,14 @@ class NexusMemory(BaseMemory):
 
     On every ``save_context`` call the human/AI exchange is appended to an
     in-process buffer.  When the buffer reaches ``distill_every`` exchanges
-    (default 1) the accumulated text is sent to the Nexus distillery.
+    (default 1) the accumulated text is sent to the DeciGraph distillery.
 
     Parameters
     ----------
     client:
-        An initialised ``NexusClient`` instance.
+        An initialised ``DeciGraphClient`` instance.
     project_id:
-        The Nexus project to scope all reads and writes to.
+        The DeciGraph project to scope all reads and writes to.
     agent_name:
         The agent name used for context compilation and decision attribution.
     task_description:
@@ -86,7 +86,7 @@ class NexusMemory(BaseMemory):
         decision list under ``nexus_decisions``.
     """
 
-    client: NexusClient
+    client: DeciGraphClient
     project_id: str
     agent_name: str
     task_description: str
@@ -123,9 +123,9 @@ class NexusMemory(BaseMemory):
 
     def load_memory_variables(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """
-        Compile context from Nexus and return it as a dict.
+        Compile context from DeciGraph and return it as a dict.
 
-        If the Nexus server is unreachable the method logs a warning and
+        If the DeciGraph server is unreachable the method logs a warning and
         returns an empty context rather than crashing the chain.
 
         Parameters
@@ -152,7 +152,7 @@ class NexusMemory(BaseMemory):
                 max_tokens=self.max_tokens,
             )
         except Exception as exc:
-            logger.warning("NexusMemory: failed to load context — %s", exc)
+            logger.warning("DeciGraphMemory: failed to load context — %s", exc)
             result: dict[str, Any] = {self.memory_key: ""}
             if self.return_messages:
                 result["nexus_decisions"] = []
@@ -168,7 +168,7 @@ class NexusMemory(BaseMemory):
         """
         Append the latest exchange to the in-process buffer and, if the
         buffer has reached ``distill_every`` exchanges, flush it to the
-        Nexus distillery.
+        DeciGraph distillery.
 
         Parameters
         ----------
@@ -201,7 +201,7 @@ class NexusMemory(BaseMemory):
     # ------------------------------------------------------------------
 
     def _flush_to_distillery(self) -> None:
-        """Send the accumulated buffer to the Nexus distillery."""
+        """Send the accumulated buffer to the DeciGraph distillery."""
         buffer: list[str] = object.__getattribute__(self, "_buffer")
         if not buffer:
             return
@@ -214,12 +214,12 @@ class NexusMemory(BaseMemory):
             )
             decisions_count = len(result.get("decisions_created", []))
             logger.debug(
-                "NexusMemory: distilled %d exchanges → %d decisions extracted",
+                "DeciGraphMemory: distilled %d exchanges → %d decisions extracted",
                 len(buffer),
                 decisions_count,
             )
         except Exception as exc:
-            logger.warning("NexusMemory: distillery call failed — %s", exc)
+            logger.warning("DeciGraphMemory: distillery call failed — %s", exc)
         finally:
             # Clear buffer regardless of success so we don't re-send on error
             buffer.clear()

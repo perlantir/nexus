@@ -1,4 +1,4 @@
--- Nexus Initial Schema
+-- DeciGraph Initial Schema
 -- PostgreSQL 17 + pgvector
 
 -- Extensions

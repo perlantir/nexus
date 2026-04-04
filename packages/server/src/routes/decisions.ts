@@ -515,6 +515,7 @@ export function registerDecisionRoutes(app: Hono): void {
     if (decResult.rows.length === 0) throw new NotFoundError('Decision', id);
     const decision = parseDecision(decResult.rows[0] as Record<string, unknown>);
 
+    // Downstream: decisions this one affects (outgoing edges)
     const downstreamEdges = await db.query(
       `SELECT DISTINCT d.* FROM decisions d
        JOIN decision_edges e ON e.target_id = d.id
@@ -522,6 +523,17 @@ export function registerDecisionRoutes(app: Hono): void {
       [id],
     );
     const downstreamDecisions = downstreamEdges.rows.map((r) =>
+      parseDecision(r as Record<string, unknown>),
+    );
+
+    // Upstream: decisions that depend ON this one (incoming edges)
+    const upstreamEdges = await db.query(
+      `SELECT DISTINCT d.* FROM decisions d
+       JOIN decision_edges e ON e.source_id = d.id
+       WHERE e.target_id = ?`,
+      [id],
+    );
+    const upstreamDecisions = upstreamEdges.rows.map((r) =>
       parseDecision(r as Record<string, unknown>),
     );
 
@@ -581,6 +593,7 @@ export function registerDecisionRoutes(app: Hono): void {
     return c.json({
       decision,
       downstream_decisions: downstreamDecisions,
+      upstream_decisions: upstreamDecisions,
       affected_agents: affectedAgents.map((a) => ({
         id: a.id,
         project_id: a.project_id,

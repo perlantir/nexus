@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-// Nexus Demo Seed Script — TaskFlow AI-Powered Task Management
+// DeciGraph Demo Seed Script — TaskFlow AI-Powered Task Management
 // Seeds the database with realistic demo data for a hypothetical
 // "TaskFlow" project management SaaS.
 //
@@ -66,7 +66,7 @@ interface DecisionInput {
 // ── Seed Data ─────────────────────────────────────────────────────────────────
 
 async function seed() {
-  log(`\n${BOLD}${CYAN}🌱 Nexus Demo Seed — TaskFlow${RESET}\n`);
+  log(`\n${BOLD}${CYAN}🌱 DeciGraph Demo Seed — TaskFlow${RESET}\n`);
 
   if (!process.env.DATABASE_URL) {
     console.error('DATABASE_URL is not set. Please set it and re-run.');

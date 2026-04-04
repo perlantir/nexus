@@ -2,7 +2,7 @@
 nexus-crewai — Task & Crew Callbacks
 ======================================
 CrewAI callback objects that automatically capture task and crew outputs and
-forward them to the Nexus distillery / session summary API.
+forward them to the DeciGraph distillery / session summary API.
 
 CrewAI's callback interface accepts plain callables or objects with
 ``on_task_complete`` / ``on_crew_complete`` methods.  Both styles are
@@ -10,11 +10,11 @@ supported here.
 
 Usage::
 
-    from nexus_sdk import NexusClient
-    from nexus_crewai import NexusCrewCallback
+    from decigraph_sdk import DeciGraphClient
+    from decigraph_crewai import DeciGraphCrewCallback
 
-    client = NexusClient()
-    cb = NexusCrewCallback(client=client, project_id="proj-123")
+    client = DeciGraphClient()
+    cb = DeciGraphCrewCallback(client=client, project_id="proj-123")
 
     from crewai import Crew, Task, Agent
     crew = Crew(
@@ -33,32 +33,32 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from nexus_sdk import NexusClient
-from nexus_sdk.exceptions import NexusError
+from decigraph_sdk import DeciGraphClient
+from decigraph_sdk.exceptions import DeciGraphError
 
 logger = logging.getLogger(__name__)
 
 
-class NexusCrewCallback:
+class DeciGraphCrewCallback:
     """
-    Callback object for CrewAI that ships task and crew outputs to Nexus.
+    Callback object for CrewAI that ships task and crew outputs to DeciGraph.
 
     Parameters
     ----------
     client:
-        An initialised ``NexusClient`` instance.
+        An initialised ``DeciGraphClient`` instance.
     project_id:
-        The Nexus project to associate all captured data with.
+        The DeciGraph project to associate all captured data with.
     agent_name:
         Default agent name for attribution when the task does not specify one.
     create_session_on_crew_end:
-        When ``True`` (default) a Nexus ``SessionSummary`` is created when
+        When ``True`` (default) a DeciGraph ``SessionSummary`` is created when
         ``on_crew_complete()`` is called.
     """
 
     def __init__(
         self,
-        client: NexusClient,
+        client: DeciGraphClient,
         project_id: str,
         agent_name: str = "crew",
         create_session_on_crew_end: bool = True,
@@ -80,7 +80,7 @@ class NexusCrewCallback:
         """
         Called by CrewAI when a single task finishes.
 
-        The task output is sent to the Nexus distillery.  Any decisions
+        The task output is sent to the DeciGraph distillery.  Any decisions
         extracted are collected for the final crew session summary.
 
         Parameters
@@ -97,7 +97,7 @@ class NexusCrewCallback:
         agent_name: str = _extract_agent_name(task) or self.agent_name
 
         if not output_text:
-            logger.debug("NexusCrewCallback.on_task_complete: empty output, skipping distillery")
+            logger.debug("DeciGraphCrewCallback.on_task_complete: empty output, skipping distillery")
             return
 
         conversation = f"Task: {task_desc}\n\nOutput:\n{output_text}"
@@ -115,12 +115,12 @@ class NexusCrewCallback:
             new_ids = [d.get("id") for d in result.get("decisions_created", []) if d.get("id")]
             self._decision_ids.extend(new_ids)
             logger.debug(
-                "NexusCrewCallback.on_task_complete: %d decisions extracted for task '%s'",
+                "DeciGraphCrewCallback.on_task_complete: %d decisions extracted for task '%s'",
                 len(new_ids),
                 task_desc[:60],
             )
-        except NexusError as exc:
-            logger.warning("NexusCrewCallback.on_task_complete: distillery call failed — %s", exc)
+        except DeciGraphError as exc:
+            logger.warning("DeciGraphCrewCallback.on_task_complete: distillery call failed — %s", exc)
 
     def on_step(self, step: Any) -> None:
         """
@@ -143,7 +143,7 @@ class NexusCrewCallback:
         """
         Called when the entire crew finishes all tasks.
 
-        Creates a Nexus ``SessionSummary`` that links all decisions extracted
+        Creates a DeciGraph ``SessionSummary`` that links all decisions extracted
         during the run.
 
         Parameters
@@ -181,12 +181,12 @@ class NexusCrewCallback:
                 },
             )
             logger.debug(
-                "NexusCrewCallback.on_crew_complete: session summary created — %s",
+                "DeciGraphCrewCallback.on_crew_complete: session summary created — %s",
                 session.get("id"),
             )
-        except NexusError as exc:
+        except DeciGraphError as exc:
             logger.warning(
-                "NexusCrewCallback.on_crew_complete: session summary failed — %s", exc
+                "DeciGraphCrewCallback.on_crew_complete: session summary failed — %s", exc
             )
         finally:
             # Reset for potential re-use
