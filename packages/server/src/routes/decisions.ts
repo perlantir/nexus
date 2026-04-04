@@ -6,6 +6,8 @@ import type { Decision, DecisionEdge, NotificationType } from '@nexus/core/types
 import { propagateChange } from '@nexus/core/change-propagator/index.js';
 import { checkForContradictions } from '@nexus/core/contradiction-detector/index.js';
 import { dispatchWebhooks } from '@nexus/core/webhooks/index.js';
+import { findCascadeImpact, notifyCascade } from '@nexus/core/dependency-cascade/index.js';
+import { randomUUID } from 'node:crypto';
 import {
   requireUUID,
   requireString,
@@ -42,6 +44,7 @@ export function registerDecisionRoutes(app: Hono): void {
       dependencies?: unknown;
       confidence_decay_rate?: number;
       metadata?: Record<string, unknown>;
+      depends_on?: unknown[];
     }>();
 
     const title = requireString(body.title, 'title', 500);
@@ -115,6 +118,21 @@ export function registerDecisionRoutes(app: Hono): void {
       checkForContradictions(decision).catch((err) =>
         console.error('[nexus] Contradiction check failed:', (err as Error).message),
       );
+
+      // Create "requires" edges from depends_on
+      if (Array.isArray(body.depends_on)) {
+        for (const targetId of body.depends_on) {
+          try {
+            const tid = requireUUID(targetId, 'depends_on');
+            await db.query(
+              `INSERT INTO decision_edges (id, source_id, target_id, relationship)
+               VALUES (?, ?, ?, 'requires')
+               ON CONFLICT (source_id, target_id, relationship) DO NOTHING`,
+              [randomUUID(), decision.id, tid],
+            );
+          } catch { /* skip invalid IDs */ }
+        }
+      }
 
       return c.json(decision, 201);
     } catch (err) {
@@ -347,7 +365,35 @@ export function registerDecisionRoutes(app: Hono): void {
       old_decision_id: oldId,
     }).catch((err) => console.warn('[nexus:webhook]', (err as Error).message));
 
-    return c.json(result, 201);
+    // Cascade impact detection (fire-and-forget notifications, but include in response)
+    let cascadeImpact: { decisions_affected: number; chain: Array<Record<string, unknown>> } = { decisions_affected: 0, chain: [] };
+    try {
+      const cascade = await findCascadeImpact(oldId, (result.newDecision as Decision).project_id);
+      cascadeImpact = {
+        decisions_affected: cascade.total_affected,
+        chain: cascade.impacts.map((i) => ({
+          title: i.decision_title,
+          depth: i.depth,
+          impact: i.impact,
+          agents_affected: i.affected_agents,
+        })),
+      };
+      // Fire-and-forget: send notifications + webhooks
+      notifyCascade(cascade, (result.newDecision as Decision).project_id, 'superseded').catch(
+        (err) => console.warn('[nexus:cascade]', (err as Error).message),
+      );
+      if (cascade.total_affected > 0) {
+        dispatchWebhooks((result.newDecision as Decision).project_id, 'cascade_detected', {
+          changed_decision_id: oldId,
+          changed_decision_title: cascade.changed_decision_title,
+          total_affected: cascade.total_affected,
+        }).catch((err) => console.warn('[nexus:webhook]', (err as Error).message));
+      }
+    } catch (err) {
+      console.warn('[nexus:cascade] Error:', (err as Error).message);
+    }
+
+    return c.json({ ...result, cascade_impact: cascadeImpact }, 201);
   });
 
   // Decision revert (restore superseded → active)
@@ -375,7 +421,43 @@ export function registerDecisionRoutes(app: Hono): void {
       title: decision.title,
     }).catch((err) => console.warn('[nexus:webhook]', (err as Error).message));
 
+    // Cascade detection for revert (fire-and-forget)
+    findCascadeImpact(id, decision.project_id).then((cascade) => {
+      if (cascade.total_affected > 0) {
+        notifyCascade(cascade, decision.project_id, 'reverted').catch(() => {});
+        dispatchWebhooks(decision.project_id, 'cascade_detected', {
+          changed_decision_id: id,
+          changed_decision_title: cascade.changed_decision_title,
+          total_affected: cascade.total_affected,
+        }).catch(() => {});
+      }
+    }).catch((err) => console.warn('[nexus:cascade]', (err as Error).message));
+
     return c.json(decision);
+  });
+
+  // Cascade preview endpoint
+  app.get('/api/decisions/:id/cascade', async (c) => {
+    const db = getDb();
+    const id = requireUUID(c.req.param('id'), 'id');
+
+    const decResult = await db.query('SELECT project_id FROM decisions WHERE id = ?', [id]);
+    if (decResult.rows.length === 0) throw new NotFoundError('Decision', id);
+    const projectId = (decResult.rows[0] as Record<string, unknown>).project_id as string;
+
+    const cascade = await findCascadeImpact(id, projectId);
+    return c.json({
+      decision_id: id,
+      decisions_affected: cascade.total_affected,
+      chain: cascade.impacts.map((i) => ({
+        decision_id: i.decision_id,
+        title: i.decision_title,
+        depth: i.depth,
+        impact: i.impact,
+        path: i.path,
+        agents_affected: i.affected_agents,
+      })),
+    });
   });
 
   // Decision Graph + Impact

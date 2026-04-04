@@ -66,6 +66,10 @@
     "./relevance-learner/index.js": {
       "import": "./dist/relevance-learner/index.js",
       "types": "./dist/relevance-learner/index.d.ts"
+    },
+    "./dependency-cascade/index.js": {
+      "import": "./dist/dependency-cascade/index.js",
+      "types": "./dist/dependency-cascade/index.d.ts"
     }
   },
   "scripts": {
