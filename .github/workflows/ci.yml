@@ -14,13 +14,13 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg17
         env:
-          POSTGRES_USER: nexus
-          POSTGRES_PASSWORD: nexus_test
-          POSTGRES_DB: nexus_test
+          POSTGRES_USER: decigraph
+          POSTGRES_PASSWORD: decigraph_test
+          POSTGRES_DB: decigraph_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U nexus"
+          --health-cmd "pg_isready -U decigraph"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -52,22 +52,20 @@ jobs:
 
       - name: Lint
         run: pnpm format:check
-        continue-on-error: true
 
       - name: Run unit tests
         run: pnpm test
 
       - name: Run integration validation
         env:
-          DATABASE_URL: postgresql://nexus:nexus_test@localhost:5432/nexus_test
+          DATABASE_URL: postgresql://decigraph:decigraph_test@localhost:5432/decigraph_test
         run: |
           # Apply migrations
           for f in supabase/migrations/*.sql; do
-            PGPASSWORD=nexus_test psql -h localhost -U nexus -d nexus_test -f "$f"
+            PGPASSWORD=decigraph_test psql -h localhost -U decigraph -d decigraph_test -f "$f"
           done
           # Run validation
           npx tsx scripts/phase-a-validation.ts
-        continue-on-error: true
 
   docker-build:
     runs-on: ubuntu-latest
@@ -76,10 +74,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build server image
-        run: docker build -t nexus-server .
+        run: docker build -t decigraph-server .
 
       - name: Build dashboard image
-        run: docker build -f Dockerfile.dashboard -t nexus-dashboard .
+        run: docker build -f Dockerfile.dashboard -t decigraph-dashboard .
 
       - name: Test Docker Compose
         run: |
@@ -111,12 +109,11 @@ jobs:
 
       - name: Verify imports
         run: |
-          python -c "from nexus_sdk import NexusClient; print('SDK imports OK')"
-          python -c "from nexus_sdk.types import Decision, Agent, Project; print('Types OK')"
+          python -c "from decigraph_sdk import DeciGraphClient; print('SDK imports OK')"
+          python -c "from decigraph_sdk.types import Decision, Agent, Project; print('Types OK')"
 
       - name: Install integrations
         run: |
           pip install langchain-core crewai 2>/dev/null || true
           cd integrations/langchain && pip install -e . 2>/dev/null && cd ../..
           cd integrations/crewai && pip install -e . 2>/dev/null && cd ../..
-        continue-on-error: true

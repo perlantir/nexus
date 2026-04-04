@@ -106,7 +106,7 @@ export const corsMiddleware: MiddlewareHandler = createMiddleware(async (c, next
   if (isDev()) {
     allowOrigin = origin || '*';
   } else {
-    const allowed = (process.env.ALLOWED_ORIGINS ?? '')
+    const allowed = (process.env.DECIGRAPH_CORS_ORIGINS ?? process.env.ALLOWED_ORIGINS ?? '')
       .split(',')
       .map((o) => o.trim())
       .filter(Boolean);

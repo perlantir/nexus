@@ -42,5 +42,9 @@ COPY --from=base /app/packages/server/node_modules packages/server/node_modules/
 
 USER decigraph
 
+# Migrations: copied as fallback if volume mount is not provided.
+# In docker-compose, ./supabase/migrations is mounted as a read-only volume.
+COPY supabase/migrations /app/supabase/migrations
+
 EXPOSE 3100
 CMD ["node", "packages/server/dist/index.js"]

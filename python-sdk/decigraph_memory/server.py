@@ -53,7 +53,7 @@ class DeciGraphServer:
         else:
             arch = "x64"
         
-        name = f"nexus-{system}-{arch}"
+        name = f"decigraph-{system}-{arch}"
         if system == "windows":
             name += ".exe"
         

@@ -30,7 +30,7 @@ services:
       DATABASE_SSL: ${DATABASE_SSL:-false}
       PORT: 3100
       HOST: 0.0.0.0
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-development}
       DECIGRAPH_API_KEY: ${DECIGRAPH_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -43,12 +43,20 @@ services:
       DECIGRAPH_LLM_MODEL: ${DECIGRAPH_LLM_MODEL:-}
       EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-}
       DISTILLERY_PROVIDER: ${DISTILLERY_PROVIDER:-}
+      DECIGRAPH_CORS_ORIGINS: ${DECIGRAPH_CORS_ORIGINS:-}
     ports:
       - "3100:3100"
+    volumes:
+      - ./supabase/migrations:/app/supabase/migrations:ro
     restart: unless-stopped
     read_only: true
     tmpfs:
       - /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3100/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   dashboard:
     build:
@@ -59,7 +67,8 @@ services:
         CACHE_BUSTER: ${CACHE_BUSTER:-1}
     container_name: decigraph-dashboard
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     ports:
       - "3200:80"
     restart: unless-stopped

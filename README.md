@@ -542,3 +542,30 @@ pnpm test --filter core  # run core package tests only
 Apache License 2.0 — see [LICENSE](LICENSE) for full text.
 
 You are free to use, modify, and distribute DeciGraph in commercial projects. Attribution is appreciated but not required.
+
+## Troubleshooting
+
+### `ENOENT: scandir '/app/supabase/migrations'`
+
+The server needs access to the SQL migration files. If running via Docker Compose, make sure the volume mount is present:
+
+```yaml
+server:
+  volumes:
+    - ./supabase/migrations:/app/supabase/migrations:ro
+```
+
+This is already configured in the default `docker-compose.yml`. If you're running a custom setup, copy the `supabase/migrations` directory into your container or mount it as a volume.
+
+### `401 Unauthorized` on all requests
+
+By default, `NODE_ENV` is set to `development` which allows unauthenticated requests. If you've set `NODE_ENV=production`, you must also set `DECIGRAPH_API_KEY` and include it as a `Bearer` token in all requests:
+
+```bash
+export DECIGRAPH_API_KEY=your-secret-key
+curl -H "Authorization: Bearer your-secret-key" http://localhost:3100/api/health
+```
+
+### Docker volume name `decigraph_pgdata`
+
+On existing deployments that were set up before the rename from Nexus to DeciGraph, the Docker volume may still be named with the old prefix. This is expected — Docker volumes persist across name changes. Do not rename or delete the volume as it contains your database data.

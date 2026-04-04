@@ -122,7 +122,20 @@ export function registerStatsRoutes(app: Hono): void {
         reverted: 0,
         pending: parseInt(d.pending as string, 10),
       },
-      decision_trend: [],
+      decision_trend: await (async () => {
+        try {
+          const trendResult = await db.query(
+            db.dialect === 'sqlite'
+              ? `SELECT DATE(created_at) as date, COUNT(*) as count FROM decisions WHERE project_id = ? GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30`
+              : `SELECT DATE(created_at) as date, COUNT(*) as count FROM decisions WHERE project_id = ? GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30`,
+            [projectId],
+          );
+          return trendResult.rows.map((r) => {
+            const row = r as Record<string, unknown>;
+            return { date: String(row.date ?? ''), count: parseInt(String(row.count ?? '0'), 10) };
+          }).reverse();
+        } catch { return []; }
+      })(),
       recent_activity: auditResult.rows.map((r) => {
         const entry = parseAuditEntry(r as Record<string, unknown>);
         const e = entry as unknown as Record<string, unknown>;

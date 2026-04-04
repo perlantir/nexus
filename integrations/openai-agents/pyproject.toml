@@ -36,7 +36,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nexus-platform/nexus"
+Homepage = "https://github.com/perlantir/DeciGraph"
 Documentation = "https://github.com/perlantir/DeciGraph"
 
 [tool.setuptools.packages.find]
