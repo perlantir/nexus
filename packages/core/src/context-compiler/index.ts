@@ -133,6 +133,9 @@ export function scoreDecision(
 
   // ── Signal C: Persona Match (primaryTags overlap - excludeTags penalty) ─
   const persona = _getPersonaSafe(agent.name);
+  if (!persona) {
+    console.warn(`[decigraph/scoring] No persona found for agent: "${agent.name}" — persona match signal will be 0`);
+  }
   let personaMatchScore = 0;
   let excludePenalty = 0;
   if (persona && decisionTags.length > 0) {
@@ -178,10 +181,10 @@ export function scoreDecision(
   // ── Freshness Multiplier ──────────────────────────────────────────
   const ageInDays = (Date.now() - new Date(decision.created_at).getTime()) / 86400000;
   const freshnessMultiplier =
-    ageInDays <= 7 ? 1.10 :   // Last week: boost
-    ageInDays <= 30 ? 1.00 :  // Last month: neutral
+    ageInDays <= 7 ? 1.12 :   // Last week: strong boost
+    ageInDays <= 30 ? 1.05 :  // Last month: mild boost
     ageInDays <= 90 ? 0.95 :  // 1-3 months: slight decay
-    0.90;                     // Older: gentle penalty
+    0.88;                     // Older: gentle penalty
   finalScore *= freshnessMultiplier;
 
   // ── Status Multiplier ─────────────────────────────────────────────
@@ -190,9 +193,9 @@ export function scoreDecision(
 
   // ── Confidence Multiplier ─────────────────────────────────────────
   const confidenceMultiplier =
-    decision.confidence === 'high' ? 1.10 :
+    decision.confidence === 'high' ? 1.15 :
     decision.confidence === 'medium' ? 1.00 :
-    0.90;
+    0.88;
   finalScore *= confidenceMultiplier;
 
   // ── Direct agent match bonus (flat add after multipliers) ─────────
@@ -209,9 +212,9 @@ export function scoreDecision(
   if (semanticScore > 0) parts.push(`Semantic sim (${(SCORING_WEIGHTS.semanticSimilarity * semanticScore).toFixed(2)})`);
   if (madeByBonus > 0) parts.push(`Made-by bonus (+${madeByBonus.toFixed(2)})`);
   if (excludePenalty > 0) parts.push(`Exclude penalty (-${excludePenalty.toFixed(2)})`);
-  if (specificityMultiplier !== 1.0) parts.push(`Specificity (x${specificityMultiplier.toFixed(2)})`);
-  if (freshnessMultiplier !== 1.0) parts.push(`Freshness (x${freshnessMultiplier.toFixed(2)})`);
-  if (confidenceMultiplier !== 1.0) parts.push(`Confidence (x${confidenceMultiplier.toFixed(2)})`);
+  if (Math.abs(specificityMultiplier - 1.0) > 0.001) parts.push(`Specificity (x${specificityMultiplier.toFixed(2)})`);
+  if (Math.abs(freshnessMultiplier - 1.0) > 0.001) parts.push(`Freshness (x${freshnessMultiplier.toFixed(2)})`);
+  if (Math.abs(confidenceMultiplier - 1.0) > 0.001) parts.push(`Confidence (x${confidenceMultiplier.toFixed(2)})`);
   if (affects.includes(agentNameLower)) parts.push(`Agent bonus (+0.25)`);
   const explanation = parts.join(' + ') + ` = ${finalScore.toFixed(3)}`;
 
@@ -622,8 +625,10 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
     notifBudget,
   );
 
+  // CRITICAL: Use qualifiedDecisions (filtered by MIN_SCORE + capped at MAX_RESULTS)
+  // not allScored, which would return 400+ results.
   const packedDecisions = packItems<ScoredDecision>(
-    allScored,
+    qualifiedDecisions,
     (d) => d.combined_score,
     (d) => estimateTokens(d.title + d.description + d.reasoning),
     decisionBudget,
