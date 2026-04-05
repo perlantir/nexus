@@ -32,15 +32,38 @@ function resolveDashboardPath(): string | null {
 }
 
 async function main() {
+  // Validate required environment
+  if (!process.env.DATABASE_URL) {
+    console.error('[decigraph] FATAL: DATABASE_URL environment variable is not set.');
+    console.error('[decigraph] Set it in .env or docker-compose.yml:');
+    console.error('  DATABASE_URL=postgresql://nexus:nexus_dev@postgres:5432/nexus');
+    process.exit(1);
+  }
+
   // Auto-detect and connect to the database (SQLite or PostgreSQL).
   let db;
   try {
     db = await initDb();
     console.warn(`[decigraph] Database connected (${db.dialect})`);
-  } catch (err: unknown) {
-    console.error('[decigraph] FATAL: Cannot connect to database:', (err as Error).message);
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    console.error('[decigraph] FATAL: Cannot connect to database:', err.message);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[decigraph] Stack trace:', err.stack);
+    }
     process.exit(1);
   }
+
+  // Verify data exists (warn if empty — may indicate wrong volume)
+  try {
+    const { rows } = await db.query('SELECT count(*) as c FROM decisions', []);
+    const count = parseInt((rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+    if (count === 0) {
+      console.warn('[decigraph] WARNING: Database has 0 decisions. If you expected data, check your Docker volume.');
+    } else {
+      console.warn(`[decigraph] Database contains ${count} decisions`);
+    }
+  } catch { /* table may not exist yet — migrations will create it */ }
 
   logLLMConfig(resolveLLMConfig());
 

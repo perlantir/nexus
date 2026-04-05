@@ -63,7 +63,7 @@ services:
       context: .
       dockerfile: Dockerfile.dashboard
       args:
-        VITE_API_URL: ${VITE_API_URL:-/}
+        VITE_API_URL: ""
         CACHE_BUSTER: ${CACHE_BUSTER:-1}
     container_name: decigraph-dashboard
     depends_on:
@@ -74,4 +74,8 @@ services:
     restart: unless-stopped
 
 volumes:
+  # CRITICAL: Do NOT rename this volume. It contains all production data.
+  # Renaming creates a new empty volume and loses all decisions.
+  # If migrating from 'nexus_nexus_pgdata', use: docker volume create --name decigraph_pgdata
+  # then: docker run --rm -v nexus_nexus_pgdata:/from -v decigraph_pgdata:/to alpine cp -a /from/. /to/
   decigraph_pgdata:

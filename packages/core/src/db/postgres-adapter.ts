@@ -69,7 +69,11 @@ export class PostgresAdapter implements DatabaseAdapter {
   private readonly _config: DatabaseConfig | undefined;
 
   constructor(config?: DatabaseConfig) {
-    this._config = config;
+    this._config = config ?? {};
+    // Ensure connectionString falls back to env
+    if (!this._config.connectionString && process.env.DATABASE_URL) {
+      this._config.connectionString = process.env.DATABASE_URL;
+    }
   }
 
   // ---- connect / close ----------------------------------------------------
@@ -108,7 +112,7 @@ export class PostgresAdapter implements DatabaseAdapter {
   async healthCheck(): Promise<boolean> {
     try {
       const result = await this._rawQuery<{ ok: number }>('SELECT 1 AS ok', []);
-      return result.rows[0]?.ok === 1;
+      return (result.rows ?? [])[0]?.ok === 1;
     } catch {
       return false;
     }
@@ -141,8 +145,8 @@ export class PostgresAdapter implements DatabaseAdapter {
           params as unknown[] | undefined,
         );
         return {
-          rows: result.rows,
-          rowCount: result.rowCount ?? result.rows.length,
+          rows: result.rows ?? [],
+          rowCount: result.rowCount ?? (result.rows?.length ?? 0),
         };
       };
 
@@ -198,7 +202,7 @@ export class PostgresAdapter implements DatabaseAdapter {
     const applied = await this.query<{ name: string }>(
       'SELECT name FROM _decigraph_migrations ORDER BY id',
     );
-    const appliedSet = new Set(applied.rows.map((r) => r.name));
+    const appliedSet = new Set((applied.rows ?? []).map((r) => r.name));
 
     let files: string[];
     try {
@@ -278,8 +282,8 @@ export class PostgresAdapter implements DatabaseAdapter {
     const pool = this._getPool();
     const result = await pool.query<T & pg.QueryResultRow>(sql, params);
     return {
-      rows: result.rows,
-      rowCount: result.rowCount ?? result.rows.length,
+      rows: result.rows ?? [],
+      rowCount: result.rowCount ?? (result.rows?.length ?? 0),
     };
   }
 }

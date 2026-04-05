@@ -12,7 +12,7 @@ LABEL org.opencontainers.image.authors="Perlantir"
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 WORKDIR /app
 
-ARG VITE_API_URL=/
+ARG VITE_API_URL=""
 ENV VITE_API_URL=${VITE_API_URL}
 ARG CACHE_BUSTER=1
 
@@ -26,6 +26,11 @@ COPY packages/dashboard/ packages/dashboard/
 # Any change to CACHE_BUSTER forces everything below to re-run.
 RUN echo "CACHE_BUSTER=${CACHE_BUSTER}" > /app/packages/dashboard/.cache-buster
 
+# Validate: VITE_API_URL must never be an absolute URL
+RUN if echo "$VITE_API_URL" | grep -q "http"; then \
+  echo "ERROR: VITE_API_URL must be empty or '/' — never an absolute URL" && exit 1; \
+fi
+
 RUN cd packages/dashboard && \
     VITE_API_URL=$VITE_API_URL \
     VITE_BUILD_VERSION=$(date -u +%Y%m%d-%H%M%S)-${CACHE_BUSTER} \
@@ -37,5 +42,6 @@ LABEL maintainer="Perlantir"
 LABEL org.opencontainers.image.authors="Perlantir"
 COPY --from=build /app/packages/dashboard/dist /usr/share/nginx/html
 COPY packages/dashboard/nginx.conf /etc/nginx/conf.d/default.conf
+RUN nginx -t || (echo "Invalid nginx config" && exit 1)
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

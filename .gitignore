@@ -16,3 +16,10 @@ __pycache__/
 .eggs/
 build/
 *.whl
+
+# Production data — never commit
+data/
+e2e-test.sh
+*.env
+.env.*
+!.env.example
