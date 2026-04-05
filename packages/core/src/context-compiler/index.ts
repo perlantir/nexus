@@ -105,6 +105,54 @@ const SCORING_WEIGHTS = {
 export const MIN_SCORE = 0.50;  // Raise to 0.72 once embeddings are live
 export const MAX_RESULTS = 15;
 
+// ── Deduplication ─────────────────────────────────────────────────────────
+
+function deduplicateDecisions(decisions: ScoredDecision[]): ScoredDecision[] {
+  const seen = new Set<string>();
+  return decisions.filter((d) => {
+    const normalized = d.title
+      .toLowerCase()
+      .replace(/\s*(in decigraph|across ops|for v1|for bouts|for agents)\s*$/i, '')
+      .trim();
+    if (seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
+// ── Single Output Funnel ──────────────────────────────────────────────────
+// EVERY code path must go through this before returning decisions.
+
+function finalizeResults(
+  scored: ScoredDecision[],
+  agentName: string,
+  minScore: number = MIN_SCORE,
+  maxResults: number = MAX_RESULTS,
+): ScoredDecision[] {
+  const filtered = scored.filter((d) => d.combined_score >= minScore);
+  const deduped = deduplicateDecisions(filtered);
+  const sorted = deduped.sort((a, b) => b.combined_score - a.combined_score);
+  const capped = sorted.slice(0, maxResults);
+
+  // Debug log (keep permanently — invaluable for diagnosing scoring issues)
+  console.log('[decigraph/compile]', {
+    agent: agentName,
+    scored: scored.length,
+    afterThreshold: filtered.length,
+    afterDedupe: deduped.length,
+    returned: capped.length,
+    topScore: capped[0]?.combined_score ?? 0,
+    bottomScore: capped[capped.length - 1]?.combined_score ?? 0,
+  });
+
+  // Safety assertion
+  if (capped.length > maxResults) {
+    console.warn('[decigraph] MAX_RESULTS VIOLATED', { agent: agentName, count: capped.length });
+  }
+
+  return capped;
+}
+
 export function scoreDecision(
   decision: Decision,
   agent: Agent,
@@ -526,7 +574,12 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
 
   const taskHash = buildTaskHash(agent.id, task_description);
   const cached = await readCache(agent.id, taskHash);
-  if (cached) return cached;
+  if (cached) {
+    // Apply finalizeResults even to cached data — ensures old cache entries
+    // from before the cap was added don't bypass MAX_RESULTS.
+    const finalized = finalizeResults(cached.decisions as ScoredDecision[], agent_name);
+    return { ...cached, decisions: finalized, decisions_included: finalized.length };
+  }
 
   let decisionQuery = `SELECT * FROM decisions WHERE project_id = ?`;
   const queryParams: unknown[] = [project_id];
@@ -625,14 +678,9 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
     notifBudget,
   );
 
-  // CRITICAL: Use qualifiedDecisions (filtered by MIN_SCORE + capped at MAX_RESULTS)
-  // not allScored, which would return 400+ results.
-  const packedDecisions = packItems<ScoredDecision>(
-    qualifiedDecisions,
-    (d) => d.combined_score,
-    (d) => estimateTokens(d.title + d.description + d.reasoning),
-    decisionBudget,
-  );
+  // SINGLE OUTPUT FUNNEL: filter + dedupe + sort + cap
+  // Every code path goes through finalizeResults — no exceptions.
+  const packedDecisions = finalizeResults(allScored, agent_name);
 
   const packedArtifacts = packItems<ScoredArtifact>(
     scoredArtifacts,
