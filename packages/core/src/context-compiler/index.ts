@@ -129,6 +129,23 @@ function finalizeResults(
   minScore: number = MIN_SCORE,
   maxResults: number = MAX_RESULTS,
 ): ScoredDecision[] {
+  // Debug log for makspm (persistent — remove once makspm is confirmed working)
+  if (agentName === 'makspm' || agentName === 'pm') {
+    const top20 = [...scored]
+      .sort((a, b) => (b.combined_score || 0) - (a.combined_score || 0))
+      .slice(0, 20);
+    console.log('[decigraph/makspm-debug]', JSON.stringify({
+      totalScored: scored.length,
+      top20: top20.map((d) => ({
+        title: (d.title ?? '').slice(0, 60),
+        combined: d.combined_score,
+        tags: (d.tags ?? []).slice(0, 5),
+        made_by: d.made_by,
+        affects: d.affects,
+      })),
+    }, null, 2));
+  }
+
   const filtered = scored.filter((d) => d.combined_score >= minScore);
   const deduped = deduplicateDecisions(filtered);
   const sorted = deduped.sort((a, b) => b.combined_score - a.combined_score);
@@ -165,8 +182,13 @@ export function scoreDecision(
   const affects = (decision.affects ?? []).map((a) => a.toLowerCase());
 
   // ── Signal A: Direct Affect (0 or 1) ──────────────────────────────
+  // Check agent name, role, AND known aliases (e.g. 'pm' for 'makspm')
+  const agentAliases = new Set([agentNameLower, agentRoleLower]);
+  // Add common aliases
+  if (agentNameLower === 'makspm') { agentAliases.add('pm'); agentAliases.add('maks_pm'); }
+  if (agentNameLower === 'maks') { agentAliases.add('builder'); }
   const directAffectScore =
-    affects.includes(agentNameLower) || affects.includes(agentRoleLower) ? 1.0 : 0.0;
+    affects.some((a) => agentAliases.has(a)) ? 1.0 : 0.0;
 
   // ── Signal B: Tag Matching (overlap with profile weights) ─────────
   const profileWeights = profile.weights;
@@ -262,10 +284,10 @@ export function scoreDecision(
   finalScore *= confidenceMultiplier;
 
   // ── Direct agent match bonus (flat add after multipliers) ─────────
-  if (affects.includes(agentNameLower)) finalScore += 0.25;
+  if (affects.some((a) => agentAliases.has(a))) finalScore += 0.25;
 
-  // Clamp to [0, 1.5]
-  finalScore = Math.max(0, Math.min(1.5, finalScore));
+  // Normalize to [0, 1.0] — no score exceeds 1.0
+  finalScore = Math.max(0, Math.min(1.0, finalScore));
 
   // ── Build explanation string ──────────────────────────────────────
   const parts: string[] = [];

@@ -177,8 +177,10 @@ describe('scoreDecision — agent match bonuses', () => {
   });
 
   it('+0.15 bonus when agent is the maker', () => {
-    const maker = scoreDecision(makeDecision({ made_by: 'builder' }), makeAgent(), []);
-    const notMaker = scoreDecision(makeDecision({ made_by: 'alice' }), makeAgent(), []);
+    // Use low-scoring decision (no affects, few tags) so made_by bonus is visible before cap
+    const base = { affects: [] as string[], tags: ['misc'], confidence: 'low' as const };
+    const maker = scoreDecision(makeDecision({ ...base, made_by: 'builder' }), makeAgent(), []);
+    const notMaker = scoreDecision(makeDecision({ ...base, made_by: 'alice' }), makeAgent(), []);
     expect(maker.combined_score).toBeGreaterThan(notMaker.combined_score);
   });
 });
@@ -199,7 +201,7 @@ describe('scoreDecision — combined output', () => {
   it('combined_score is clamped to [0, 1.5]', () => {
     const result = scoreDecision(makeDecision(), makeAgent(), []);
     expect(result.combined_score).toBeGreaterThanOrEqual(0);
-    expect(result.combined_score).toBeLessThanOrEqual(1.5);
+    expect(result.combined_score).toBeLessThanOrEqual(1.0);
   });
 
   it('highly relevant decisions score > 0.5', () => {

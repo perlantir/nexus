@@ -31,7 +31,7 @@ export const AGENT_PERSONAS: Record<string, AgentPersona> = {
     primaryTags: ['architecture', 'product', 'process', 'business', 'bouts', 'scoring', 'monitoring', 'testing', 'devops', 'openclaw', 'competition', 'challenge', 'leaderboard', 'auth', 'dashboard'],
     excludeTags: ['solidity', 'on-chain', 'defi', 'smart-contract', 'figma', 'typography'],
     // Keywords match PM language in decision TITLES and DESCRIPTIONS
-    keywords: ['spec', 'sprint', 'roadmap', 'milestone', 'delegation', 'qa', 'coordinate', 'priority', 'acceptance', 'handoff', 'rollout', 'plan', 'schedule', 'requirement'],
+    keywords: ['spec', 'sprint', 'roadmap', 'milestone', 'delegation', 'qa', 'coordinate', 'priority', 'pipeline', 'review', 'gate', 'acceptance', 'rollout', 'checklist', 'route', 'remediation', 'handoff', 'task', 'schedule'],
     boostFactor: 0.25,
   },
   scout: {
@@ -56,10 +56,9 @@ export const AGENT_PERSONAS: Record<string, AgentPersona> = {
     name: 'launch',
     role: 'launch',
     description: 'Go-to-market, marketing, content strategy, TikTok, partnerships',
-    // Tightened: marketing/GTM only, not product features
-    primaryTags: ['marketing', 'go-to-market', 'tiktok', 'content', 'partnerships', 'pricing', 'campaigns', 'branding', 'seo', 'growth', 'acquisition', 'retention', 'distribution', 'conversion', 'launch'],
-    excludeTags: ['architecture', 'database', 'solidity', 'on-chain', 'ci-cd', 'server', 'api', 'security', 'devops', 'openclaw', 'config', 'typography', 'color'],
-    keywords: ['launch', 'marketing', 'tiktok', 'content', 'growth', 'campaign', 'social', 'brand', 'partnership', 'go-to-market', 'acquisition', 'pricing', 'distribution'],
+    primaryTags: ['marketing', 'go-to-market', 'tiktok', 'content', 'partnerships', 'pricing', 'campaigns', 'branding', 'seo', 'growth', 'acquisition', 'retention', 'distribution', 'conversion', 'launch', 'messaging'],
+    excludeTags: ['architecture', 'database', 'solidity', 'on-chain', 'ci-cd', 'server', 'api', 'security', 'devops', 'openclaw', 'config', 'typography', 'color', 'migration', 'middleware', 'curriculum', 'parental', 'admin'],
+    keywords: ['launch', 'campaign', 'growth', 'tiktok', 'partnership', 'pricing', 'brand', 'seo', 'acquisition', 'retention'],
     boostFactor: 0.25,
   },
   forge: {
@@ -93,10 +92,9 @@ export const AGENT_PERSONAS: Record<string, AgentPersona> = {
     name: 'counsel',
     role: 'legal',
     description: 'CFTC/SEC compliance, gambling law, privacy, NDAs, licensing, Iowa law',
-    // Sharpened: pure legal vocabulary
     primaryTags: ['legal', 'compliance', 'cftc', 'sec', 'privacy', 'gdpr', 'ccpa', 'nda', 'licensing', 'gambling', 'money-transmitter', 'iowa-law', 'terms', 'consent', 'regulatory', 'policy'],
-    excludeTags: ['architecture', 'devops', 'frontend', 'design', 'content', 'tiktok', 'production', 'openclaw', 'ci-cd', 'testing', 'performance', 'database', 'api', 'server'],
-    keywords: ['compliance', 'regulat', 'privacy', 'CFTC', 'SEC', 'legal', 'NDA', 'license', 'gambl', 'money transmit', 'consent', 'policy', 'terms'],
+    excludeTags: ['architecture', 'devops', 'frontend', 'design', 'content', 'tiktok', 'production', 'openclaw', 'ci-cd', 'testing', 'performance', 'database', 'api', 'server', 'scoring', 'challenge', 'leaderboard'],
+    keywords: ['compliance', 'regulat', 'privacy', 'CFTC', 'SEC', 'legal', 'NDA', 'license', 'gambl', 'money transmit', 'consent', 'policy', 'terms', 'Iowa', '99B', 'footer'],
     boostFactor: 0.25,
   },
   gauntlet: {
@@ -110,9 +108,17 @@ export const AGENT_PERSONAS: Record<string, AgentPersona> = {
   },
 };
 
+// Alias map for agents whose DB name differs from persona key
+const ALIASES: Record<string, string> = {
+  pm: 'makspm',
+  maks_pm: 'makspm',
+  'maks-pm': 'makspm',
+};
+
 /**
- * Look up persona by agent name (case-insensitive).
+ * Look up persona by agent name (case-insensitive, alias-aware).
  */
 export function getPersona(agentName: string): AgentPersona | undefined {
-  return AGENT_PERSONAS[agentName.toLowerCase()];
+  const lower = agentName.toLowerCase();
+  return AGENT_PERSONAS[lower] ?? AGENT_PERSONAS[ALIASES[lower] ?? ''];
 }
