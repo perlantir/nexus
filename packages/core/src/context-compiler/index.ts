@@ -204,6 +204,20 @@ export function scoreDecision(
       ? Math.max(0, cosineSimilarity(taskEmbedding, decisionEmbedding))
       : 0;
 
+  // ── Signal E: Keyword Matching (title + description substring match) ──
+  // Critical for agents like makspm and counsel where tag overlap is weak
+  // but decision titles contain PM/legal language.
+  let keywordScore = 0;
+  if (persona && (persona.keywords ?? []).length > 0) {
+    const titleLower = (decision.title ?? '').toLowerCase();
+    const descLower = (decision.description ?? '').toLowerCase();
+    const keywordHits = persona.keywords.filter((kw) =>
+      titleLower.includes(kw.toLowerCase()) ||
+      descLower.includes(kw.toLowerCase()),
+    ).length;
+    keywordScore = Math.min(keywordHits * 0.08, 0.20); // cap at 0.20
+  }
+
   // ── Made-by bonus ─────────────────────────────────────────────────
   const madeByBonus = (decision.made_by ?? '').toLowerCase() === agentNameLower ? 0.15 : 0;
 
@@ -213,6 +227,7 @@ export function scoreDecision(
     SCORING_WEIGHTS.tagMatch * tagMatchScore +
     SCORING_WEIGHTS.personaMatch * personaMatchScore +
     SCORING_WEIGHTS.semanticSimilarity * semanticScore +
+    keywordScore +
     madeByBonus -
     excludePenalty;
 
@@ -258,6 +273,7 @@ export function scoreDecision(
   if (tagMatchScore > 0) parts.push(`Tag match (${(SCORING_WEIGHTS.tagMatch * tagMatchScore).toFixed(2)})`);
   if (personaMatchScore > 0) parts.push(`Persona match (${(SCORING_WEIGHTS.personaMatch * personaMatchScore).toFixed(2)})`);
   if (semanticScore > 0) parts.push(`Semantic sim (${(SCORING_WEIGHTS.semanticSimilarity * semanticScore).toFixed(2)})`);
+  if (keywordScore > 0) parts.push(`Keyword match (+${keywordScore.toFixed(2)})`);
   if (madeByBonus > 0) parts.push(`Made-by bonus (+${madeByBonus.toFixed(2)})`);
   if (excludePenalty > 0) parts.push(`Exclude penalty (-${excludePenalty.toFixed(2)})`);
   if (Math.abs(specificityMultiplier - 1.0) > 0.001) parts.push(`Specificity (x${specificityMultiplier.toFixed(2)})`);
@@ -276,7 +292,8 @@ export function scoreDecision(
     status_penalty: statusPenaltyVal,
     freshness: freshnessMultiplier,
     combined: finalScore,
-    // V3 extended signals
+    // V4 extended signals
+    keyword_score: keywordScore,
     made_by_bonus: madeByBonus,
     confidence_multiplier: confidenceMultiplier,
     specificity_multiplier: specificityMultiplier,

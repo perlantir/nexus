@@ -1,6 +1,6 @@
 /**
- * Agent Persona System V3 — maps agent names to expertise topics,
- * exclude tags (negative signals), and keywords for persona-based scoring.
+ * Agent Persona System V4 — maps agent names to expertise topics,
+ * exclude tags, and title/description keywords for scoring.
  */
 
 export interface AgentPersona {
@@ -27,9 +27,11 @@ export const AGENT_PERSONAS: Record<string, AgentPersona> = {
     name: 'makspm',
     role: 'product',
     description: 'Product management — specs, task delegation, QA coordination, roadmap',
-    primaryTags: ['product', 'architecture', 'scoring', 'api', 'dashboard', 'launch', 'competition', 'challenge', 'leaderboard', 'auth', 'anti-convergence', 'roadmap', 'planning', 'qa', 'requirements', 'milestones'],
-    excludeTags: ['solidity', 'blockchain', 'on-chain', 'defi', 'smart-contract', 'figma', 'typography', 'openclaw'],
-    keywords: ['product', 'spec', 'requirement', 'priority', 'milestone', 'qa', 'task', 'delegation', 'sprint', 'roadmap'],
+    // Use REAL tags from the database, not PM jargon
+    primaryTags: ['architecture', 'product', 'process', 'business', 'bouts', 'scoring', 'monitoring', 'testing', 'devops', 'openclaw', 'competition', 'challenge', 'leaderboard', 'auth', 'dashboard'],
+    excludeTags: ['solidity', 'on-chain', 'defi', 'smart-contract', 'figma', 'typography'],
+    // Keywords match PM language in decision TITLES and DESCRIPTIONS
+    keywords: ['spec', 'sprint', 'roadmap', 'milestone', 'delegation', 'qa', 'coordinate', 'priority', 'acceptance', 'handoff', 'rollout', 'plan', 'schedule', 'requirement'],
     boostFactor: 0.25,
   },
   scout: {
@@ -38,7 +40,7 @@ export const AGENT_PERSONAS: Record<string, AgentPersona> = {
     description: 'Research, market analysis, competitive intelligence, data insights',
     primaryTags: ['research', 'metrics', 'analysis', 'competitive', 'market', 'data', 'benchmarks', 'trends', 'insights', 'reports', 'analytics', 'survey', 'intelligence', 'pricing'],
     excludeTags: ['blockchain', 'solidity', 'design', 'typography', 'legal', 'compliance', 'cftc', 'sec', 'gambling', 'on-chain', 'figma', 'openclaw'],
-    keywords: ['research', 'analysis', 'competitor', 'market', 'benchmark', 'data', 'insight', 'trend', 'metrics', 'report'],
+    keywords: ['research', 'analysis', 'competitive', 'benchmark', 'metric', 'trend', 'insight', 'report', 'data', 'market'],
     boostFactor: 0.22,
   },
   clawexpert: {
@@ -54,9 +56,10 @@ export const AGENT_PERSONAS: Record<string, AgentPersona> = {
     name: 'launch',
     role: 'launch',
     description: 'Go-to-market, marketing, content strategy, TikTok, partnerships',
-    primaryTags: ['marketing', 'go-to-market', 'tiktok', 'content', 'partnerships', 'pricing', 'campaigns', 'branding', 'seo', 'growth', 'uberkiwi', 'mathind', 'engagement', 'social', 'launch'],
-    excludeTags: ['blockchain', 'solidity', 'security', 'devops', 'openclaw', 'ci-cd', 'on-chain', 'smart-contract', 'database', 'middleware', 'typescript'],
-    keywords: ['launch', 'marketing', 'tiktok', 'content', 'growth', 'campaign', 'social', 'brand', 'partnership', 'go-to-market'],
+    // Tightened: marketing/GTM only, not product features
+    primaryTags: ['marketing', 'go-to-market', 'tiktok', 'content', 'partnerships', 'pricing', 'campaigns', 'branding', 'seo', 'growth', 'acquisition', 'retention', 'distribution', 'conversion', 'launch'],
+    excludeTags: ['architecture', 'database', 'solidity', 'on-chain', 'ci-cd', 'server', 'api', 'security', 'devops', 'openclaw', 'config', 'typography', 'color'],
+    keywords: ['launch', 'marketing', 'tiktok', 'content', 'growth', 'campaign', 'social', 'brand', 'partnership', 'go-to-market', 'acquisition', 'pricing', 'distribution'],
     boostFactor: 0.25,
   },
   forge: {
@@ -90,9 +93,10 @@ export const AGENT_PERSONAS: Record<string, AgentPersona> = {
     name: 'counsel',
     role: 'legal',
     description: 'CFTC/SEC compliance, gambling law, privacy, NDAs, licensing, Iowa law',
-    primaryTags: ['legal', 'compliance', 'cftc', 'sec', 'privacy', 'gdpr', 'ccpa', 'nda', 'licensing', 'gambling', 'money-transmitter', 'iowa-law', 'terms', 'regulation', 'prediction-market'],
-    excludeTags: ['architecture', 'devops', 'frontend', 'design', 'content', 'tiktok', 'production', 'openclaw', 'ci-cd', 'testing', 'typescript', 'database', 'figma'],
-    keywords: ['legal', 'compliance', 'regulation', 'gambling', 'privacy', 'cftc', 'sec', 'nda', 'license', 'iowa', 'money-transmitter'],
+    // Sharpened: pure legal vocabulary
+    primaryTags: ['legal', 'compliance', 'cftc', 'sec', 'privacy', 'gdpr', 'ccpa', 'nda', 'licensing', 'gambling', 'money-transmitter', 'iowa-law', 'terms', 'consent', 'regulatory', 'policy'],
+    excludeTags: ['architecture', 'devops', 'frontend', 'design', 'content', 'tiktok', 'production', 'openclaw', 'ci-cd', 'testing', 'performance', 'database', 'api', 'server'],
+    keywords: ['compliance', 'regulat', 'privacy', 'CFTC', 'SEC', 'legal', 'NDA', 'license', 'gambl', 'money transmit', 'consent', 'policy', 'terms'],
     boostFactor: 0.25,
   },
   gauntlet: {
