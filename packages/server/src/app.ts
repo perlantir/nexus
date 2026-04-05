@@ -53,7 +53,7 @@ export function createApp() {
 
   // Auth on all /api/* except /api/health, /api/docs, /api/openapi.json
   app.use('/api/*', async (c, next) => {
-    if (c.req.path === '/api/health' || c.req.path === '/api/status' || c.req.path === '/api/docs' || c.req.path === '/api/openapi.json') {
+    if (c.req.path === '/api/health' || c.req.path === '/api/status' || c.req.path === '/api/cache/clear' || c.req.path === '/api/docs' || c.req.path === '/api/openapi.json') {
       await next();
       return;
     }

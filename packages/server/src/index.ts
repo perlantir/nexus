@@ -66,6 +66,17 @@ async function main() {
     }
   } catch { /* table may not exist yet — migrations will create it */ }
 
+  // Clear context cache on startup — prevents stale cached results from a
+  // previous deployment (e.g. after a revert or scoring algorithm change)
+  // from poisoning fresh compile calls.
+  try {
+    const delResult = await db.query('DELETE FROM context_cache', []);
+    const deleted = delResult.rowCount ?? 0;
+    if (deleted > 0) {
+      console.warn(`[decigraph] Cleared ${deleted} stale context_cache entries on startup`);
+    }
+  } catch { /* table may not exist yet */ }
+
   logLLMConfig(resolveLLMConfig());
 
   // Log auto-discovery config

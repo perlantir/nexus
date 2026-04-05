@@ -26,18 +26,28 @@ import type {
 
 // Embedding helper — imported from decision-graph (generated at runtime).
 // We use a dynamic import shape so the module can be provided at runtime.
+// IMPORTANT: Do NOT cache the zero-vector fallback — retry the real import
+// on every call so a transient import failure doesn't permanently disable
+// semantic search for the lifetime of the process.
 let _generateEmbedding: ((text: string) => Promise<number[]>) | null = null;
+let _embeddingImportFailed = false;
+
+const ZERO_VECTOR: number[] = new Array(1536).fill(0) as number[];
 
 async function getEmbeddingFn(): Promise<(text: string) => Promise<number[]>> {
   if (_generateEmbedding) return _generateEmbedding;
   try {
     const mod = await import('../decision-graph/embeddings.js');
     _generateEmbedding = mod.generateEmbedding as (text: string) => Promise<number[]>;
+    _embeddingImportFailed = false;
     return _generateEmbedding;
-  } catch {
-    // Fallback: return a zero vector of dimension 1536 when the module is absent.
-    _generateEmbedding = async (_text: string) => new Array(1536).fill(0) as number[];
-    return _generateEmbedding;
+  } catch (err) {
+    // Log but do NOT cache the fallback — retry the import next time.
+    if (!_embeddingImportFailed) {
+      console.warn('[decigraph/embeddings] Failed to import embeddings module — semantic search disabled for this call:', (err as Error).message);
+      _embeddingImportFailed = true;
+    }
+    return async (_text: string) => [...ZERO_VECTOR];
   }
 }
 
@@ -663,10 +673,12 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
   const taskHash = buildTaskHash(agent.id, task_description);
   const cached = await readCache(agent.id, taskHash);
   if (cached) {
-    // Apply finalizeResults even to cached data — ensures old cache entries
-    // from before the cap was added don't bypass MAX_RESULTS.
-    const finalized = finalizeResults(cached.decisions as ScoredDecision[], agent_name, project_id, startMs);
-    return { ...cached, decisions: finalized, decisions_included: finalized.length };
+    // Return cached data directly — it was already finalized before caching.
+    // Do NOT re-run finalizeResults, which would double-normalize scores
+    // and potentially filter out decisions that originally passed MIN_SCORE.
+    const cachedDecisions = (cached.decisions ?? []) as ScoredDecision[];
+    console.log(`[decigraph/compile] agent=${agent_name} CACHE HIT decisions=${cachedDecisions.length} ms=${Date.now() - startMs}`);
+    return { ...cached, decisions: cachedDecisions, decisions_included: cachedDecisions.length };
   }
 
   let decisionQuery = `SELECT * FROM decisions WHERE project_id = ?`;
@@ -683,7 +695,16 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
   const allDecisionMap = new Map<string, Decision>(allDecisions.map((d) => [d.id, d]));
 
   const generateEmbedding = await getEmbeddingFn();
-  const taskEmbedding = await generateEmbedding(task_description);
+  let taskEmbedding: number[];
+  try {
+    taskEmbedding = await generateEmbedding(task_description);
+  } catch (err) {
+    // Graceful degradation: if embedding generation fails (API down, rate limit,
+    // network error), continue scoring without semantic similarity rather than
+    // crashing the entire compile request.
+    console.warn(`[decigraph/compile] Embedding generation failed for agent=${agent_name} — falling back to non-semantic scoring:`, (err as Error).message);
+    taskEmbedding = [...ZERO_VECTOR];
+  }
 
   const scored = allDecisions.map((d) => scoreDecision(d, agent, taskEmbedding));
 

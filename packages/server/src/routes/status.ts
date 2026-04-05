@@ -3,6 +3,20 @@ import { getDb } from '@decigraph/core/db/index.js';
 import { resolveLLMConfig } from '@decigraph/core/config/llm.js';
 
 export function registerStatusRoutes(app: Hono): void {
+  // POST /api/cache/clear — manually flush the context cache.
+  // Useful after deploys, scoring changes, or debugging scored=0 issues.
+  app.post('/api/cache/clear', async (c) => {
+    const db = getDb();
+    try {
+      const result = await db.query('DELETE FROM context_cache', []);
+      const deleted = result.rowCount ?? 0;
+      console.warn(`[decigraph] Cache cleared manually: ${deleted} entries removed`);
+      return c.json({ cleared: deleted, timestamp: new Date().toISOString() });
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 500);
+    }
+  });
+
   // /api/status — system diagnostics (separate from /api/health which load balancers use)
   app.get('/api/status', async (c) => {
     const db = getDb();
@@ -21,6 +35,23 @@ export function registerStatusRoutes(app: Hono): void {
     // Check if embeddings are configured
     const hasEmbeddings = !!(process.env.OPENAI_API_KEY || process.env.DECIGRAPH_EMBEDDINGS_URL);
 
+    // Check how many decisions have embeddings
+    let decisionsWithEmbeddings = 0;
+    try {
+      const embResult = await db.query(
+        'SELECT COUNT(*) as c FROM decisions WHERE embedding IS NOT NULL',
+        [],
+      );
+      decisionsWithEmbeddings = parseInt((embResult.rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+    } catch { /* embedding column may not exist */ }
+
+    // Check stale cache entries
+    let cacheEntries = 0;
+    try {
+      const cacheResult = await db.query('SELECT COUNT(*) as c FROM context_cache', []);
+      cacheEntries = parseInt((cacheResult.rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+    } catch { /* table may not exist */ }
+
     return c.json({
       status: 'ok',
       version: '0.1.0',
@@ -29,6 +60,8 @@ export function registerStatusRoutes(app: Hono): void {
         projects: projectCount,
         agents: agentCount,
         decisions: decisionCount,
+        decisions_with_embeddings: decisionsWithEmbeddings,
+        cache_entries: cacheEntries,
         embeddings: hasEmbeddings,
         distillery: llm.distillery?.model ?? "not configured",
       },
