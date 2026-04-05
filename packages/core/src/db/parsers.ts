@@ -14,6 +14,26 @@ import type {
   RelevanceProfile,
 } from '../types.js';
 
+/**
+ * Parse a pgvector embedding into number[].
+ * pgvector can return: string "[0.02,0.08,...]", actual number[], or undefined.
+ */
+function parseEmbedding(raw: unknown): number[] | undefined {
+  if (!raw) return undefined;
+  if (Array.isArray(raw)) {
+    return raw.length > 0 && typeof raw[0] === 'number' ? raw as number[] : undefined;
+  }
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'number') {
+        return parsed as number[];
+      }
+    } catch { /* not valid JSON */ }
+  }
+  return undefined;
+}
+
 function parseJsonb<T>(val: unknown, fallback: T): T {
   if (val === null || val === undefined) return fallback;
   if (typeof val === 'string') {
@@ -88,7 +108,7 @@ export function parseDecision(row: Record<string, unknown>): Decision {
     created_at: (row.created_at as Date).toISOString(),
     updated_at: (row.updated_at as Date).toISOString(),
     metadata: parseJsonb(row.metadata, {}),
-    embedding: row.embedding as number[] | undefined,
+    embedding: parseEmbedding(row.embedding),
   };
 }
 
@@ -119,7 +139,7 @@ export function parseArtifact(row: Record<string, unknown>): Artifact {
     created_at: (row.created_at as Date).toISOString(),
     updated_at: (row.updated_at as Date).toISOString(),
     metadata: parseJsonb(row.metadata, {}),
-    embedding: row.embedding as number[] | undefined,
+    embedding: parseEmbedding(row.embedding),
   };
 }
 
@@ -140,7 +160,7 @@ export function parseSession(row: Record<string, unknown>): SessionSummary {
     extraction_model: row.extraction_model as string | undefined,
     extraction_confidence: row.extraction_confidence as number | undefined,
     created_at: (row.created_at as Date).toISOString(),
-    embedding: row.embedding as number[] | undefined,
+    embedding: parseEmbedding(row.embedding),
   };
 }
 

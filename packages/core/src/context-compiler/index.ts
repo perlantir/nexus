@@ -156,7 +156,7 @@ function finalizeResults(
   // One-line compile trace (always-on, permanent)
   const ms = Date.now() - startMs;
   console.log(
-    `[decigraph/compile] agent=${agentName} project=${(projectId ?? '').slice(0, 8)}.. scored=${scored.length} passed=${capped.length} top=${(capped[0]?.combined_score ?? 0).toFixed(3)} ms=${ms}`,
+    `[decigraph/compile] agent=${agentName} project=${(projectId ?? '').slice(0, 8)}.. scored=${scored.length} passed=${capped.length} top=${(capped[0]?.combined_score ?? 0).toFixed(3)} semantic=${scored.filter((d) => ((d.scoring_breakdown as unknown) as Record<string, unknown>)?.semantic_similarity as number > 0).length} ms=${ms}`,
   );
 
   return capped;
@@ -212,7 +212,15 @@ export function scoreDecision(
   }
 
   // ── Signal D: Semantic Similarity ─────────────────────────────────
-  const decisionEmbedding = decision.embedding ?? [];
+  // Ensure embedding is number[] (pgvector may return string from DB)
+  let decisionEmbedding: number[] = [];
+  const rawEmb = decision.embedding as unknown;
+  if (Array.isArray(rawEmb) && rawEmb.length > 0 && typeof rawEmb[0] === 'number') {
+    decisionEmbedding = rawEmb;
+  } else if (typeof rawEmb === 'string' && String(rawEmb).startsWith('[')) {
+    try { decisionEmbedding = JSON.parse(rawEmb); } catch { /* invalid */ }
+  }
+
   const semanticScore =
     decisionEmbedding.length > 0 && taskEmbedding.length > 0
       ? Math.max(0, cosineSimilarity(taskEmbedding, decisionEmbedding))
@@ -760,14 +768,16 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
 
   // SINGLE OUTPUT FUNNEL: filter + dedupe + sort + cap
   // Every code path goes through finalizeResults — no exceptions.
-  console.log('[decigraph/compile-pre-finalize]', {
-    agent: agent_name,
-    allScored: allScored.length,
-    top5scores: allScored
-      .sort((a, b) => b.combined_score - a.combined_score)
-      .slice(0, 5)
-      .map((d) => `${d.combined_score.toFixed(3)} ${(d.title ?? '').slice(0, 40)}`),
-  });
+  // Log embedding / semantic health for this compile
+  const semanticHits = allScored.filter((d) => ((d.scoring_breakdown as unknown) as Record<string, unknown>)?.semantic_similarity as number > 0).length;
+  if (allScored.length > 0) {
+    // One-time debug: log embedding types for first decision
+    const first = allScored[0];
+    const rawType = typeof first.embedding;
+    const isArr = Array.isArray(first.embedding);
+    const embLen = isArr ? (first.embedding as number[]).length : (typeof first.embedding === 'string' ? (first.embedding as string).length : 0);
+    console.log(`[decigraph/embeddings] first_decision_embedding: type=${rawType} isArray=${isArr} len=${embLen} semanticHits=${semanticHits}/${allScored.length}`);
+  }
   const packedDecisions = finalizeResults(allScored, agent_name, project_id, startMs);
   if (packedDecisions.length === 0 && allScored.length > 0) {
     console.warn('[decigraph/compile] WARNING: finalizeResults returned 0 but allScored had', allScored.length, 'items for agent', agent_name);
