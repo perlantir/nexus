@@ -113,6 +113,7 @@ export function registerCompileRoutes(app: Hono): void {
     } : undefined;
 
     // ── Response ─────────────────────────────────────────────────────
+    console.log("[decigraph/compile-response]", { agent: agent_name, resultDecisions: (result.decisions ?? []).length, decisionsIncluded: result.decisions_included });
     return c.json({
       compile_request_id: compileRequestId,
       ...result,

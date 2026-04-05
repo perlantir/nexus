@@ -754,7 +754,19 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
 
   // SINGLE OUTPUT FUNNEL: filter + dedupe + sort + cap
   // Every code path goes through finalizeResults — no exceptions.
+  console.log('[decigraph/compile-pre-finalize]', {
+    agent: agent_name,
+    allScored: allScored.length,
+    top5scores: allScored
+      .sort((a, b) => b.combined_score - a.combined_score)
+      .slice(0, 5)
+      .map((d) => `${d.combined_score.toFixed(3)} ${(d.title ?? '').slice(0, 40)}`),
+  });
   const packedDecisions = finalizeResults(allScored, agent_name);
+  if (packedDecisions.length === 0 && allScored.length > 0) {
+    console.warn('[decigraph/compile] WARNING: finalizeResults returned 0 but allScored had', allScored.length, 'items for agent', agent_name);
+    console.warn('[decigraph/compile] Top score:', allScored[0]?.combined_score, 'MIN_SCORE:', MIN_SCORE);
+  }
 
   const packedArtifacts = packItems<ScoredArtifact>(
     scoredArtifacts,
