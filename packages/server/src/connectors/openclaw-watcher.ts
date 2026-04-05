@@ -94,8 +94,8 @@ export function startOpenClawWatcher(): boolean {
   _cursorPath = path.join(_watchPath, '.decigraph-cursor.json');
   loadCursors();
 
-  // Watch for .jsonl files
-  const globPattern = path.join(_watchPath, '**', '*.{jsonl,md}');
+  // Watch for .jsonl and .md files
+  const globPattern = path.join(_watchPath, '**', '*');
 
   try {
     watcher = chokidar.watch(globPattern, {
@@ -109,13 +109,31 @@ export function startOpenClawWatcher(): boolean {
       interval: 5000,
     });
 
-    watcher.on('add', (filePath: string) => void processFile(filePath));
-    watcher.on('change', (filePath: string) => void processFile(filePath));
+    // Debug: log ALL chokidar events so we can see what it detects
+    watcher.on('add', (filePath: string) => {
+      console.log('[openclaw] chokidar event: add', filePath);
+      if (filePath.endsWith('.jsonl') || filePath.endsWith('.md')) {
+        void processFile(filePath);
+      }
+    });
+    watcher.on('change', (filePath: string) => {
+      console.log('[openclaw] chokidar event: change', filePath);
+      if (filePath.endsWith('.jsonl') || filePath.endsWith('.md')) {
+        void processFile(filePath);
+      }
+    });
+    watcher.on('unlink', (filePath: string) => {
+      console.log('[openclaw] chokidar event: unlink', filePath);
+    });
+    watcher.on('ready', () => {
+      console.log('[openclaw] chokidar event: ready (initial scan complete)');
+    });
     watcher.on('error', (err: unknown) => {
-      console.error('[decigraph/openclaw] Watcher error:', (err as Error).message);
+      console.log('[openclaw] chokidar event: error', (err as Error).message);
     });
 
     console.warn(`[decigraph/openclaw] Watching: ${_watchPath} (project: ${_projectId.slice(0, 8)}..)`);
+    console.log(`[openclaw] glob pattern: ${globPattern}`);
     return true;
   } catch (err) {
     console.error('[decigraph/openclaw] Failed to start watcher:', (err as Error).message);
