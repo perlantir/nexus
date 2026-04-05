@@ -163,6 +163,21 @@ function finalizeResults(
     }
   }
 
+  // After normalization, ensure unique scores via micro-spread
+  if (capped.length > 1) {
+    for (let i = 1; i < capped.length; i++) {
+      if (capped[i].combined_score >= capped[i - 1].combined_score) {
+        // Use semantic_similarity to determine spread amount
+        const sem = (capped[i].scoring_breakdown as unknown as Record<string, unknown>)?.semantic_similarity as number ?? 0;
+        const prevSem = (capped[i - 1].scoring_breakdown as unknown as Record<string, unknown>)?.semantic_similarity as number ?? 0;
+        const semDiff = Math.abs(sem - prevSem);
+        // Minimum spread of 0.001, up to 0.005 based on semantic difference
+        const spread = Math.max(0.001, Math.min(0.005, semDiff * 0.02));
+        capped[i].combined_score = Math.round((capped[i - 1].combined_score - spread) * 1000) / 1000;
+      }
+    }
+  }
+
   // One-line compile trace (always-on, permanent)
   const ms = Date.now() - startMs;
   console.log(
@@ -170,6 +185,63 @@ function finalizeResults(
   );
 
   return capped;
+}
+
+// ── Conversational Explanation Generator ───────────────────────────────────
+
+function generateExplanation(
+  agentName: string,
+  decision: { made_by?: string; confidence?: string },
+  signals: {
+    directAffect: number;
+    matchedTags: string[];
+    semanticScore: number;
+    freshnessMultiplier: number;
+    keywordScore: number;
+  }
+): string {
+  const parts: string[] = [];
+
+  // Lead with strongest signal
+  if (signals.directAffect > 0) {
+    parts.push(`Assigned directly to ${agentName}`);
+  }
+
+  // Describe tags in context of the agent's role
+  if (signals.matchedTags.length > 0 && signals.directAffect > 0) {
+    parts.push(`covers ${signals.matchedTags.slice(0, 3).join(', ')} \u2014 core to your role`);
+  } else if (signals.matchedTags.length > 0) {
+    parts.push(`Relevant to your focus on ${signals.matchedTags.slice(0, 3).join(', ')}`);
+  }
+
+  // Semantic match — only if meaningful
+  if (signals.semanticScore > 0.3) {
+    parts.push('closely matches your current task');
+  } else if (signals.semanticScore > 0.15) {
+    parts.push('related to your current task');
+  }
+
+  // Attribution
+  if (decision.made_by && decision.made_by !== agentName) {
+    parts.push(`decided by ${decision.made_by}`);
+  }
+
+  // Freshness
+  if (signals.freshnessMultiplier > 1.05) {
+    parts.push('recent decision');
+  } else if (signals.freshnessMultiplier < 0.9) {
+    parts.push('older decision \u2014 may need review');
+  }
+
+  // Confidence
+  if (decision.confidence === 'low') {
+    parts.push('low confidence \u2014 verify before acting');
+  }
+
+  // Fallback
+  if (parts.length === 0) parts.push('Matches general project context');
+
+  return parts.join('. ').replace(/^./, c => c.toUpperCase()) + '.';
 }
 
 export function scoreDecision(
@@ -300,24 +372,22 @@ export function scoreDecision(
   finalScore = Math.max(0, Math.min(1.0, finalScore));
 
   // ── Build human-readable explanation ────────────────────────────────
-  const explanations: string[] = [];
-  if (directAffectScore > 0) explanations.push(`Directly affects ${agentNameLower}`);
-  if (tagMatchScore > 0) {
-    const matchedTags = decisionTags.filter((t) => profileWeights[t] !== undefined);
-    explanations.push(`Tags ${matchedTags.slice(0, 3).join(', ')} match your focus`);
-  }
-  if (personaMatchScore > 0 && persona) {
-    const matched = persona.primaryTags.filter((t) => decisionTags.includes(t));
-    explanations.push(`Persona match: ${matched.slice(0, 3).join(', ')}`);
-  }
-  if (keywordScore > 0) explanations.push(`Keyword hits in title/description`);
-  if (madeByBonus > 0) explanations.push(`Made by ${(decision.made_by ?? '').toLowerCase()} (+bonus)`);
-  if (excludePenalty > 0) explanations.push(`Cross-domain penalty (-${excludePenalty.toFixed(2)})`);
-  if (Math.abs(freshnessMultiplier - 1.0) > 0.01) {
-    explanations.push(freshnessMultiplier > 1.0 ? `Recent decision (x${freshnessMultiplier.toFixed(2)})` : `Older decision (x${freshnessMultiplier.toFixed(2)})`);
-  }
-  if (semanticScore > 0) explanations.push(`Semantic similarity (${semanticScore.toFixed(2)})`);
-  const explanation = explanations.join('. ') + '.';
+  // Collect matched tags (union of profile weight matches + persona primaryTag matches)
+  const profileMatchedTags = decisionTags.filter((t) => profileWeights[t] !== undefined);
+  const personaMatchedTags = persona ? persona.primaryTags.filter((t) => decisionTags.includes(t)) : [];
+  const allMatchedTags = [...new Set([...profileMatchedTags, ...personaMatchedTags])];
+
+  const explanation = generateExplanation(
+    agent.name,
+    { made_by: decision.made_by, confidence: decision.confidence },
+    {
+      directAffect: directAffectScore,
+      matchedTags: allMatchedTags,
+      semanticScore,
+      freshnessMultiplier,
+      keywordScore,
+    },
+  );
 
   const statusPenaltyVal = decision.status === 'superseded' ? 0.4 : decision.status === 'pending' ? 0.6 : 1.0;
 
