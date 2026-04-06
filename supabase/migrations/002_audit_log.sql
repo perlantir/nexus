@@ -3,7 +3,7 @@
 -- ============================================================
 -- AUDIT LOG
 -- ============================================================
-CREATE TABLE audit_log (
+CREATE TABLE IF NOT EXISTS audit_log (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   event_type TEXT NOT NULL,
   agent_id UUID,
@@ -13,13 +13,13 @@ CREATE TABLE audit_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_project ON audit_log(project_id, created_at DESC);
-CREATE INDEX idx_audit_type ON audit_log(event_type);
+CREATE INDEX IF NOT EXISTS idx_audit_project ON audit_log(project_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_type ON audit_log(event_type);
 
 -- ============================================================
 -- API KEYS
 -- ============================================================
-CREATE TABLE api_keys (
+CREATE TABLE IF NOT EXISTS api_keys (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   key_hash TEXT NOT NULL UNIQUE,
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,

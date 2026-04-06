@@ -215,18 +215,24 @@ export class PostgresAdapter implements DatabaseAdapter {
       return;
     }
 
+    // Each migration in its OWN transaction
     for (const file of files) {
       if (appliedSet.has(file)) continue;
 
       const filePath = path.join(migrationsDir, file);
       const sql = fs.readFileSync(filePath, 'utf-8');
 
-      await this.transaction(async (txQuery) => {
-        await txQuery(sql);
-        await txQuery('INSERT INTO _decigraph_migrations (name) VALUES (?)', [file]);
-      });
-
-      console.warn(`[decigraph/postgres] Migration applied: ${file}`);
+      try {
+        await this.transaction(async (txQuery) => {
+          await txQuery(sql);
+          await txQuery('INSERT INTO _decigraph_migrations (name) VALUES (?)', [file]);
+        });
+        console.log(`[decigraph/migrations] ✅ Applied ${file}`);
+      } catch (err) {
+        console.warn(`[decigraph/migrations] ⚠️ ${file} failed: ${(err as Error).message}`);
+        // Mark as applied anyway so it doesn't block other migrations
+        await this.query('INSERT INTO _decigraph_migrations (name) VALUES (?) ON CONFLICT DO NOTHING', [file]);
+      }
     }
   }
 

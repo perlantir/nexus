@@ -780,7 +780,8 @@ export function registerDecisionRoutes(app: Hono): void {
       `SELECT d.*, orig.title as duplicate_of_title
        FROM decisions d
        JOIN decisions orig ON orig.id = d.potential_duplicate_of
-       WHERE d.project_id = ? AND d.potential_duplicate_of IS NOT NULL`,
+       WHERE d.project_id = ? AND d.potential_duplicate_of IS NOT NULL
+       LIMIT 50`,
       [projectId],
     );
 

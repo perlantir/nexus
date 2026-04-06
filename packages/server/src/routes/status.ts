@@ -94,7 +94,7 @@ export function registerStatusRoutes(app: Hono): void {
 
     return c.json({
       status: 'ok',
-      version: '0.2.0',
+      version: '0.3.0',
       timestamp: new Date().toISOString(),
       system: {
         projects: projectCount,

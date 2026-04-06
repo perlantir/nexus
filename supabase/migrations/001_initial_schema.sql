@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ============================================================
 -- PROJECTS
 -- ============================================================
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   description TEXT,
@@ -20,7 +20,7 @@ CREATE TABLE projects (
 -- ============================================================
 -- AGENTS
 -- ============================================================
-CREATE TABLE agents (
+CREATE TABLE IF NOT EXISTS agents (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE agents (
 -- ============================================================
 -- DECISIONS (graph nodes)
 -- ============================================================
-CREATE TABLE decisions (
+CREATE TABLE IF NOT EXISTS decisions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -62,19 +62,19 @@ CREATE TABLE decisions (
   embedding vector(1536)
 );
 
-CREATE INDEX idx_decisions_project ON decisions(project_id);
-CREATE INDEX idx_decisions_status ON decisions(status);
-CREATE INDEX idx_decisions_made_by ON decisions(made_by);
-CREATE INDEX idx_decisions_created ON decisions(created_at DESC);
-CREATE INDEX idx_decisions_tags ON decisions USING GIN(tags);
-CREATE INDEX idx_decisions_affects ON decisions USING GIN(affects);
-CREATE INDEX idx_decisions_embedding ON decisions
+CREATE INDEX IF NOT EXISTS idx_decisions_project ON decisions(project_id);
+CREATE INDEX IF NOT EXISTS idx_decisions_status ON decisions(status);
+CREATE INDEX IF NOT EXISTS idx_decisions_made_by ON decisions(made_by);
+CREATE INDEX IF NOT EXISTS idx_decisions_created ON decisions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_decisions_tags ON decisions USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_decisions_affects ON decisions USING GIN(affects);
+CREATE INDEX IF NOT EXISTS idx_decisions_embedding ON decisions
   USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
 
 -- ============================================================
 -- DECISION EDGES (graph relationships)
 -- ============================================================
-CREATE TABLE decision_edges (
+CREATE TABLE IF NOT EXISTS decision_edges (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   source_id UUID NOT NULL REFERENCES decisions(id) ON DELETE CASCADE,
   target_id UUID NOT NULL REFERENCES decisions(id) ON DELETE CASCADE,
@@ -92,7 +92,7 @@ CREATE TABLE decision_edges (
 -- ============================================================
 -- ARTIFACTS
 -- ============================================================
-CREATE TABLE artifacts (
+CREATE TABLE IF NOT EXISTS artifacts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -111,13 +111,13 @@ CREATE TABLE artifacts (
   embedding vector(1536)
 );
 
-CREATE INDEX idx_artifacts_embedding ON artifacts
+CREATE INDEX IF NOT EXISTS idx_artifacts_embedding ON artifacts
   USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
 
 -- ============================================================
 -- SESSION SUMMARIES
 -- ============================================================
-CREATE TABLE session_summaries (
+CREATE TABLE IF NOT EXISTS session_summaries (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   agent_name TEXT NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE session_summaries (
 -- ============================================================
 -- SUBSCRIPTIONS (who cares about what)
 -- ============================================================
-CREATE TABLE subscriptions (
+CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
   topic TEXT NOT NULL,
@@ -152,7 +152,7 @@ CREATE TABLE subscriptions (
 -- ============================================================
 -- NOTIFICATIONS
 -- ============================================================
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
   decision_id UUID REFERENCES decisions(id) ON DELETE SET NULL,
@@ -171,7 +171,7 @@ CREATE TABLE notifications (
 -- ============================================================
 -- CONTEXT CACHE
 -- ============================================================
-CREATE TABLE context_cache (
+CREATE TABLE IF NOT EXISTS context_cache (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
   task_hash TEXT NOT NULL,
@@ -187,7 +187,7 @@ CREATE TABLE context_cache (
 -- ============================================================
 -- RELEVANCE FEEDBACK (for evolving scoring weights)
 -- ============================================================
-CREATE TABLE relevance_feedback (
+CREATE TABLE IF NOT EXISTS relevance_feedback (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
   decision_id UUID NOT NULL REFERENCES decisions(id) ON DELETE CASCADE,
@@ -197,13 +197,13 @@ CREATE TABLE relevance_feedback (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_feedback_agent ON relevance_feedback(agent_id);
-CREATE INDEX idx_feedback_decision ON relevance_feedback(decision_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_agent ON relevance_feedback(agent_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_decision ON relevance_feedback(decision_id);
 
 -- ============================================================
 -- CONTRADICTIONS
 -- ============================================================
-CREATE TABLE contradictions (
+CREATE TABLE IF NOT EXISTS contradictions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   decision_a_id UUID NOT NULL REFERENCES decisions(id) ON DELETE CASCADE,

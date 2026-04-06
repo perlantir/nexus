@@ -113,7 +113,25 @@ async function main() {
   }
 
   // Log contradiction detection
-  console.warn('[decigraph] Contradiction detection: enabled (semantic threshold: 0.75)');
+  console.warn('[decigraph] Contradiction detection: enabled (semantic threshold: 0.40)');
+
+  // Staleness cron — run on startup + every 24 hours
+  const runStalenessCheck = async () => {
+    try {
+      const { markStaleDecisions } = await import('@decigraph/core/intelligence/staleness-tracker.js');
+      const stalDb = (await import('@decigraph/core/db/index.js')).getDb();
+      const result = await stalDb.query('SELECT id FROM projects', []);
+      for (const row of result.rows) {
+        const projectId = (row as Record<string, unknown>).id as string;
+        await markStaleDecisions(projectId);
+      }
+      console.log('[decigraph/staleness] Staleness check completed');
+    } catch (err) {
+      console.warn('[decigraph/staleness] Check failed:', (err as Error).message);
+    }
+  };
+  void runStalenessCheck();
+  setInterval(() => void runStalenessCheck(), 24 * 60 * 60 * 1000);
 
   const app = createApp();
 

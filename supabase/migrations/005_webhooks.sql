@@ -1,7 +1,7 @@
 -- Webhook configuration
 -- Depends on: 001_initial_schema.sql (projects table, update_updated_at() function)
 
-CREATE TABLE webhook_configs (
+CREATE TABLE IF NOT EXISTS webhook_configs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -17,8 +17,9 @@ CREATE TABLE webhook_configs (
   CONSTRAINT uq_webhook_name_per_project UNIQUE(project_id, name)
 );
 
-CREATE INDEX idx_webhook_configs_project ON webhook_configs(project_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_configs_project ON webhook_configs(project_id);
 
+DROP TRIGGER IF EXISTS trg_webhook_configs_updated ON webhook_configs;
 CREATE TRIGGER trg_webhook_configs_updated
   BEFORE UPDATE ON webhook_configs
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
