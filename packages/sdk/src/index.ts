@@ -1,4 +1,6 @@
 export { DeciGraphClient } from './client.js';
+export { DeciGraph } from './facade.js';
+export type { DeciGraphConfig, CompileOptions, AddDecisionOptions, SearchOptions } from './facade.js';
 
 export type {
   // Client options

@@ -9,6 +9,7 @@ import { handleExtractionJob } from './queue/extraction-worker.js';
 import { handleIngestionJob } from './queue/ingestion-worker.js';
 import { startTelegramBot, stopTelegramBot, handleTelegramNotification } from './connectors/telegram.js';
 import { startOpenClawWatcher, stopOpenClawWatcher } from './connectors/openclaw-watcher.js';
+import { registerGitHubWebhook } from './connectors/github.js';
 import type { NotificationJobData } from './queue/index.js';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -113,6 +114,12 @@ async function main() {
   console.warn('[decigraph] Contradiction detection: enabled (semantic threshold: 0.75)');
 
   const app = createApp();
+
+  // ── Register GitHub PR webhook ──────────────────────────────────────────
+  registerGitHubWebhook(app);
+  if (process.env.DECIGRAPH_GITHUB_WEBHOOK_SECRET) {
+    console.warn('[decigraph] GitHub PR webhook: active');
+  }
 
   // Serve the dashboard static files when they are available (non-Docker mode).
   const dashboardDist = resolveDashboardPath();

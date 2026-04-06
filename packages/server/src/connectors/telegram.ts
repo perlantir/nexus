@@ -7,6 +7,8 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { submitForExtraction } from '../queue/index.js';
 import type { NotificationJobData } from '../queue/index.js';
+import { getDb } from '@decigraph/core/db/index.js';
+import { callLLM } from '@decigraph/core/distillery/index.js';
 
 // ── Decision pattern matching ──────────────────────────────────────────────
 
@@ -115,6 +117,111 @@ export function startTelegramBot(): boolean {
     } catch (err) {
       console.error('[decigraph/telegram] Error handling /decision command:', (err as Error).message);
     }
+  });
+
+  // Handle /ask command — Ask Anything (uses Opus)
+  bot.onText(/^\/ask\s+(.+)/s, async (msg, match) => {
+    if (!match?.[1]) return;
+    const chatId = String(msg.chat.id);
+    if (_allowedChatIds.size > 0 && !_allowedChatIds.has(chatId)) return;
+    if (msg.from?.is_bot) return;
+
+    try {
+      const question = match[1].trim();
+      await bot!.sendMessage(msg.chat.id, '🤔 Thinking...', { reply_to_message_id: msg.message_id });
+
+      // Use Ask Anything — call LLM for synthesis
+      const db = getDb();
+      const result = await db.query(
+        'SELECT title, description, made_by, tags FROM decisions WHERE project_id = ? AND status != ? ORDER BY created_at DESC LIMIT 20',
+        [_projectId, 'superseded'],
+      );
+      const decisions = result.rows as Array<Record<string, unknown>>;
+      const decisionContext = decisions.map((d, i) =>
+        `${i + 1}. "${d.title}" — ${d.description ?? ''} (by ${d.made_by ?? 'unknown'})`
+      ).join('\n');
+
+      const answer = await callLLM(
+        'You are a decision memory assistant. Answer the question using only the provided decisions. Be concise (2-4 sentences). No markdown.',
+        `Question: ${question}\n\nDecisions:\n${decisionContext}`,
+      );
+
+      await bot!.sendMessage(msg.chat.id, answer || 'No relevant decisions found.', {
+        reply_to_message_id: msg.message_id,
+      });
+    } catch (err) {
+      console.error('[decigraph/telegram] /ask error:', (err as Error).message);
+      try {
+        await bot!.sendMessage(msg.chat.id, '❌ Failed to process question.', { reply_to_message_id: msg.message_id });
+      } catch { /* ignore */ }
+    }
+  });
+
+  // Handle /status command
+  bot.onText(/^\/status$/, async (msg) => {
+    const chatId = String(msg.chat.id);
+    if (_allowedChatIds.size > 0 && !_allowedChatIds.has(chatId)) return;
+
+    try {
+      const db = getDb();
+      const [decResult, agentResult] = await Promise.all([
+        db.query('SELECT count(*) as c FROM decisions WHERE project_id = ?', [_projectId]),
+        db.query('SELECT count(*) as c FROM agents WHERE project_id = ?', [_projectId]),
+      ]);
+      const decCount = parseInt((decResult.rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+      const agentCount = parseInt((agentResult.rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+
+      await bot!.sendMessage(msg.chat.id, `📊 DeciGraph: ${decCount} decisions, ${agentCount} agents, watcher active`);
+    } catch (err) {
+      console.error('[decigraph/telegram] /status error:', (err as Error).message);
+    }
+  });
+
+  // Handle /recent command — show last 5 decisions
+  bot.onText(/^\/recent$/, async (msg) => {
+    const chatId = String(msg.chat.id);
+    if (_allowedChatIds.size > 0 && !_allowedChatIds.has(chatId)) return;
+
+    try {
+      const db = getDb();
+      const result = await db.query(
+        'SELECT title, made_by, created_at FROM decisions WHERE project_id = ? ORDER BY created_at DESC LIMIT 5',
+        [_projectId],
+      );
+      const decisions = result.rows as Array<Record<string, unknown>>;
+
+      if (decisions.length === 0) {
+        await bot!.sendMessage(msg.chat.id, 'No decisions recorded yet.');
+        return;
+      }
+
+      const lines = decisions.map((d) => {
+        const date = new Date(d.created_at as string).toLocaleDateString();
+        return `• ${d.title} (${d.made_by}, ${date})`;
+      });
+
+      await bot!.sendMessage(msg.chat.id, `📋 Recent decisions:\n\n${lines.join('\n')}`);
+    } catch (err) {
+      console.error('[decigraph/telegram] /recent error:', (err as Error).message);
+    }
+  });
+
+  // Handle /help command
+  bot.onText(/^\/help$/, async (msg) => {
+    const chatId = String(msg.chat.id);
+    if (_allowedChatIds.size > 0 && !_allowedChatIds.has(chatId)) return;
+
+    await bot!.sendMessage(msg.chat.id, [
+      '📖 DeciGraph Bot Commands:',
+      '',
+      '/decision <text> — Record a decision',
+      '/ask <question> — Ask about decisions',
+      '/status — Show system info',
+      '/recent — Show last 5 decisions',
+      '/help — Show this message',
+      '',
+      'I also listen for decision language in regular messages (50+ chars).',
+    ].join('\n'));
   });
 
   bot.on('polling_error', (err) => {

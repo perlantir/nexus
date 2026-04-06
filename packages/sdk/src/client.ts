@@ -300,6 +300,20 @@ export class DeciGraphClient {
     return this.patch<Contradiction>(`/api/contradictions/${id}`, input);
   }
 
+  // Ask Anything
+
+  ask(
+    projectId: string,
+    question: string,
+    agentName?: string,
+  ): Promise<{ answer: string; sources: Array<{ id: string; title: string; score: number }>; tokens_used: number }> {
+    return this.post('/api/distill/ask', {
+      project_id: projectId,
+      question,
+      agent_name: agentName,
+    });
+  }
+
   // Feedback
 
   recordFeedback(input: CreateFeedbackInput): Promise<RelevanceFeedback> {

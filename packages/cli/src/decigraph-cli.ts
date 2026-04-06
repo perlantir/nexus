@@ -10,6 +10,7 @@ import { registerNotificationCommands } from './commands/notifications.js';
 import { registerStatusCommands } from './commands/status.js';
 import { registerServerCommands } from './commands/server.js';
 import { registerExportImportCommands } from './commands/export-import.js';
+import { registerShortcutCommands } from './commands/shortcuts.js';
 
 const program = new Command();
 
@@ -18,6 +19,10 @@ program
   .description('DeciGraph — AI team memory, decision tracking, and context compilation')
   .version('0.1.0');
 
+// Top-level shortcut commands (add, ask, search, list)
+registerShortcutCommands(program);
+
+// Full command groups
 registerInitCommand(program);
 registerDecisionCommands(program);
 registerCompileCommand(program);
