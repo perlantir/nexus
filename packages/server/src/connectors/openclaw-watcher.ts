@@ -1,17 +1,19 @@
 /**
  * OpenClaw Session Auto-Discovery Connector.
  *
- * Watches the OpenClaw workspace directory for new/modified JSONL session files.
- * When an agent completes a task, extracts decisions from the session transcript.
+ * Polls the OpenClaw workspace directory for new/modified .jsonl and .md
+ * session files using fs.statSync mtime comparison. No inotify, no chokidar —
+ * works reliably inside Docker bind mounts where host-side changes are
+ * invisible to inotify/kqueue watchers.
  *
  * Directory layout: /data/.openclaw/workspace-<agentname>/session-*.jsonl
  */
-import chokidar from 'chokidar';
 import fs from 'node:fs';
 import path from 'node:path';
 import { submitForExtraction } from '../queue/index.js';
 
-// Re-use the same decision patterns from telegram connector
+// ── Decision pattern matching ──────────────────────────────────────────────
+
 const DECISION_PATTERNS: RegExp[] = [
   /\bdecision\s*:/i,
   /\bwe decided\b/i,
@@ -32,11 +34,10 @@ function matchesDecisionPattern(text: string): boolean {
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-interface CursorData {
-  [filePath: string]: {
-    offset: number;
-    last_processed: string;
-  };
+interface CursorEntry {
+  offset: number;
+  mtime: number;
+  last_processed: string;
 }
 
 interface JsonlMessage {
@@ -48,23 +49,26 @@ interface JsonlMessage {
 
 // ── State ──────────────────────────────────────────────────────────────────
 
-let watcher: ReturnType<typeof chokidar.watch> | null = null;
+let _pollTimer: ReturnType<typeof setInterval> | null = null;
 let _watchPath = '';
 let _projectId = '';
 let _cursorPath = '';
-let _cursors: CursorData = {};
+const _cursors = new Map<string, CursorEntry>();
 let _filesTracked = 0;
 let _decisionsCaptured = 0;
+let _polling = false; // Guard against overlapping polls
+
+const POLL_INTERVAL = 10_000; // 10 seconds
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
 export function isOpenClawWatching(): boolean {
-  return watcher !== null;
+  return _pollTimer !== null;
 }
 
 export function getOpenClawStatus(): Record<string, unknown> {
   return {
-    watching: watcher !== null,
+    watching: _pollTimer !== null,
     path: _watchPath || null,
     files_tracked: _filesTracked,
     decisions_captured: _decisionsCaptured,
@@ -72,7 +76,7 @@ export function getOpenClawStatus(): Record<string, unknown> {
 }
 
 /**
- * Start watching the OpenClaw workspace for JSONL session files.
+ * Start polling the OpenClaw workspace for session files.
  */
 export function startOpenClawWatcher(): boolean {
   _watchPath = process.env.DECIGRAPH_OPENCLAW_PATH ?? process.env.DECIGRAPH_WATCH_DIR ?? '';
@@ -90,127 +94,104 @@ export function startOpenClawWatcher(): boolean {
     return false;
   }
 
-  // Load cursor state
+  // Verify directory exists
+  if (!fs.existsSync(_watchPath)) {
+    console.error(`[decigraph/openclaw] Watch path does not exist: ${_watchPath}`);
+    return false;
+  }
+
+  // Load cursor state from disk
   _cursorPath = path.join(_watchPath, '.decigraph-cursor.json');
   loadCursors();
 
-  // Watch for .jsonl and .md files
-  const globPattern = path.join(_watchPath, '**', '*');
+  // Count workspace dirs for startup log
+  const workspaceDirs = listWorkspaceDirs();
 
-  try {
-    watcher = chokidar.watch(globPattern, {
-      persistent: true,
-      ignoreInitial: false, // Process existing files on startup (from cursor)
-      awaitWriteFinish: {
-        stabilityThreshold: 2000,
-        pollInterval: 500,
-      },
-      usePolling: true, // More reliable in Docker/NFS
-      interval: 5000,
-    });
+  _pollTimer = setInterval(() => void pollOnce(), POLL_INTERVAL);
 
-    // Debug: log ALL chokidar events so we can see what it detects
-    watcher.on('add', (filePath: string) => {
-      console.log('[openclaw] chokidar event: add', filePath);
-      if (filePath.endsWith('.jsonl') || filePath.endsWith('.md')) {
-        void processFile(filePath);
-      }
-    });
-    watcher.on('change', (filePath: string) => {
-      console.log('[openclaw] chokidar event: change', filePath);
-      if (filePath.endsWith('.jsonl') || filePath.endsWith('.md')) {
-        void processFile(filePath);
-      }
-    });
-    watcher.on('unlink', (filePath: string) => {
-      console.log('[openclaw] chokidar event: unlink', filePath);
-    });
-    watcher.on('ready', () => {
-      console.log('[openclaw] chokidar event: ready (initial scan complete)');
-    });
-    watcher.on('error', (err: unknown) => {
-      console.log('[openclaw] chokidar event: error', (err as Error).message);
-    });
+  // Run first poll immediately
+  void pollOnce();
 
-    console.warn(`[decigraph/openclaw] Watching: ${_watchPath} (project: ${_projectId.slice(0, 8)}..)`);
-    console.log(`[openclaw] glob pattern: ${globPattern}`);
-    return true;
-  } catch (err) {
-    console.error('[decigraph/openclaw] Failed to start watcher:', (err as Error).message);
-    return false;
-  }
+  console.warn(`[decigraph/openclaw] Polling: ${_watchPath} (${workspaceDirs.length} workspace dirs, interval: ${POLL_INTERVAL / 1000}s)`);
+  return true;
 }
 
 /**
- * Stop the file watcher.
+ * Stop the polling loop.
  */
 export async function stopOpenClawWatcher(): Promise<void> {
-  if (watcher) {
-    await watcher.close();
-    watcher = null;
+  if (_pollTimer) {
+    clearInterval(_pollTimer);
+    _pollTimer = null;
     saveCursors();
     console.warn('[decigraph/openclaw] Watcher stopped');
   }
 }
 
-// ── Internal ───────────────────────────────────────────────────────────────
+// ── Polling loop ───────────────────────────────────────────────────────────
 
 /**
- * Extract agent name from directory path.
- * OpenClaw workspace: /data/.openclaw/workspace-<agentname>/session.jsonl
+ * List all workspace-* directories under the watch path.
  */
-function extractAgentName(filePath: string): string {
-  const parts = filePath.split(path.sep);
-  for (const part of parts) {
-    const match = part.match(/^workspace-(.+)$/);
-    if (match?.[1]) return match[1];
-  }
-  // Fallback: use parent directory name
-  const parent = path.basename(path.dirname(filePath));
-  return parent.replace(/^workspace-/, '') || 'unknown';
-}
-
-/**
- * Get the relative path key for cursor tracking.
- */
-function cursorKey(filePath: string): string {
-  return path.relative(_watchPath, filePath);
-}
-
-/**
- * Load cursor state from disk.
- */
-function loadCursors(): void {
+function listWorkspaceDirs(): string[] {
   try {
-    if (fs.existsSync(_cursorPath)) {
-      const raw = fs.readFileSync(_cursorPath, 'utf-8');
-      _cursors = JSON.parse(raw) as CursorData;
-      _filesTracked = Object.keys(_cursors).length;
+    const entries = fs.readdirSync(_watchPath, { withFileTypes: true });
+    return entries
+      .filter((e) => e.isDirectory() && e.name.startsWith('workspace-'))
+      .map((e) => path.join(_watchPath, e.name));
+  } catch (err) {
+    console.warn('[decigraph/openclaw] Failed to list workspace dirs:', (err as Error).message);
+    return [];
+  }
+}
+
+/**
+ * List .jsonl and .md files in a directory (non-recursive, single level).
+ */
+function listSessionFiles(dirPath: string): string[] {
+  try {
+    const entries = fs.readdirSync(dirPath);
+    return entries
+      .filter((name) => name.endsWith('.jsonl') || name.endsWith('.md'))
+      .map((name) => path.join(dirPath, name));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Single poll iteration — scan all workspace dirs for new/modified files.
+ */
+async function pollOnce(): Promise<void> {
+  if (_polling) return; // Skip if previous poll is still running
+  _polling = true;
+
+  try {
+    const workspaceDirs = listWorkspaceDirs();
+    let trackedCount = 0;
+
+    for (const dir of workspaceDirs) {
+      const files = listSessionFiles(dir);
+      trackedCount += files.length;
+
+      for (const filePath of files) {
+        await checkAndProcessFile(filePath);
+      }
     }
+
+    _filesTracked = trackedCount;
   } catch (err) {
-    console.warn('[decigraph/openclaw] Failed to load cursors:', (err as Error).message);
-    _cursors = {};
+    console.error('[decigraph/openclaw] Poll error:', (err as Error).message);
+  } finally {
+    _polling = false;
   }
 }
 
 /**
- * Save cursor state to disk.
+ * Check a single file for new content by comparing mtime and offset.
  */
-function saveCursors(): void {
-  try {
-    fs.writeFileSync(_cursorPath, JSON.stringify(_cursors, null, 2), 'utf-8');
-  } catch (err) {
-    console.warn('[decigraph/openclaw] Failed to save cursors:', (err as Error).message);
-  }
-}
-
-/**
- * Process a JSONL file — read from last cursor position, extract decisions.
- */
-async function processFile(filePath: string): Promise<void> {
-  const key = cursorKey(filePath);
-  const cursor = _cursors[key];
-  const startOffset = cursor?.offset ?? 0;
+async function checkAndProcessFile(filePath: string): Promise<void> {
+  const key = path.relative(_watchPath, filePath);
 
   let stat: fs.Stats;
   try {
@@ -219,21 +200,40 @@ async function processFile(filePath: string): Promise<void> {
     return; // File gone
   }
 
-  // No new content since last cursor
-  if (stat.size <= startOffset) return;
+  const cursor = _cursors.get(key);
+  const lastMtime = cursor?.mtime ?? 0;
+  const lastOffset = cursor?.offset ?? 0;
+  const currentMtime = stat.mtimeMs;
 
-  // Read new content from cursor position
+  // Skip if file hasn't been modified since last check
+  if (currentMtime <= lastMtime && stat.size <= lastOffset) return;
+
+  // Skip if no new bytes
+  if (stat.size <= lastOffset) {
+    // mtime changed but size didn't — update mtime cursor only
+    _cursors.set(key, {
+      offset: lastOffset,
+      mtime: currentMtime,
+      last_processed: new Date().toISOString(),
+    });
+    return;
+  }
+
+  // Read new content from last offset
+  const newBytes = stat.size - lastOffset;
   let newContent: string;
   try {
     const fd = fs.openSync(filePath, 'r');
-    const buffer = Buffer.alloc(stat.size - startOffset);
-    fs.readSync(fd, buffer, 0, buffer.length, startOffset);
+    const buffer = Buffer.alloc(newBytes);
+    fs.readSync(fd, buffer, 0, newBytes, lastOffset);
     fs.closeSync(fd);
     newContent = buffer.toString('utf-8');
   } catch (err) {
     console.warn(`[decigraph/openclaw] Failed to read ${key}:`, (err as Error).message);
     return;
   }
+
+  console.log(`[decigraph/openclaw] New content in ${key} (${newBytes} bytes)`);
 
   const agentName = extractAgentName(filePath);
   const lines = newContent.split('\n').filter((l) => l.trim());
@@ -275,20 +275,72 @@ async function processFile(filePath: string): Promise<void> {
     });
 
     decisionsFound++;
+
+    // Log decision capture with title snippet
+    const snippet = textContent.slice(0, 80).replace(/\n/g, ' ');
+    console.log(`[decigraph/openclaw] Decision captured from ${agentName}: "${snippet}"`);
   }
-
-  // Update cursor
-  _cursors[key] = {
-    offset: stat.size,
-    last_processed: new Date().toISOString(),
-  };
-  _filesTracked = Object.keys(_cursors).length;
-
-  // Save cursors periodically (every file processed)
-  saveCursors();
 
   if (decisionsFound > 0) {
     _decisionsCaptured += decisionsFound;
-    console.log(`[decigraph/openclaw] ${key}: ${decisionsFound} potential decisions found (agent=${agentName})`);
+  }
+
+  // Update cursor
+  _cursors.set(key, {
+    offset: stat.size,
+    mtime: currentMtime,
+    last_processed: new Date().toISOString(),
+  });
+
+  // Flush cursors to disk after processing
+  saveCursors();
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Extract agent name from directory path.
+ * workspace-<agentname>/session.jsonl → agentname
+ */
+function extractAgentName(filePath: string): string {
+  const parts = filePath.split(path.sep);
+  for (const part of parts) {
+    const match = part.match(/^workspace-(.+)$/);
+    if (match?.[1]) return match[1];
+  }
+  const parent = path.basename(path.dirname(filePath));
+  return parent.replace(/^workspace-/, '') || 'unknown';
+}
+
+/**
+ * Load cursor state from disk into the in-memory Map.
+ */
+function loadCursors(): void {
+  try {
+    if (fs.existsSync(_cursorPath)) {
+      const raw = fs.readFileSync(_cursorPath, 'utf-8');
+      const data = JSON.parse(raw) as Record<string, CursorEntry>;
+      for (const [key, entry] of Object.entries(data)) {
+        _cursors.set(key, entry);
+      }
+      _filesTracked = _cursors.size;
+    }
+  } catch (err) {
+    console.warn('[decigraph/openclaw] Failed to load cursors:', (err as Error).message);
+  }
+}
+
+/**
+ * Flush in-memory cursor Map to disk.
+ */
+function saveCursors(): void {
+  try {
+    const obj: Record<string, CursorEntry> = {};
+    for (const [key, entry] of _cursors.entries()) {
+      obj[key] = entry;
+    }
+    fs.writeFileSync(_cursorPath, JSON.stringify(obj, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('[decigraph/openclaw] Failed to save cursors:', (err as Error).message);
   }
 }

@@ -31,7 +31,6 @@
     "@decigraph/core": "workspace:*",
     "@hono/node-server": "^1.13.0",
     "bullmq": "^5.73.0",
-    "chokidar": "^5.0.0",
     "hono": "^4.6.0",
     "ioredis": "^5.10.1",
     "node-telegram-bot-api": "^0.67.0",
