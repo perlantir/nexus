@@ -1,11 +1,52 @@
 /**
  * Ingestion Worker — validates, generates embedding, deduplicates, and inserts
  * a structured decision into the database.
+ *
+ * Key fix: The decisions table has:
+ *   source TEXT CHECK (source IN ('manual', 'auto_distilled', 'imported'))
+ *   source_session_id UUID
+ *
+ * Connectors pass source='openclaw'/'telegram' (invalid for CHECK) and
+ * source_session_id='workspace-maks/test.jsonl:1' (not a UUID).
+ * We map these to valid DB values and store the original source info
+ * in a metadata-enriched description.
  */
 import { getDb } from '@decigraph/core/db/index.js';
 import { generateEmbedding } from '@decigraph/core/decision-graph/embeddings.js';
+import crypto from 'node:crypto';
 import type { IngestionJobData, NotificationJobData } from './index.js';
 import { addNotificationJob } from './index.js';
+
+/**
+ * Generate a deterministic UUID v5 from a string.
+ * Used to convert source_session_id strings to valid UUIDs for dedupe.
+ */
+function deterministicUUID(input: string): string {
+  const hash = crypto.createHash('sha256').update(input).digest('hex');
+  // Format as UUID: 8-4-4-4-12
+  return [
+    hash.slice(0, 8),
+    hash.slice(8, 12),
+    '4' + hash.slice(13, 16), // Version 4
+    ((parseInt(hash.slice(16, 18), 16) & 0x3f) | 0x80).toString(16) + hash.slice(18, 20), // Variant
+    hash.slice(20, 32),
+  ].join('-');
+}
+
+/**
+ * Map connector source names to valid DB CHECK values.
+ */
+function mapSourceForDB(source: string): string {
+  switch (source) {
+    case 'openclaw':
+    case 'telegram':
+      return 'auto_distilled';
+    case 'api':
+      return 'manual';
+    default:
+      return 'auto_distilled';
+  }
+}
 
 /**
  * Process ingestion job: embed, dedupe, insert.
@@ -13,17 +54,25 @@ import { addNotificationJob } from './index.js';
 export async function handleIngestionJob(data: IngestionJobData): Promise<void> {
   const db = getDb();
 
-  console.log(`[decigraph/ingestion] Processing: "${data.title}" source=${data.source} by=${data.made_by}`);
+  // Map source to DB-valid value (CHECK constraint: manual, auto_distilled, imported)
+  const dbSource = mapSourceForDB(data.source);
 
-  // ── Dedupe check by source_session_id ────────────────────────────────────
-  if (data.source_session_id) {
+  // Convert source_session_id to a valid UUID for the DB column
+  const dbSessionId = data.source_session_id
+    ? deterministicUUID(data.source_session_id)
+    : null;
+
+  console.log(`[decigraph/ingestion] Processing: "${data.title}" source=${data.source}→${dbSource} by=${data.made_by} project=${data.project_id.slice(0, 8)}..`);
+
+  // ── Dedupe check by deterministic UUID ───────────────────────────────────
+  if (dbSessionId) {
     try {
       const existing = await db.query(
         'SELECT id FROM decisions WHERE source_session_id = ? LIMIT 1',
-        [data.source_session_id],
+        [dbSessionId],
       );
       if (existing.rows.length > 0) {
-        console.log(`[decigraph/ingestion] Duplicate skipped: source_session_id=${data.source_session_id}`);
+        console.log(`[decigraph/ingestion] Duplicate skipped: "${data.title}" (session_id=${dbSessionId.slice(0, 8)}..)`);
         return;
       }
     } catch (err) {
@@ -48,7 +97,7 @@ export async function handleIngestionJob(data: IngestionJobData): Promise<void> 
   try {
     const proj = await db.query('SELECT id FROM projects WHERE id = ?', [data.project_id]);
     if (proj.rows.length === 0) {
-      console.error(`[decigraph/ingestion] Project not found: ${data.project_id}`);
+      console.error(`[decigraph/ingestion] Project not found: ${data.project_id} — cannot insert decision "${data.title}"`);
       return;
     }
   } catch (err) {
@@ -57,11 +106,18 @@ export async function handleIngestionJob(data: IngestionJobData): Promise<void> 
   }
 
   // ── Insert decision ──────────────────────────────────────────────────────
+  // Enrich description with original source info for traceability
+  const enrichedDescription = data.source !== 'api'
+    ? `${data.description}\n\n[Auto-ingested from ${data.source}${data.source_session_id ? ` — ref: ${data.source_session_id}` : ''}]`
+    : data.description;
+
   const confidenceScore = data.confidence === 'high' ? 0.9 : data.confidence === 'medium' ? 0.6 : 0.3;
   const autoApproveThreshold = parseFloat(process.env.DECIGRAPH_AUTO_APPROVE_THRESHOLD ?? '0.85');
   const autoApproved = confidenceScore >= autoApproveThreshold;
   const decisionStatus = autoApproved ? 'active' : 'pending';
   const reviewStatus = autoApproved ? 'approved' : 'pending_review';
+
+  console.log(`[decigraph/ingestion] Inserting decision: "${data.title}" project=${data.project_id.slice(0, 8)}.. source=${dbSource} status=${decisionStatus}`);
 
   try {
     const result = await db.query(
@@ -75,11 +131,11 @@ export async function handleIngestionJob(data: IngestionJobData): Promise<void> 
       [
         data.project_id,
         data.title,
-        data.description,
+        enrichedDescription,
         data.reasoning,
         data.made_by,
-        data.source,
-        data.source_session_id,
+        dbSource,
+        dbSessionId,
         data.confidence,
         decisionStatus,
         JSON.stringify(data.alternatives_considered),
@@ -93,7 +149,7 @@ export async function handleIngestionJob(data: IngestionJobData): Promise<void> 
     const inserted = result.rows[0] as Record<string, unknown> | undefined;
     const decisionId = (inserted?.id as string) ?? 'unknown';
 
-    console.log(`[decigraph/ingestion] Decision inserted: id=${decisionId} title="${data.title}" status=${decisionStatus}`);
+    console.log(`[decigraph/ingestion] ✓ Inserted decision ${decisionId} into DB: "${data.title}" (source=${data.source}, db_source=${dbSource})`);
 
     // ── Forward to notification queue ────────────────────────────────────
     const notificationData: NotificationJobData = {
@@ -111,7 +167,8 @@ export async function handleIngestionJob(data: IngestionJobData): Promise<void> 
 
     await addNotificationJob(notificationData);
   } catch (err) {
-    console.error(`[decigraph/ingestion] Insert failed for "${data.title}":`, (err as Error).message);
+    console.error(`[decigraph/ingestion] ✗ INSERT FAILED for "${data.title}":`, (err as Error).message);
+    console.error(`[decigraph/ingestion] Debug: project_id=${data.project_id} source=${dbSource} session_id=${dbSessionId} confidence=${data.confidence}`);
     throw err; // Re-throw so BullMQ retries
   }
 }

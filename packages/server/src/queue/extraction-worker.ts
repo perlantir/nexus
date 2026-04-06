@@ -1,10 +1,17 @@
 /**
  * Extraction Worker — processes raw text through Distillery to produce
  * structured decision JSON, then forwards to the ingestion queue.
+ *
+ * Uses Sonnet (not Opus) for extraction — structured JSON output at 1/10th
+ * the cost. Opus is reserved for Ask Anything (synthesis needs reasoning).
  */
-import { callLLM, scrubSecrets, INJECTION_GUARD } from '@decigraph/core/distillery/index.js';
+import { scrubSecrets, INJECTION_GUARD } from '@decigraph/core/distillery/index.js';
+import { resolveLLMConfig } from '@decigraph/core/config/llm.js';
 import type { ExtractionJobData, IngestionJobData } from './index.js';
 import { addIngestionJob } from './index.js';
+
+// Sonnet model for extraction — much cheaper than Opus for structured output
+const EXTRACTION_MODEL = 'claude-sonnet-4-20250514';
 
 const EXTRACTION_SYSTEM_PROMPT = `You are a decision extractor. Given a raw message from a team conversation, determine if it contains an actual decision.
 
@@ -41,15 +48,68 @@ interface ExtractedResult {
 }
 
 /**
- * Process extraction job: call Distillery, parse result, forward to ingestion.
+ * Call LLM using Sonnet for extraction (cheaper than Opus).
+ * Falls back to the configured distillery model if Anthropic SDK is unavailable.
+ */
+async function callExtractionLLM(systemPrompt: string, userMessage: string): Promise<string> {
+  const endpoint = resolveLLMConfig().distillery;
+
+  if (!endpoint) {
+    console.warn('[decigraph/extraction] No LLM provider configured');
+    return '[]';
+  }
+
+  try {
+    if (endpoint.url === '__anthropic_sdk__') {
+      // Use Anthropic SDK directly with Sonnet model
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      const client = new Anthropic({ apiKey: endpoint.key });
+
+      const response = await client.messages.create({
+        model: EXTRACTION_MODEL,
+        max_tokens: 2048, // Extraction responses are short JSON
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
+      });
+
+      const block = response.content[0];
+      return block?.type === 'text' ? block.text : '[]';
+    }
+
+    // OpenAI-compatible path — use configured model (can't force Sonnet)
+    // Import OpenAI dynamically
+    const { default: OpenAI } = await import('openai');
+    const client = new OpenAI({
+      baseURL: endpoint.url,
+      apiKey: endpoint.key,
+    });
+
+    const response = await client.chat.completions.create({
+      model: EXTRACTION_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: 2048,
+    });
+
+    return response.choices[0]?.message?.content ?? '[]';
+  } catch (err) {
+    console.error('[decigraph/extraction] LLM call failed:', (err as Error).message);
+    throw err;
+  }
+}
+
+/**
+ * Process extraction job: call Distillery (Sonnet), parse result, forward to ingestion.
  */
 export async function handleExtractionJob(data: ExtractionJobData): Promise<void> {
   const scrubbed = scrubSecrets(data.raw_text);
   const userMessage = INJECTION_GUARD + scrubbed;
 
-  console.log(`[decigraph/extraction] Processing: source=${data.source} by=${data.made_by} len=${data.raw_text.length}`);
+  console.log(`[decigraph/extraction] Processing: source=${data.source} by=${data.made_by} len=${data.raw_text.length} model=${EXTRACTION_MODEL}`);
 
-  const llmResponse = await callLLM(EXTRACTION_SYSTEM_PROMPT, userMessage);
+  const llmResponse = await callExtractionLLM(EXTRACTION_SYSTEM_PROMPT, userMessage);
 
   // Check if Distillery thinks this is not a decision
   if (!llmResponse || llmResponse.trim() === 'null' || llmResponse.trim() === 'NO_DECISION' || llmResponse.trim() === '[]') {

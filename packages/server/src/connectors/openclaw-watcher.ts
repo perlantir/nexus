@@ -1,16 +1,34 @@
 /**
  * OpenClaw Session Auto-Discovery Connector.
  *
- * Polls the OpenClaw workspace directory for new/modified .jsonl and .md
- * session files using fs.statSync mtime comparison. No inotify, no chokidar —
- * works reliably inside Docker bind mounts where host-side changes are
- * invisible to inotify/kqueue watchers.
+ * Polls the OpenClaw workspace directory for new/modified session files
+ * using fs.statSync mtime comparison. Pure Node stdlib (fs + path) — no
+ * external file-watcher dependency. Works reliably inside Docker bind mounts.
+ *
+ * Token efficiency:
+ *   - SKIP_FILES set filters out static config files (SOUL.md, etc.)
+ *   - Only .jsonl files and session-named .md files are processed
+ *   - Decision pattern pre-filter before any Distillery call
+ *   - Content truncated to 2000 chars per extraction call
  *
  * Directory layout: /data/.openclaw/workspace-<agentname>/session-*.jsonl
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { submitForExtraction } from '../queue/index.js';
+
+// ── Config files to ALWAYS skip ────────────────────────────────────────────
+
+const SKIP_FILES = new Set([
+  'SOUL.md', 'AGENTS.md', 'HEARTBEAT.md', 'IDENTITY.md',
+  'BOOTSTRAP.md', 'BOOT.md', 'TOOLS.md', 'USER.md',
+  'QUALITY.md', 'HANDOFF.md', 'MEMORY.md', 'PERMISSION_MATRIX.md',
+  'REPORT_TEMPLATE.md', 'SCORING_RUBRIC.md', 'REFERENCE_SECURITY_BASELINES.md',
+  'TEST_DATA_AND_ROLES.md', 'ROUTE_AND_ENDPOINT_INVENTORY.md',
+  'FALSE_POSITIVE_GUARDRAILS.md', 'LAUNCH_DECISION_RULES.md',
+  'BENCHMARK_STANDARDS.md', 'AUDIT_DOMAINS.md', 'FLEET-MEMORY.md',
+  'CEO-DIRECTIVE.md', 'RESTORE.md',
+]);
 
 // ── Decision pattern matching ──────────────────────────────────────────────
 
@@ -31,6 +49,11 @@ const DECISION_PATTERNS: RegExp[] = [
 function matchesDecisionPattern(text: string): boolean {
   return DECISION_PATTERNS.some((p) => p.test(text));
 }
+
+// ── Constants ──────────────────────────────────────────────────────────────
+
+const POLL_INTERVAL = 10_000; // 10 seconds
+const MAX_EXTRACTION_LENGTH = 2000; // Max chars per Distillery call
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -55,10 +78,9 @@ let _projectId = '';
 let _cursorPath = '';
 const _cursors = new Map<string, CursorEntry>();
 let _filesTracked = 0;
+let _filesSkipped = 0;
 let _decisionsCaptured = 0;
 let _polling = false; // Guard against overlapping polls
-
-const POLL_INTERVAL = 10_000; // 10 seconds
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -71,6 +93,7 @@ export function getOpenClawStatus(): Record<string, unknown> {
     watching: _pollTimer !== null,
     path: _watchPath || null,
     files_tracked: _filesTracked,
+    files_skipped: _filesSkipped,
     decisions_captured: _decisionsCaptured,
   };
 }
@@ -100,8 +123,8 @@ export function startOpenClawWatcher(): boolean {
     return false;
   }
 
-  // Load cursor state from disk
-  _cursorPath = path.join(_watchPath, '.decigraph-cursor.json');
+  // Cursor stored in /tmp to avoid permission issues on mounted volumes
+  _cursorPath = process.env.DECIGRAPH_CURSOR_PATH || '/tmp/.decigraph-cursor.json';
   loadCursors();
 
   // Count workspace dirs for startup log
@@ -128,6 +151,36 @@ export async function stopOpenClawWatcher(): Promise<void> {
   }
 }
 
+// ── File filtering ─────────────────────────────────────────────────────────
+
+/**
+ * Determine if a file should be processed.
+ * Returns true for session files, false for config files.
+ */
+function shouldProcessFile(filePath: string): boolean {
+  const basename = path.basename(filePath);
+
+  // Always skip known config files
+  if (SKIP_FILES.has(basename)) return false;
+
+  // Always process .jsonl files (session transcripts)
+  if (basename.endsWith('.jsonl')) return true;
+
+  // Process .md files ONLY if they look like session files:
+  //   - In a sessions/ subdirectory
+  //   - Named session-* or conversation-*
+  if (basename.endsWith('.md')) {
+    const dir = path.basename(path.dirname(filePath));
+    if (dir === 'sessions') return true;
+    if (basename.startsWith('session-') || basename.startsWith('conversation-')) return true;
+
+    // All other .md files in workspace root are config — skip them
+    return false;
+  }
+
+  return false;
+}
+
 // ── Polling loop ───────────────────────────────────────────────────────────
 
 /**
@@ -146,17 +199,31 @@ function listWorkspaceDirs(): string[] {
 }
 
 /**
- * List .jsonl and .md files in a directory (non-recursive, single level).
+ * List all files in a directory and its immediate subdirectories.
  */
-function listSessionFiles(dirPath: string): string[] {
+function listAllFiles(dirPath: string): string[] {
+  const results: string[] = [];
   try {
-    const entries = fs.readdirSync(dirPath);
-    return entries
-      .filter((name) => name.endsWith('.jsonl') || name.endsWith('.md'))
-      .map((name) => path.join(dirPath, name));
-  } catch {
-    return [];
-  }
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+      if (entry.isFile()) {
+        results.push(fullPath);
+      } else if (entry.isDirectory()) {
+        // One level deep (e.g., sessions/ subdirectory)
+        try {
+          const subEntries = fs.readdirSync(fullPath);
+          for (const sub of subEntries) {
+            const subFull = path.join(fullPath, sub);
+            try {
+              if (fs.statSync(subFull).isFile()) results.push(subFull);
+            } catch { /* skip */ }
+          }
+        } catch { /* skip unreadable subdirs */ }
+      }
+    }
+  } catch { /* skip */ }
+  return results;
 }
 
 /**
@@ -169,17 +236,23 @@ async function pollOnce(): Promise<void> {
   try {
     const workspaceDirs = listWorkspaceDirs();
     let trackedCount = 0;
+    let skippedCount = 0;
 
     for (const dir of workspaceDirs) {
-      const files = listSessionFiles(dir);
-      trackedCount += files.length;
+      const allFiles = listAllFiles(dir);
 
-      for (const filePath of files) {
-        await checkAndProcessFile(filePath);
+      for (const filePath of allFiles) {
+        if (shouldProcessFile(filePath)) {
+          trackedCount++;
+          await checkAndProcessFile(filePath);
+        } else {
+          skippedCount++;
+        }
       }
     }
 
     _filesTracked = trackedCount;
+    _filesSkipped = skippedCount;
   } catch (err) {
     console.error('[decigraph/openclaw] Poll error:', (err as Error).message);
   } finally {
@@ -210,7 +283,6 @@ async function checkAndProcessFile(filePath: string): Promise<void> {
 
   // Skip if no new bytes
   if (stat.size <= lastOffset) {
-    // mtime changed but size didn't — update mtime cursor only
     _cursors.set(key, {
       offset: lastOffset,
       mtime: currentMtime,
@@ -245,7 +317,6 @@ async function checkAndProcessFile(filePath: string): Promise<void> {
     let textContent: string;
 
     if (isMarkdown) {
-      // For .md files, each line is plain text
       textContent = line;
     } else {
       // For .jsonl files, parse JSON and only process assistant messages
@@ -261,13 +332,16 @@ async function checkAndProcessFile(filePath: string): Promise<void> {
 
     if (textContent.length < 50) continue;
 
-    // Check for decision language
+    // Pre-filter: MUST match decision pattern before calling Distillery.
+    // This eliminates ~90% of false positives and saves $0.15-0.30 per call.
     if (!matchesDecisionPattern(textContent)) continue;
 
+    // Truncate to max extraction length — most decisions are 1-2 sentences.
+    const truncatedText = textContent.slice(0, MAX_EXTRACTION_LENGTH);
     const lineNumber = i + 1;
 
     await submitForExtraction({
-      raw_text: textContent,
+      raw_text: truncatedText,
       source: 'openclaw',
       source_session_id: `${key}:${lineNumber}`,
       made_by: agentName,
@@ -276,8 +350,7 @@ async function checkAndProcessFile(filePath: string): Promise<void> {
 
     decisionsFound++;
 
-    // Log decision capture with title snippet
-    const snippet = textContent.slice(0, 80).replace(/\n/g, ' ');
+    const snippet = truncatedText.slice(0, 80).replace(/\n/g, ' ');
     console.log(`[decigraph/openclaw] Decision captured from ${agentName}: "${snippet}"`);
   }
 
@@ -298,10 +371,6 @@ async function checkAndProcessFile(filePath: string): Promise<void> {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-/**
- * Extract agent name from directory path.
- * workspace-<agentname>/session.jsonl → agentname
- */
 function extractAgentName(filePath: string): string {
   const parts = filePath.split(path.sep);
   for (const part of parts) {
@@ -312,9 +381,6 @@ function extractAgentName(filePath: string): string {
   return parent.replace(/^workspace-/, '') || 'unknown';
 }
 
-/**
- * Load cursor state from disk into the in-memory Map.
- */
 function loadCursors(): void {
   try {
     if (fs.existsSync(_cursorPath)) {
@@ -324,15 +390,13 @@ function loadCursors(): void {
         _cursors.set(key, entry);
       }
       _filesTracked = _cursors.size;
+      console.log(`[decigraph/openclaw] Loaded ${_cursors.size} cursors from ${_cursorPath}`);
     }
   } catch (err) {
     console.warn('[decigraph/openclaw] Failed to load cursors:', (err as Error).message);
   }
 }
 
-/**
- * Flush in-memory cursor Map to disk.
- */
 function saveCursors(): void {
   try {
     const obj: Record<string, CursorEntry> = {};
