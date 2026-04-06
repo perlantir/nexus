@@ -40,7 +40,7 @@ export function ContextComparison() {
 
   const [agentA, setAgentA] = useState('');
   const [agentB, setAgentB] = useState('');
-  const [task, setTask] = useState('');
+  const [task, setTask] = useState('general context');
 
   const [resultA, setResultA] = useState<ContextResult | null>(null);
   const [resultB, setResultB] = useState<ContextResult | null>(null);
@@ -59,12 +59,14 @@ export function ContextComparison() {
     try {
       const [resA, resB] = await Promise.all([
         post<ContextResult>('/api/compile', {
-          agent: agentA,
-          task,
+          agent_name: agentA,
+          project_id: projectId,
+          task_description: task,
         }),
         post<ContextResult>('/api/compile', {
-          agent: agentB,
-          task,
+          agent_name: agentB,
+          project_id: projectId,
+          task_description: task,
         }),
       ]);
       setResultA(resA);
@@ -157,7 +159,7 @@ export function ContextComparison() {
 
             <div>
               <label className="text-xs font-medium text-[var(--text-secondary)] mb-1.5 block">
-                Task
+                Task Description
               </label>
               <input
                 type="text"
