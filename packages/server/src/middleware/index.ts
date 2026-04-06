@@ -79,12 +79,12 @@ export const errorHandler = (err: Error, c: Context) => {
   return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }, 500);
 };
 
-// Security Headers — applied to ALL responses
+// Security Headers — applied to ALL responses (Phase 3 hardened)
 export const securityHeaders: MiddlewareHandler = createMiddleware(async (c, next) => {
   await next();
   c.header('X-Content-Type-Options', 'nosniff');
   c.header('X-Frame-Options', 'DENY');
-  c.header('X-XSS-Protection', '0');
+  c.header('X-XSS-Protection', '1; mode=block');
   c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   c.header('Content-Security-Policy', "default-src 'self'");
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -98,7 +98,7 @@ export const requestTimer: MiddlewareHandler = createMiddleware(async (c, next) 
   c.header('X-Response-Time', `${Date.now() - start}ms`);
 });
 
-// CORS Middleware
+// CORS Middleware — Phase 3: includes decigraph.ai + localhost:3200 by default
 export const corsMiddleware: MiddlewareHandler = createMiddleware(async (c, next) => {
   const origin = c.req.header('Origin') ?? '';
   let allowOrigin: string;
@@ -106,14 +106,16 @@ export const corsMiddleware: MiddlewareHandler = createMiddleware(async (c, next
   if (isDev()) {
     allowOrigin = origin || '*';
   } else {
-    const allowed = (process.env.DECIGRAPH_CORS_ORIGINS ?? process.env.ALLOWED_ORIGINS ?? '')
+    const defaultOrigins = ['https://decigraph.ai', 'http://localhost:3200'];
+    const envOrigins = (process.env.DECIGRAPH_CORS_ORIGINS ?? process.env.ALLOWED_ORIGINS ?? '')
       .split(',')
       .map((o) => o.trim())
       .filter(Boolean);
+    const allowed = [...new Set([...defaultOrigins, ...envOrigins])];
+
     if (allowed.includes(origin)) {
       allowOrigin = origin;
     } else if (allowed.length === 0) {
-      // No origins configured in production — deny cross-origin
       allowOrigin = 'null';
     } else {
       allowOrigin = allowed[0] ?? 'null';
@@ -122,7 +124,7 @@ export const corsMiddleware: MiddlewareHandler = createMiddleware(async (c, next
 
   c.header('Access-Control-Allow-Origin', allowOrigin);
   c.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
   c.header('Access-Control-Max-Age', '86400');
 
   if (c.req.method === 'OPTIONS') {
