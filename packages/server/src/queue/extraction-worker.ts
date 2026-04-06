@@ -76,24 +76,10 @@ async function callExtractionLLM(systemPrompt: string, userMessage: string): Pro
       return block?.type === 'text' ? block.text : '[]';
     }
 
-    // OpenAI-compatible path — use configured model (can't force Sonnet)
-    // Import OpenAI dynamically
-    const { default: OpenAI } = await import('openai');
-    const client = new OpenAI({
-      baseURL: endpoint.url,
-      apiKey: endpoint.key,
-    });
-
-    const response = await client.chat.completions.create({
-      model: EXTRACTION_MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      max_tokens: 2048,
-    });
-
-    return response.choices[0]?.message?.content ?? '[]';
+    // Non-Anthropic path — fall back to the configured distillery callLLM.
+    // Can't force Sonnet here, but it still works with whatever model is configured.
+    const { callLLM } = await import('@decigraph/core/distillery/index.js');
+    return await callLLM(systemPrompt, userMessage);
   } catch (err) {
     console.error('[decigraph/extraction] LLM call failed:', (err as Error).message);
     throw err;
