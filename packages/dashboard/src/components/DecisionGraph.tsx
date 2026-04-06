@@ -400,13 +400,28 @@ export function DecisionGraph() {
 
         {/* Zoom controls */}
         <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
-          <button onClick={() => handleZoom(1.3)} className="btn-ghost p-2" title="Zoom in">
+          <button
+            onClick={() => handleZoom(1.3)}
+            onTouchEnd={(e) => { e.preventDefault(); handleZoom(1.3); }}
+            className="btn-ghost p-2 touch-target"
+            title="Zoom in"
+          >
             <ZoomIn size={16} />
           </button>
-          <button onClick={() => handleZoom(0.7)} className="btn-ghost p-2" title="Zoom out">
+          <button
+            onClick={() => handleZoom(0.7)}
+            onTouchEnd={(e) => { e.preventDefault(); handleZoom(0.7); }}
+            className="btn-ghost p-2 touch-target"
+            title="Zoom out"
+          >
             <ZoomOut size={16} />
           </button>
-          <button onClick={handleExpand} className="btn-ghost p-2" title={isExpanded ? 'Exit fullscreen' : 'Expand'}>
+          <button
+            onClick={handleExpand}
+            onTouchEnd={(e) => { e.preventDefault(); handleExpand(); }}
+            className="btn-ghost p-2 touch-target"
+            title={isExpanded ? 'Exit fullscreen' : 'Expand'}
+          >
             {isExpanded ? <X size={16} /> : <Maximize2 size={16} />}
           </button>
         </div>
@@ -493,9 +508,9 @@ export function DecisionGraph() {
         )}
       </div>
 
-      {/* Detail panel */}
+      {/* Detail panel — renders below graph on mobile, beside on desktop */}
       {selectedNode && (
-        <aside className="w-full md:w-96 shrink-0 border-t md:border-t-0 md:border-l border-[var(--border-light)] overflow-y-auto bg-[var(--bg-primary)] max-h-[50vh] md:max-h-none animate-slide-in">
+        <aside className="w-full md:w-96 shrink-0 border-t md:border-t-0 md:border-l border-[var(--border-light)] overflow-y-auto max-h-[50vh] md:max-h-none animate-slide-in" style={{ backgroundColor: 'var(--bg-primary)', zIndex: 20 }}>
           <div className="p-5">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 min-w-0 pr-3">

@@ -235,6 +235,34 @@ export function Contradictions() {
     );
   }
 
+  // Flag contradiction modal state
+  const [showFlagModal, setShowFlagModal] = useState(false);
+  const [flagDecisionA, setFlagDecisionA] = useState('');
+  const [flagDecisionB, setFlagDecisionB] = useState('');
+  const [flagDescription, setFlagDescription] = useState('');
+  const [flagSubmitting, setFlagSubmitting] = useState(false);
+
+  async function handleFlagContradiction() {
+    if (!flagDecisionA || !flagDecisionB || !flagDescription) return;
+    setFlagSubmitting(true);
+    try {
+      const created = await post<Contradiction>(`/api/projects/${projectId}/contradictions`, {
+        decision_a_id: flagDecisionA,
+        decision_b_id: flagDecisionB,
+        conflict_description: flagDescription,
+      });
+      setContradictions((prev) => [...prev, created]);
+      setShowFlagModal(false);
+      setFlagDecisionA('');
+      setFlagDecisionB('');
+      setFlagDescription('');
+    } catch {
+      // silent
+    } finally {
+      setFlagSubmitting(false);
+    }
+  }
+
   const unresolvedCritical = (contradictions ?? []).filter(
     (c) => c.status === 'unresolved' && getSeverity(c.similarity_score) === 'critical',
   ).length;
@@ -247,11 +275,20 @@ export function Contradictions() {
     <div className="h-full overflow-y-auto">
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-lg font-semibold mb-1">Contradictions</h1>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Conflicting decisions that need resolution
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-lg font-semibold mb-1">Contradictions</h1>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Conflicting decisions that need resolution
+            </p>
+          </div>
+          <button
+            onClick={() => setShowFlagModal(true)}
+            className="btn-primary text-xs flex items-center gap-1.5"
+          >
+            <AlertTriangle size={14} />
+            Flag Contradiction
+          </button>
         </div>
 
         {/* ---- Alert banner: unresolved contradictions exist ------- */}
@@ -319,9 +356,14 @@ export function Contradictions() {
               size={28}
               className="mx-auto mb-2 text-[var(--text-tertiary)]"
             />
-            <p className="text-sm text-[var(--text-secondary)]">
-              No {tab} contradictions
+            <p className="text-lg font-medium text-[var(--text-secondary)]">
+              {contradictions.length === 0 ? 'No contradictions detected' : `No ${tab} contradictions`}
             </p>
+            {contradictions.length === 0 && (
+              <p className="text-sm text-[var(--text-tertiary)] mt-1">
+                Contradictions are flagged when two active decisions conflict.
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-6">
@@ -455,6 +497,71 @@ export function Contradictions() {
           </div>
         )}
       </div>
+
+      {/* ---- Flag contradiction modal -------------------------------- */}
+      {showFlagModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in p-4">
+          <div className="card p-6 w-full max-w-lg animate-slide-up">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Flag Contradiction</h3>
+              <button onClick={() => setShowFlagModal(false)} className="btn-ghost p-1">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
+                  Decision A ID <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={flagDecisionA}
+                  onChange={(e) => setFlagDecisionA(e.target.value)}
+                  placeholder="UUID of first decision"
+                  className="input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
+                  Decision B ID <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={flagDecisionB}
+                  onChange={(e) => setFlagDecisionB(e.target.value)}
+                  placeholder="UUID of second decision"
+                  className="input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wider text-[var(--text-secondary)]">
+                  Conflict Description <span className="text-red-400">*</span>
+                </label>
+                <textarea
+                  value={flagDescription}
+                  onChange={(e) => setFlagDescription(e.target.value)}
+                  placeholder="Describe why these decisions conflict…"
+                  className="input min-h-[80px] resize-y w-full"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 justify-end mt-5">
+              <button onClick={() => setShowFlagModal(false)} className="btn-secondary text-xs">
+                Cancel
+              </button>
+              <button
+                onClick={handleFlagContradiction}
+                disabled={!flagDecisionA || !flagDecisionB || !flagDescription || flagSubmitting}
+                className="btn-primary text-xs"
+              >
+                {flagSubmitting ? <Loader2 size={14} className="animate-spin" /> : <AlertTriangle size={14} />}
+                Flag
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ---- Resolve modal ---------------------------------------- */}
       {resolving && (
