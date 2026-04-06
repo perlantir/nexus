@@ -870,6 +870,20 @@ export async function compileContext(request: CompileRequest): Promise<ContextPa
     console.log(`[decigraph/embeddings] first_decision_embedding: type=${rawType} isArray=${isArr} len=${embLen} semanticHits=${semanticHits}/${allScored.length}`);
   }
   const packedDecisions = finalizeResults(allScored, agent_name, project_id, startMs);
+
+  // Phase 2: Update last_referenced_at + reference_count for included decisions
+  if (packedDecisions.length > 0) {
+    const includedIds = packedDecisions.map((d) => d.id);
+    try {
+      await db.query(
+        `UPDATE decisions SET last_referenced_at = NOW(), reference_count = reference_count + 1 WHERE id = ANY(?)`,
+        [db.arrayParam(includedIds)],
+      );
+    } catch (err) {
+      console.warn('[decigraph/compile] Failed to update last_referenced_at:', (err as Error).message);
+    }
+  }
+
   if (packedDecisions.length === 0 && allScored.length > 0) {
     console.warn('[decigraph/compile] WARNING: finalizeResults returned 0 but allScored had', allScored.length, 'items for agent', agent_name);
     console.warn('[decigraph/compile] Top score:', allScored[0]?.combined_score, 'MIN_SCORE:', MIN_SCORE);

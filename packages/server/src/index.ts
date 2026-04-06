@@ -10,6 +10,7 @@ import { handleIngestionJob } from './queue/ingestion-worker.js';
 import { startTelegramBot, stopTelegramBot, handleTelegramNotification } from './connectors/telegram.js';
 import { startOpenClawWatcher, stopOpenClawWatcher } from './connectors/openclaw-watcher.js';
 import { registerGitHubWebhook } from './connectors/github.js';
+import { startDiscordBot, stopDiscordBot } from './connectors/discord.js';
 import type { NotificationJobData } from './queue/index.js';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -106,7 +107,8 @@ async function main() {
   const telegramStarted = startTelegramBot();
 
   const openclawStarted = startOpenClawWatcher();
-  if (!openclawStarted && !telegramStarted) {
+  const discordStarted = await startDiscordBot();
+  if (!openclawStarted && !telegramStarted && !discordStarted) {
     console.warn('[decigraph] Auto-discovery: no connectors configured');
   }
 
@@ -154,6 +156,7 @@ async function main() {
 
     // Stop connectors first
     stopTelegramBot();
+    await stopDiscordBot();
     await stopOpenClawWatcher();
     await closeQueues();
 

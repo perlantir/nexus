@@ -754,6 +754,111 @@ export function registerDecisionRoutes(app: Hono): void {
     }
   });
 
+  // ── Phase 2: Stale, Duplicate, Reaffirm, Merge, Keep ────────────────────
+
+  // GET /api/projects/:id/decisions/stale — list stale decisions
+  app.get('/api/projects/:id/decisions/stale', async (c) => {
+    const db = getDb();
+    const projectId = requireUUID(c.req.param('id'), 'projectId');
+
+    const result = await db.query(
+      `SELECT * FROM decisions
+       WHERE project_id = ? AND stale = true
+       ORDER BY last_referenced_at ASC NULLS FIRST`,
+      [projectId],
+    );
+
+    return c.json(result.rows.map((r) => parseDecision(r as Record<string, unknown>)));
+  });
+
+  // GET /api/projects/:id/decisions/duplicates — list potential duplicates
+  app.get('/api/projects/:id/decisions/duplicates', async (c) => {
+    const db = getDb();
+    const projectId = requireUUID(c.req.param('id'), 'projectId');
+
+    const result = await db.query(
+      `SELECT d.*, orig.title as duplicate_of_title
+       FROM decisions d
+       JOIN decisions orig ON orig.id = d.potential_duplicate_of
+       WHERE d.project_id = ? AND d.potential_duplicate_of IS NOT NULL`,
+      [projectId],
+    );
+
+    return c.json(result.rows);
+  });
+
+  // POST /api/projects/:id/decisions/:did/reaffirm — reset stale flag
+  app.post('/api/projects/:id/decisions/:decisionId/reaffirm', async (c) => {
+    const db = getDb();
+    requireUUID(c.req.param('id'), 'projectId');
+    const decisionId = requireUUID(c.req.param('decisionId'), 'decisionId');
+
+    const result = await db.query(
+      `UPDATE decisions SET stale = false, last_referenced_at = NOW()
+       WHERE id = ? RETURNING *`,
+      [decisionId],
+    );
+
+    if (result.rows.length === 0) throw new NotFoundError('Decision', decisionId);
+    return c.json(parseDecision(result.rows[0] as Record<string, unknown>));
+  });
+
+  // POST /api/projects/:id/decisions/:did/merge — merge duplicate into original
+  app.post('/api/projects/:id/decisions/:decisionId/merge', async (c) => {
+    const db = getDb();
+    requireUUID(c.req.param('id'), 'projectId');
+    const decisionId = requireUUID(c.req.param('decisionId'), 'decisionId');
+
+    // Get the decision and its duplicate target
+    const decResult = await db.query(
+      'SELECT * FROM decisions WHERE id = ?',
+      [decisionId],
+    );
+    if (decResult.rows.length === 0) throw new NotFoundError('Decision', decisionId);
+
+    const dec = decResult.rows[0] as Record<string, unknown>;
+    if (!dec.potential_duplicate_of) {
+      throw new ValidationError('Decision is not flagged as a potential duplicate');
+    }
+
+    // Mark the duplicate as superseded
+    await db.query(
+      "UPDATE decisions SET status = 'superseded', updated_at = NOW() WHERE id = ?",
+      [decisionId],
+    );
+
+    // Create a supersedes edge in the Phase 1 decision_edges table
+    await db.query(
+      `INSERT INTO decision_edges (source_id, target_id, relationship, strength)
+       VALUES (?, ?, 'supersedes', 1.0)
+       ON CONFLICT (source_id, target_id, relationship) DO NOTHING`,
+      [dec.potential_duplicate_of, decisionId],
+    );
+
+    // Clear the duplicate flag
+    await db.query(
+      'UPDATE decisions SET potential_duplicate_of = NULL WHERE id = ?',
+      [decisionId],
+    );
+
+    return c.json({ merged: true, superseded_id: decisionId, kept_id: dec.potential_duplicate_of });
+  });
+
+  // POST /api/projects/:id/decisions/:did/keep — dismiss duplicate flag
+  app.post('/api/projects/:id/decisions/:decisionId/keep', async (c) => {
+    const db = getDb();
+    requireUUID(c.req.param('id'), 'projectId');
+    const decisionId = requireUUID(c.req.param('decisionId'), 'decisionId');
+
+    const result = await db.query(
+      'UPDATE decisions SET potential_duplicate_of = NULL WHERE id = ? RETURNING *',
+      [decisionId],
+    );
+
+    if (result.rows.length === 0) throw new NotFoundError('Decision', decisionId);
+    return c.json(parseDecision(result.rows[0] as Record<string, unknown>));
+  });
+
   // ── Decision Validation ─────────────────────────────────────────────────
 
   const VALID_SOURCES = ['manual_review', 'test_passed', 'production_verified', 'peer_reviewed', 'external'] as const;

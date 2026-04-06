@@ -30,6 +30,10 @@ import { registerDocsRoutes } from './routes/docs.js';
 import { registerTimeTravelRoutes } from './routes/time-travel.js';
 import { registerReviewRoutes } from './routes/review.js';
 import { registerStatusRoutes } from './routes/status.js';
+import { registerPhase2ContradictionRoutes } from './routes/phase2-contradictions.js';
+import { registerPhase2EdgeRoutes } from './routes/phase2-edges.js';
+import { registerImpactRoutes } from './routes/impact.js';
+import { registerSlackConnector } from './connectors/slack.js';
 
 export function createApp() {
   const app = new Hono();
@@ -53,7 +57,7 @@ export function createApp() {
 
   // Auth on all /api/* except /api/health, /api/docs, /api/openapi.json
   app.use('/api/*', async (c, next) => {
-    if (c.req.path === '/api/health' || c.req.path === '/api/status' || c.req.path === '/api/cache/clear' || c.req.path === '/api/distill/ask' || c.req.path === '/api/webhooks/github' || c.req.path === '/api/docs' || c.req.path === '/api/openapi.json') {
+    if (c.req.path === '/api/health' || c.req.path === '/api/status' || c.req.path === '/api/cache/clear' || c.req.path === '/api/distill/ask' || c.req.path === '/api/webhooks/github' || c.req.path === '/api/webhooks/slack/events' || c.req.path === '/api/webhooks/slack/commands' || c.req.path === '/api/docs' || c.req.path === '/api/openapi.json') {
       await next();
       return;
     }
@@ -84,6 +88,10 @@ export function createApp() {
   registerTimeTravelRoutes(app);
   registerReviewRoutes(app);
   registerStatusRoutes(app);
+  registerPhase2ContradictionRoutes(app);
+  registerPhase2EdgeRoutes(app);
+  registerImpactRoutes(app);
+  registerSlackConnector(app);
 
   return app;
 }

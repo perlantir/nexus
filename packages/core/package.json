@@ -78,6 +78,22 @@
     "./config/agentPersonas.js": {
       "import": "./dist/config/agentPersonas.js",
       "types": "./dist/config/agentPersonas.d.ts"
+    },
+    "./intelligence/contradiction-detector.js": {
+      "import": "./dist/intelligence/contradiction-detector.js",
+      "types": "./dist/intelligence/contradiction-detector.d.ts"
+    },
+    "./intelligence/dedup-detector.js": {
+      "import": "./dist/intelligence/dedup-detector.js",
+      "types": "./dist/intelligence/dedup-detector.d.ts"
+    },
+    "./intelligence/staleness-tracker.js": {
+      "import": "./dist/intelligence/staleness-tracker.js",
+      "types": "./dist/intelligence/staleness-tracker.d.ts"
+    },
+    "./intelligence/impact-analyzer.js": {
+      "import": "./dist/intelligence/impact-analyzer.js",
+      "types": "./dist/intelligence/impact-analyzer.d.ts"
     }
   },
   "scripts": {

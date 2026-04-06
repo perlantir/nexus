@@ -151,6 +151,25 @@ export async function handleIngestionJob(data: IngestionJobData): Promise<void> 
 
     console.log(`[decigraph/ingestion] ✓ Inserted decision ${decisionId} into DB: "${data.title}" (source=${data.source}, db_source=${dbSource})`);
 
+    // ── Phase 2 Intelligence hooks (fire-and-forget, never block ingestion) ──
+    try {
+      const { detectContradictions } = await import('@decigraph/core/intelligence/contradiction-detector.js');
+      detectContradictions(decisionId, data.project_id).catch((err: Error) =>
+        console.warn('[decigraph/ingestion] Contradiction detection failed:', err.message),
+      );
+    } catch (err) {
+      console.warn('[decigraph/ingestion] Could not load contradiction detector:', (err as Error).message);
+    }
+
+    try {
+      const { detectDuplicates } = await import('@decigraph/core/intelligence/dedup-detector.js');
+      detectDuplicates(decisionId, data.project_id).catch((err: Error) =>
+        console.warn('[decigraph/ingestion] Dedup detection failed:', err.message),
+      );
+    } catch (err) {
+      console.warn('[decigraph/ingestion] Could not load dedup detector:', (err as Error).message);
+    }
+
     // ── Forward to notification queue ────────────────────────────────────
     const notificationData: NotificationJobData = {
       title: data.title,

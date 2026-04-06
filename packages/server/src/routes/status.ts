@@ -4,6 +4,8 @@ import { resolveLLMConfig } from '@decigraph/core/config/llm.js';
 import { getQueueStats, isQueueEnabled } from '../queue/index.js';
 import { getTelegramStatus } from '../connectors/telegram.js';
 import { getOpenClawStatus } from '../connectors/openclaw-watcher.js';
+import { getDiscordStatus } from '../connectors/discord.js';
+import { getSlackStatus } from '../connectors/slack.js';
 
 export function registerStatusRoutes(app: Hono): void {
   // POST /api/cache/clear — manually flush the context cache.
@@ -61,9 +63,38 @@ export function registerStatusRoutes(app: Hono): void {
       queueStats = await getQueueStats();
     } catch { /* ignore */ }
 
+    // Phase 2 Intelligence stats
+    let contradictionsOpen = 0;
+    let contradictionsResolved = 0;
+    let staleCount = 0;
+    let duplicateCount = 0;
+    let edgesCount = 0;
+
+    try {
+      const contrOpen = await db.query("SELECT COUNT(*) as c FROM phase2_contradictions WHERE status = 'open'", []);
+      contradictionsOpen = parseInt((contrOpen.rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+      const contrResolved = await db.query("SELECT COUNT(*) as c FROM phase2_contradictions WHERE status IN ('resolved', 'dismissed')", []);
+      contradictionsResolved = parseInt((contrResolved.rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+    } catch { /* tables may not exist yet */ }
+
+    try {
+      const staleRes = await db.query('SELECT COUNT(*) as c FROM decisions WHERE stale = true', []);
+      staleCount = parseInt((staleRes.rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+    } catch { /* column may not exist yet */ }
+
+    try {
+      const dupRes = await db.query('SELECT COUNT(*) as c FROM decisions WHERE potential_duplicate_of IS NOT NULL', []);
+      duplicateCount = parseInt((dupRes.rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+    } catch { /* column may not exist yet */ }
+
+    try {
+      const edgeRes = await db.query('SELECT COUNT(*) as c FROM phase2_decision_edges', []);
+      edgesCount = parseInt((edgeRes.rows[0] as Record<string, unknown>)?.c as string ?? '0', 10);
+    } catch { /* table may not exist yet */ }
+
     return c.json({
       status: 'ok',
-      version: '0.1.0',
+      version: '0.2.0',
       timestamp: new Date().toISOString(),
       system: {
         projects: projectCount,
@@ -76,6 +107,14 @@ export function registerStatusRoutes(app: Hono): void {
         queues: queueStats,
         telegram: getTelegramStatus(),
         openclaw: getOpenClawStatus(),
+        discord: getDiscordStatus(),
+        slack: getSlackStatus(),
+      },
+      intelligence: {
+        contradictions: { open: contradictionsOpen, resolved: contradictionsResolved },
+        stale_count: staleCount,
+        duplicate_count: duplicateCount,
+        edges_count: edgesCount,
       },
     });
   });
